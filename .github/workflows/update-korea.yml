@@ -1,0 +1,36 @@
+name: Update Korea Prices
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # 18:30 KST / 09:30 UTC
+    # Monday-Friday
+    - cron: "30 9 * * 1-5"
+
+jobs:
+  update-korea:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install finance-datareader pandas
+
+      - name: Update Korean securities
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: python scripts/update_korea.py
