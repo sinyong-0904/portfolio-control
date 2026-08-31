@@ -17,3 +17,82 @@ input,select,textarea{width:100%;padding:7px;border:1px solid #d0d5dd;border-rad
 .performanceStrip{margin-top:12px}
 .authShell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;background:var(--bg)}.authCard{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 8px 30px rgba(16,24,40,.08)}.authCard h1{margin:0 0 8px;font-size:22px}.authGrid{display:grid;gap:10px;margin-top:16px}.authMsg{font-size:12px;color:var(--muted);min-height:18px;margin-top:8px}.syncDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#98a2b3;margin-right:5px}.syncDot.ok{background:#12b76a}.syncDot.busy{background:#f79009}.syncDot.err{background:#f04438}.topRight{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.cloudLabel{font-size:11px;color:var(--muted);white-space:nowrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.metric{font-size:18px}.wrap{padding-left:8px;padding-right:8px}.card{padding:11px}.top h1{font-size:17px}.sticky2{left:82px}.tableWrap{max-height:68vh}.kpirow{grid-template-columns:92px 1fr 65px}.mobileTableLauncher{display:block}.tableWrap.mobile-collapsed{display:none}.modalBack{padding:0}.modalPanel{width:100%;height:100vh;max-height:none;border-radius:0}.modalBody{padding:6px}.modalBody table{font-size:10.5px}.modalBody th,.modalBody td{padding:7px 7px}.modalBody .sticky1{left:0}.tabs{padding-bottom:8px}}
+/* ===== Portfolio Control v3.1 ===== */
+
+.verticalSummary{
+  width:100%;
+  min-width:0!important;
+  table-layout:auto;
+}
+
+.verticalSummary th{
+  position:static;
+  width:1%;
+  text-align:left!important;
+  font-weight:700;
+}
+
+.verticalSummary td{
+  text-align:right!important;
+}
+
+@media(max-width:850px){
+
+  /* modal table compact mode */
+  .modalBody table{
+    width:max-content;
+    min-width:0!important;
+    table-layout:auto;
+  }
+
+  .modalBody th,
+  .modalBody td{
+    width:1%;
+    min-width:0!important;
+    max-width:none;
+    padding:5px 5px!important;
+    white-space:nowrap;
+  }
+
+  .modalBody .wide,
+  .modalBody .mid{
+    min-width:0!important;
+  }
+
+  .modalBody input,
+  .modalBody select{
+    min-width:55px!important;
+    width:64px!important;
+    padding:4px!important;
+  }
+
+  .modalBody .priceInput{
+    min-width:68px!important;
+    width:72px!important;
+  }
+
+  .modalBody .numInput{
+    min-width:55px!important;
+    width:62px!important;
+  }
+
+  /* one-row summary table */
+  .modalBody .verticalSummary{
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  .modalBody .verticalSummary th{
+    width:45%!important;
+    min-width:0!important;
+    position:static!important;
+    text-align:left!important;
+    background:#f9fafb;
+  }
+
+  .modalBody .verticalSummary td{
+    width:55%!important;
+    min-width:0!important;
+    text-align:right!important;
+  }
+}
