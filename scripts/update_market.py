@@ -108,42 +108,43 @@ def yahoo_price(symbol):
 
 
 def cnn_fear_greed():
+    # 날짜가 붙은 endpoint가 GitHub Actions에서 더 안정적
+    start_date = "2026-01-01"
+
     url = (
         "https://production.dataviz.cnn.io/"
-        "index/fearandgreed/graphdata"
+        "index/fearandgreed/graphdata/"
+        + start_date
     )
+
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json, text/plain, */*",
+        "Origin": "https://www.cnn.com",
+        "Referer": "https://www.cnn.com/",
+    }
 
     raw = http_json(
         url,
-        {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
-            "Referer": (
-                "https://edition.cnn.com/"
-                "markets/fear-and-greed"
-            ),
-        }
+        headers
     )
 
     fg = raw["fear_and_greed"]
 
-    current = float(fg["score"])
+    current = float(
+        fg["score"]
+    )
 
     previous = None
 
-    # CNN response formats have changed before.
-    # Try to obtain the prior close if supplied.
-    for key in (
-        "previous_close",
-        "previous_1_day",
-        "previous"
-    ):
-        if fg.get(key) is not None:
-            try:
-                previous = float(fg[key])
-                break
-            except Exception:
-                pass
+    if fg.get("previous_close") is not None:
+        previous = float(
+            fg["previous_close"]
+        )
 
     change_pct = None
 
@@ -152,20 +153,72 @@ def cnn_fear_greed():
             current / previous - 1
         ) * 100
 
+    # CNN historical series에서 실제 최신 거래일 확인
+    historical = (
+        raw
+        .get(
+            "fear_and_greed_historical",
+            {}
+        )
+        .get(
+            "data",
+            []
+        )
+    )
+
+    price_date = (
+        datetime
+        .now(timezone.utc)
+        .date()
+        .isoformat()
+    )
+
+    previous_date = None
+
+    if historical:
+        valid = [
+            x for x in historical
+            if x.get("x") is not None
+            and x.get("y") is not None
+        ]
+
+        valid.sort(
+            key=lambda x: x["x"]
+        )
+
+        if valid:
+            price_date = (
+                datetime
+                .fromtimestamp(
+                    valid[-1]["x"] / 1000,
+                    timezone.utc
+                )
+                .date()
+                .isoformat()
+            )
+
+        if len(valid) >= 2:
+            previous_date = (
+                datetime
+                .fromtimestamp(
+                    valid[-2]["x"] / 1000,
+                    timezone.utc
+                )
+                .date()
+                .isoformat()
+            )
+
     return {
         "current": current,
         "previous": previous,
         "change_pct": change_pct,
         "change_bp": None,
-        "price_date": (
-            datetime.now(timezone.utc)
-            .date()
-            .isoformat()
+        "price_date": price_date,
+        "previous_date": previous_date,
+        "classification": fg.get(
+            "rating"
         ),
-        "previous_date": None,
-        "classification": fg.get("rating"),
     }
-
 
 def supabase_upsert(rows):
     url = (
