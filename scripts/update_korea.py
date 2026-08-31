@@ -173,11 +173,6 @@ def collect_price(code):
         )
     )
 
-    if yoy_base is None:
-        raise RuntimeError(
-            "YoY base not found"
-        )
-
     return {
         "current": current,
         "previous": previous,
