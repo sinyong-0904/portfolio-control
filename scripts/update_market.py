@@ -15,6 +15,7 @@ YAHOO_SYMBOLS = {
     "DXY": ("미국달러지수", "DX-Y.NYB"),
     "USDKRW": ("달러/원", "KRW=X"),
     "JPYKRW": ("엔/원", "JPYKRW=X"),
+    "US10Y": ("미국국채10년", "^TNX"),
 }
 
 
@@ -271,17 +272,20 @@ def main():
                 "symbol": key,
                 "name": name,
                 "category": (
-                    "INDEX"
-                    if key in (
-                        "NASDAQ",
-                        "SP500",
-                        "DOW",
-                        "KOSPI"
-                    )
-                    else
-                    "MARKET"
-                ),
-                **p,
+    "INDEX"
+    if key in (
+        "NASDAQ",
+        "SP500",
+        "DOW",
+        "KOSPI"
+    )
+    else "RATE"
+    if key in (
+        "US10Y",
+    )
+    else "MARKET"
+),
+**p,
                 "source": "Yahoo Finance",
                 "source_symbol":
                     yahoo_symbol,
@@ -290,7 +294,12 @@ def main():
                         timezone.utc
                     ).isoformat(),
             }
-
+if key == "US10Y":
+    row["change_bp"] = (
+        (row["current"] - row["previous"]) * 100
+        if row["previous"] is not None
+        else None
+    )
             rows.append(row)
 
             print(
