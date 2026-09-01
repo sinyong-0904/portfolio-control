@@ -599,11 +599,40 @@
   }
 
 
-
   function afterViewRender() {
 
     requestAnimationFrame(
       () => {
+
+        //
+        // 1. Overview Financial Assets의
+        //    실제 계산값 / donut geometry /
+        //    구성비를 먼저 복원한다.
+        //
+
+        try {
+
+          if (
+            typeof applyFinancialFixV33 ===
+            'function'
+          ) {
+
+            applyFinancialFixV33();
+          }
+
+        } catch (e) {
+
+          console.warn(
+            '[v33 nav] financial fix failed',
+            e
+          );
+        }
+
+
+        //
+        // 2. 색상 / mobile / sticky 등
+        //    공통 UI semantics 적용
+        //
 
         try {
 
@@ -615,8 +644,19 @@
             applyUiV33();
           }
 
-        } catch (e) {}
+        } catch (e) {
 
+          console.warn(
+            '[v33 nav] UI fix failed',
+            e
+          );
+        }
+
+
+        //
+        // 3. 마지막에 금액 표시 형식을
+        //    x.xx억 -> x억 xxxx만원으로 변경.
+        //
 
         try {
 
@@ -628,7 +668,13 @@
             applyMoneyFormatV33();
           }
 
-        } catch (e) {}
+        } catch (e) {
+
+          console.warn(
+            '[v33 nav] money format failed',
+            e
+          );
+        }
 
 
         mountNav();
