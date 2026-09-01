@@ -662,9 +662,18 @@
 
   function applyMoneyFormatV33() {
 
-    updateFinancialMoneyV33();
+    //
+    // Overview Financial Assets만
+    // 안전하게 상세 금액 형식 적용.
+    //
+    // 계좌 평가액 DOM 자동탐색은
+    // Overview / Simulation의 숫자를
+    // 계좌 KPI로 오인할 수 있으므로
+    // v3.3 계좌 view를 직접 수정하기 전까지
+    // 비활성화한다.
+    //
 
-    updateAccountMoneyV33();
+    updateFinancialMoneyV33();
   }
 
 
