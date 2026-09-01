@@ -526,6 +526,15 @@
 
   function simulationStartManV33() {
 
+    //
+    // accountValue / accountSummary의 value는
+    // 현재 앱에서 이미 '만원' 단위이다.
+    //
+    // 따라서 여기서 /10000을 하면
+    // 약 4억원이 4만원으로 축소되는
+    // unit conversion 오류가 발생한다.
+    //
+
     return [
       'DC',
       'P1',
@@ -542,8 +551,7 @@
             id
           ),
         0
-      ) /
-      10000;
+      );
   }
 
 
