@@ -910,6 +910,155 @@
     return changed;
   }
 
+    function ensureGrowthAug2026CloseFixV33() {
+
+    const g = data.growthV32;
+
+    const aug =
+      g &&
+      g.years &&
+      g.years['2026'] &&
+      g.years['2026'].AUG;
+
+    if (!g || !aug) {
+      return false;
+    }
+
+    if (
+      !data.meta.migrations ||
+      typeof data.meta.migrations !== 'object'
+    ) {
+      data.meta.migrations = {};
+    }
+
+    const migrationKey =
+      'growthAug2026ExcelCloseV1';
+
+    // 이미 적용했다면 다시 덮어쓰지 않는다.
+    if (data.meta.migrations[migrationKey]) {
+      return false;
+    }
+
+    // 2026-08 Excel 검증 월말 확정값
+    // 단위: 만원
+    Object.assign(
+      aug,
+      {
+        contribution: 58,
+        cashChange: 391,
+        investmentReturn: 649,
+        legacy: -900,
+        totalChange: 198,
+        value: 99732,
+        locked: true
+      }
+    );
+
+    const storedSerial =
+      Number(g.currentYear) * 12 +
+      Number(g.currentMonthIndex);
+
+    const aug2026Serial =
+      2026 * 12 + 7;
+
+    const sep2026Serial =
+      2026 * 12 + 8;
+
+    // 현재 AUG 또는 SEP라면
+    // SEP LIVE 시작점을 정확한 8월말 값으로 재설정한다.
+    if (
+      storedSerial === aug2026Serial ||
+      storedSerial === sep2026Serial
+    ) {
+
+      g.currentYear = 2026;
+      g.currentMonthIndex = 8;
+
+      g.currentStart = {
+
+        // 투자계좌:
+        // 2025말 36,810
+        // + 2026 추가투입 4,017
+        // + 2026 투자수익 2,765
+        investmentValue: 43592,
+
+        // 삼성전자우:
+        // 2025말 17,840
+        // + 2026 YTD 증감 19,460
+        legacyValue: 37300,
+
+        // 전체 금융자산 2026-08 확정값
+        totalValue: 99732
+      };
+
+      const sep =
+        g.years['2026'].SEP;
+
+      if (sep) {
+        // 기존 잘못 계산된 SEP 값을 버리고
+        // 현재 평가액 기준으로 다시 계산하게 한다.
+        sep.investmentReturn = null;
+        sep.legacy = null;
+        sep.totalChange = null;
+        sep.value = null;
+        sep.locked = false;
+      }
+
+    } else {
+
+      // 이미 OCT 이후라면 현재월 기준점을 함부로 되감지 않는다.
+      if (
+        !Array.isArray(
+          g.rolloverWarnings
+        )
+      ) {
+        g.rolloverWarnings = [];
+      }
+
+      g.rolloverWarnings.push({
+        type:
+          'AUG_2026_BASELINE_FIX_NEEDS_REVIEW',
+
+        createdAt:
+          new Date().toISOString(),
+
+        storedYear:
+          g.currentYear,
+
+        storedMonthIndex:
+          g.currentMonthIndex,
+
+        message:
+          '2026 AUG was corrected to 99,732 but the active month baseline was not rewound.'
+      });
+    }
+
+    data.meta.migrations[migrationKey] = {
+
+      appliedAt:
+        new Date().toISOString(),
+
+      source:
+        'user-verified Excel month-end close',
+
+      aug2026: {
+        contribution: 58,
+        cashChange: 391,
+        investmentReturn: 649,
+        legacy: -900,
+        totalChange: 198,
+        value: 99732
+      },
+
+      sepStart: {
+        investmentValue: 43592,
+        legacyValue: 37300,
+        totalValue: 99732
+      }
+    };
+
+    return true;
+  }
 
   function migrateV33() {
 
@@ -959,7 +1108,12 @@
       changed = true;
     }
 
-
+	if (
+      ensureGrowthAug2026CloseFixV33()
+    ) {
+      changed = true;
+    }
+	
     if (
       Number(
         data.meta.schemaVersion

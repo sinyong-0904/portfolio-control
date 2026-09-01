@@ -156,6 +156,77 @@
       p.monthIndex;
 
     if (nowSerial > storedSerial) {
+
+      const schemaVersion =
+        Number(
+          (data.meta || {}).schemaVersion
+        ) || 0;
+
+      // v3.3부터는 새 달 첫 접속 시
+      // 현재 평가액을 직전 월말 평가액으로
+      // 자동 확정하지 않는다.
+      //
+      // 월말 snapshot을 확인한 후
+      // 별도의 월마감 기능에서 확정한다.
+      if (schemaVersion >= 33) {
+
+        if (
+          !Array.isArray(
+            data.growthV32.rolloverWarnings
+          )
+        ) {
+          data.growthV32.rolloverWarnings = [];
+        }
+
+        const warningId =
+          'month-close-' +
+          data.growthV32.currentYear + '-' +
+          data.growthV32.currentMonthIndex + '-' +
+          p.year + '-' +
+          p.monthIndex;
+
+        const exists =
+          data.growthV32
+            .rolloverWarnings
+            .some(
+              x =>
+                x &&
+                x.id === warningId
+            );
+
+        if (!exists) {
+
+          data.growthV32
+            .rolloverWarnings
+            .push({
+              id: warningId,
+
+              type:
+                'MONTH_CLOSE_REQUIRED',
+
+              fromYear:
+                data.growthV32.currentYear,
+
+              fromMonthIndex:
+                data.growthV32.currentMonthIndex,
+
+              targetYear:
+                p.year,
+
+              targetMonthIndex:
+                p.monthIndex,
+
+              detectedAt:
+                new Date()
+                  .toISOString()
+            });
+        }
+
+        return;
+      }
+
+      // v3.2 이하에 대해서만
+      // 기존 자동 rollover 유지
       rollGrowthForward(
         p.year,
         p.monthIndex
