@@ -1,0 +1,243 @@
+/* Portfolio Control v3.3 views */
+/* Phase 1: Market Monitor */
+
+.v33-market-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.v33-market-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.v33-market-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px 18px;
+  flex-wrap: wrap;
+  margin: 8px 0 10px;
+  font-size: 12px;
+  opacity: 0.78;
+}
+
+.v33-market-notice {
+  margin-bottom: 10px;
+}
+
+.v33-market-table-wrap {
+  overflow: auto;
+  max-width: 100%;
+}
+
+.v33-market-table {
+  min-width: 1180px;
+}
+
+.v33-market-table th,
+.v33-market-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+
+/* 첫 열 = 종목 */
+
+.v33-market-name-cell {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+
+  min-width: 220px;
+  max-width: 260px;
+
+  background:
+    var(
+      --card-bg,
+      var(
+        --panel-bg,
+        #fff
+      )
+    );
+
+  box-shadow:
+    1px 0 0
+    rgba(0, 0, 0, 0.06);
+}
+
+.v33-market-table
+thead
+.v33-market-name-cell {
+  z-index: 4;
+}
+
+.v33-market-name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+
+/* ETF CHECK */
+
+.v33-etf-link {
+  color: inherit;
+  font-weight: 700;
+
+  text-decoration:
+    underline;
+
+  text-decoration-thickness:
+    1px;
+
+  text-underline-offset:
+    2px;
+}
+
+.v33-etf-link:hover {
+  opacity: 0.72;
+}
+
+
+/* 보유 badge */
+
+.v33-held-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding:
+    1px 5px;
+
+  border:
+    1px solid
+    currentColor;
+
+  border-radius:
+    999px;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  opacity:
+    0.58;
+}
+
+
+/* sortable header */
+
+.v33-sort-th {
+  padding: 0 !important;
+}
+
+.v33-sort-btn {
+  width: 100%;
+  min-height: 36px;
+
+  padding:
+    6px 8px;
+
+  border: 0;
+  background: transparent;
+
+  color: inherit;
+
+  font: inherit;
+  font-weight: inherit;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.v33-sort-btn:hover,
+.v33-sort-btn.active {
+  text-decoration:
+    underline;
+
+  text-underline-offset:
+    3px;
+}
+
+
+/* price/source */
+
+.v33-market-source {
+  white-space: nowrap;
+}
+
+.v33-market-source.manual {
+  opacity: 0.7;
+}
+
+.v33-market-stale {
+  font-weight: 700;
+}
+
+.v33-manual-price {
+  min-width: 92px;
+}
+
+
+/* empty table */
+
+.v33-market-empty {
+  padding:
+    28px 12px !important;
+
+  text-align: center;
+
+  opacity: 0.65;
+}
+
+
+/* mobile */
+
+@media (max-width: 760px) {
+
+  .v33-market-toolbar {
+    align-items: stretch;
+  }
+
+  .v33-market-toolbar-group {
+    width: 100%;
+  }
+
+  .v33-market-toolbar-group
+  .btn {
+    flex:
+      1 1 auto;
+  }
+
+  .v33-market-summary {
+    display: block;
+    line-height: 1.55;
+  }
+
+  .v33-market-summary
+  > span {
+    display: block;
+  }
+
+  .v33-market-table {
+    min-width: 1100px;
+  }
+
+  .v33-market-name-cell {
+    min-width: 155px;
+    max-width: 175px;
+  }
+
+  .v33-market-name-line {
+    white-space: normal;
+    line-height: 1.25;
+  }
+}
