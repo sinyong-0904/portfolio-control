@@ -1,0 +1,802 @@
+/* Portfolio Control v3.3
+   Final 8 tabs / merged views /
+   History / Simulation */
+
+.v33-merged-page,
+.v33-history-page {
+  display: block;
+}
+
+
+.v33-merged-section {
+  margin-bottom: 28px;
+}
+
+
+.v33-merged-heading {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items:
+    flex-start;
+
+  gap: 12px;
+
+  margin-bottom:
+    10px;
+}
+
+
+.v33-merged-heading h2 {
+  margin:
+    0 0 4px;
+}
+
+
+.v33-merged-heading p {
+  margin: 0;
+
+  font-size:
+    12px;
+
+  opacity:
+    .7;
+}
+
+
+/* 기존 view 내부 title 중복 최소화 */
+
+.v33-merged-body
+> h2:first-child,
+
+.v33-merged-body
+> h3:first-child {
+  display: none;
+}
+
+
+/* ========================================
+   Simulation
+   ======================================== */
+
+.v33-simulation {
+  display: grid;
+
+  gap: 12px;
+}
+
+
+.v33-sim-controls {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 9px;
+}
+
+
+.v33-sim-controls > div,
+.v33-sim-controls > label {
+  display: flex;
+
+  flex-direction:
+    column;
+
+  gap: 4px;
+
+  min-width: 0;
+
+  padding: 12px;
+
+  border:
+    1px solid
+    var(
+      --v33-border,
+      rgba(
+        100,
+        116,
+        139,
+        .2
+      )
+    );
+
+  border-radius:
+    10px;
+
+  background:
+    var(
+      --card-bg,
+      var(
+        --panel-bg,
+        #fff
+      )
+    );
+}
+
+
+.v33-sim-controls span {
+  font-size:
+    11px;
+
+  opacity:
+    .68;
+}
+
+
+.v33-sim-controls strong {
+  color:
+    var(
+      --v33-blue,
+      #2563eb
+    );
+
+  font-size:
+    18px;
+}
+
+
+.v33-sim-controls small {
+  line-height:
+    1.35;
+
+  opacity:
+    .58;
+}
+
+
+.v33-sim-controls input {
+  width: 100%;
+
+  box-sizing:
+    border-box;
+}
+
+
+.v33-simulation-table {
+  min-width:
+    900px;
+}
+
+
+.v33-simulation-table
+th:first-child,
+
+.v33-simulation-table
+td:first-child {
+  position: sticky;
+
+  left: 0;
+
+  z-index: 2;
+
+  background:
+    var(
+      --card-bg,
+      var(
+        --panel-bg,
+        #fff
+      )
+    );
+}
+
+
+.v33-simulation-table
+thead
+th:first-child {
+  z-index: 4;
+}
+
+
+.v33-sim-target {
+  color:
+    var(
+      --v33-blue,
+      #2563eb
+    ) !important;
+
+  font-weight:
+    800 !important;
+
+  background:
+    var(
+      --v33-blue-soft,
+      #eff6ff
+    );
+}
+
+
+.v33-event-input {
+  width: 64px;
+
+  text-align:
+    right;
+}
+
+
+.v33-sim-event-value {
+  color:
+    var(
+      --v33-purple,
+      #7c3aed
+    );
+}
+
+
+/* Chart */
+
+.v33-sim-chart-card {
+  padding: 12px;
+
+  border:
+    1px solid
+    var(
+      --v33-border,
+      rgba(
+        100,
+        116,
+        139,
+        .2
+      )
+    );
+
+  border-radius:
+    12px;
+
+  background:
+    var(
+      --card-bg,
+      var(
+        --panel-bg,
+        #fff
+      )
+    );
+
+  overflow: hidden;
+}
+
+
+.v33-sim-chart {
+  width: 100%;
+
+  height: auto;
+
+  min-height:
+    250px;
+}
+
+
+.v33-sim-chart
+.grid line {
+  stroke:
+    rgba(
+      100,
+      116,
+      139,
+      .16
+    );
+
+  stroke-width: 1;
+}
+
+
+.v33-sim-chart text {
+  fill:
+    currentColor;
+
+  font-size:
+    10px;
+
+  opacity:
+    .58;
+}
+
+
+.v33-sim-line {
+  fill: none;
+
+  stroke-width:
+    2.5;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+
+.v33-sim-line.r0 {
+  stroke:
+    var(
+      --v33-teal,
+      #0d9488
+    );
+}
+
+
+.v33-sim-line.r1 {
+  stroke:
+    var(
+      --v33-blue,
+      #2563eb
+    );
+
+  stroke-width:
+    3.5;
+}
+
+
+.v33-sim-line.r2 {
+  stroke:
+    var(
+      --v33-amber,
+      #d97706
+    );
+}
+
+
+.v33-sim-line.r3 {
+  stroke:
+    var(
+      --v33-red,
+      #dc2626
+    );
+}
+
+
+.v33-sim-line.event {
+  stroke:
+    var(
+      --v33-purple,
+      #7c3aed
+    );
+
+  stroke-dasharray:
+    6 4;
+
+  stroke-width:
+    3;
+}
+
+
+.v33-sim-event-dot {
+  fill:
+    var(
+      --v33-red,
+      #dc2626
+    );
+
+  stroke:
+    #fff;
+
+  stroke-width:
+    1.5;
+}
+
+
+.v33-sim-legend {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  justify-content:
+    center;
+
+  gap:
+    9px 16px;
+
+  margin-top:
+    5px;
+
+  font-size:
+    11px;
+}
+
+
+.v33-sim-legend span {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap: 5px;
+}
+
+
+.v33-sim-legend i {
+  width: 18px;
+
+  height: 3px;
+
+  border-radius:
+    999px;
+}
+
+
+.v33-sim-legend
+.r0 i {
+  background:
+    var(
+      --v33-teal,
+      #0d9488
+    );
+}
+
+
+.v33-sim-legend
+.r1 i {
+  background:
+    var(
+      --v33-blue,
+      #2563eb
+    );
+}
+
+
+.v33-sim-legend
+.r2 i {
+  background:
+    var(
+      --v33-amber,
+      #d97706
+    );
+}
+
+
+.v33-sim-legend
+.r3 i {
+  background:
+    var(
+      --v33-red,
+      #dc2626
+    );
+}
+
+
+.v33-sim-legend
+.event i {
+  background:
+    var(
+      --v33-purple,
+      #7c3aed
+    );
+}
+
+
+/* Final results */
+
+.v33-sim-final {
+  display: grid;
+
+  grid-template-columns:
+    1.2fr
+    repeat(
+      5,
+      1fr
+    );
+
+  gap: 8px;
+
+  align-items:
+    stretch;
+}
+
+
+.v33-sim-final > span,
+.v33-sim-final > div {
+  display: flex;
+
+  flex-direction:
+    column;
+
+  justify-content:
+    center;
+
+  gap: 3px;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    var(
+      --v33-border,
+      rgba(
+        100,
+        116,
+        139,
+        .2
+      )
+    );
+
+  border-radius:
+    9px;
+}
+
+
+.v33-sim-final small {
+  opacity:
+    .62;
+}
+
+
+/* 8% 목표 */
+
+.v33-sim-final
+> div:nth-child(3) {
+  color:
+    var(
+      --v33-blue,
+      #2563eb
+    );
+
+  font-weight:
+    800;
+
+  background:
+    var(
+      --v33-blue-soft,
+      #eff6ff
+    );
+}
+
+
+.v33-sim-final
+.event {
+  color:
+    var(
+      --v33-purple,
+      #7c3aed
+    );
+}
+
+
+/* ========================================
+   History
+   ======================================== */
+
+.v33-history-toolbar {
+  display: flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap: 10px;
+
+  margin-bottom:
+    12px;
+
+  padding:
+    10px 12px;
+
+  border:
+    1px solid
+    var(
+      --v33-border,
+      rgba(
+        100,
+        116,
+        139,
+        .2
+      )
+    );
+
+  border-radius:
+    10px;
+}
+
+
+.v33-history-toolbar label {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap: 8px;
+
+  font-weight:
+    700;
+}
+
+
+.v33-frozen-badge {
+  display:
+    inline-flex;
+
+  padding:
+    3px 7px;
+
+  border-radius:
+    999px;
+
+  color:
+    var(
+      --v33-purple,
+      #7c3aed
+    );
+
+  background:
+    var(
+      --v33-purple-soft,
+      #f5f3ff
+    );
+
+  border:
+    1px solid
+    rgba(
+      124,
+      58,
+      237,
+      .25
+    );
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+}
+
+
+.v33-history-year,
+.v33-history-subsection {
+  margin-bottom:
+    24px;
+}
+
+
+.v33-history-subsection h3 {
+  margin:
+    0 0 8px;
+}
+
+
+.v33-history-financial {
+  min-width:
+    920px;
+}
+
+
+.v33-income-tax {
+  min-width:
+    1100px;
+}
+
+
+.v33-history-total td {
+  font-weight:
+    800;
+
+  background:
+    rgba(
+      37,
+      99,
+      235,
+      .045
+    );
+
+  border-top-width:
+    2px;
+}
+
+
+.v33-history-input {
+  min-width:
+    86px;
+
+  max-width:
+    120px;
+
+  width: 100%;
+
+  box-sizing:
+    border-box;
+
+  text-align:
+    right;
+}
+
+
+.v33-history-notes {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+
+  gap: 9px;
+
+  margin-top:
+    10px;
+}
+
+
+.v33-history-note {
+  display: flex;
+
+  flex-direction:
+    column;
+
+  gap: 5px;
+}
+
+
+.v33-history-note label {
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+}
+
+
+.v33-history-note textarea {
+  min-height:
+    86px;
+
+  resize:
+    vertical;
+}
+
+
+/* ========================================
+   Mobile
+   ======================================== */
+
+@media (
+  max-width: 760px
+) {
+
+  /*
+   * 이제 실제 탭이 8개이므로
+   * 정확히 4 x 2.
+   */
+
+  .v33-tab-grid {
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0, 1fr)
+      ) !important;
+  }
+
+
+  .v33-sim-controls {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+
+  .v33-sim-final {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+
+  .v33-sim-final
+  > span {
+    grid-column:
+      1 / -1;
+  }
+
+
+  .v33-history-notes {
+    grid-template-columns:
+      1fr;
+  }
+}
