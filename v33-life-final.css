@@ -1,0 +1,291 @@
+/* Portfolio Control v3.3 - Final Lifecycle */
+
+.v33-life-legacy-hidden {
+  display: none !important;
+}
+
+
+.v33-life-account-tools,
+.v33-life-child-tools,
+.v33-life-child-savebar,
+.v33-life-actions,
+.v33-life-modal-head,
+.v33-life-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+
+.v33-life-account-tools,
+.v33-life-child-tools {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin: 4px 0 5px;
+}
+
+
+.v33-life-final-add,
+.v33-life-final-close,
+.v33-life-reopen {
+  min-height: 0 !important;
+  padding: 3px 7px !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+}
+
+
+.v33-life-child-input {
+  width: 100%;
+  min-width: 70px;
+  box-sizing: border-box;
+  padding: 4px 5px;
+  text-align: right;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+
+.v33-life-child-savebar {
+  justify-content: flex-end;
+  margin: 5px 0 10px;
+}
+
+
+.v33-life-child-savebar .small {
+  margin-right: auto;
+  opacity: .55;
+}
+
+
+.v33-life-child-save {
+  min-height: 0 !important;
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+}
+
+
+/* Modal */
+
+.v33-life-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 10100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, .46);
+}
+
+
+.v33-life-modal-back[hidden] {
+  display: none !important;
+}
+
+
+.v33-life-modal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid rgba(127,127,127,.28);
+  border-radius: 14px;
+  background: var(--card, var(--bg, #fff));
+  box-shadow: 0 18px 50px rgba(0,0,0,.24);
+}
+
+
+.v33-life-modal-head {
+  justify-content: space-between;
+  margin-bottom: 13px;
+}
+
+
+.v33-life-modal-title {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+
+.v33-life-form {
+  display: grid;
+  gap: 10px;
+}
+
+
+.v33-life-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+.v33-life-form input {
+  width: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+
+.v33-life-code-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 6px;
+}
+
+
+.v33-life-lookup-result {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(127,127,127,.08);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+
+.v33-life-lookup-result.is-ok,
+.v33-life-lookup-result.is-error {
+  font-weight: 700;
+}
+
+
+/* Advanced */
+
+.v33-life-advanced-root {
+  margin: 17px 0 4px;
+  padding: 6px 9px;
+  border: 1px solid rgba(127,127,127,.14);
+  border-radius: 9px;
+}
+
+
+.v33-life-advanced-root summary {
+  cursor: pointer;
+  padding: 3px 1px;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: .58;
+}
+
+
+.v33-life-advanced-body {
+  padding-top: 7px;
+}
+
+
+.v33-life-subtitle {
+  margin: 10px 0 7px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+
+.v33-life-closed-title {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(127,127,127,.16);
+}
+
+
+.v33-life-master-table input {
+  width: 100%;
+  min-width: 85px;
+  box-sizing: border-box;
+  font-size: 10px;
+}
+
+
+.v33-life-master-code {
+  min-width: 68px !important;
+}
+
+
+.v33-life-actions {
+  justify-content: flex-end;
+  margin-top: 7px;
+}
+
+
+.v33-life-empty {
+  padding: 9px 2px;
+  font-size: 10px;
+  opacity: .52;
+}
+
+
+@media (max-width: 760px) {
+
+  .v33-life-final-add,
+  .v33-life-final-close,
+  .v33-life-reopen {
+    padding: 2px 5px !important;
+    font-size: 8px !important;
+  }
+
+
+  .v33-life-child-input {
+    min-width: 62px;
+    padding: 3px 4px;
+    font-size: 9px;
+  }
+
+
+  .v33-life-child-savebar .small {
+    font-size: 7px;
+  }
+
+
+  .v33-life-child-save {
+    padding: 3px 6px !important;
+    font-size: 8px !important;
+  }
+
+
+  .v33-life-modal-back {
+    align-items: flex-end;
+    padding: 8px;
+  }
+
+
+  .v33-life-modal {
+    width: 100%;
+    max-height: 88vh;
+    padding: 12px;
+  }
+
+
+  .v33-life-form label {
+    font-size: 9px;
+  }
+
+
+  .v33-life-form input {
+    min-height: 31px;
+    font-size: 11px;
+  }
+
+
+  .v33-life-lookup-result {
+    font-size: 8px;
+  }
+
+
+  .v33-life-advanced-root {
+    margin-top: 10px;
+    padding: 4px 6px;
+  }
+
+
+  .v33-life-master-table {
+    min-width: 570px;
+  }
+
+
+  .v33-life-master-table input {
+    font-size: 9px;
+  }
+}
