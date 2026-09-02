@@ -1191,5 +1191,41 @@
   console.info(
     '[Portfolio Control] lifecycle add/master loaded'
   );
+  // ============================================================
+  // Existing renderer +종목 bridge
+  // ============================================================
 
+  document.addEventListener(
+    'click',
+    function (
+      event
+    ) {
+
+      const button =
+        event.target.closest(
+          '.v33-life-legacy-add'
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+
+      openModal(
+        button.dataset
+          .v33Account,
+        button.dataset
+          .v33Owner ||
+          ''
+      );
+
+    },
+    true
+  );
 })();
