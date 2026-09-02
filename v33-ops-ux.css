@@ -410,3 +410,55 @@ strong {
     min-height: 130px;
   }
 }
+
+/* ========================================
+   Mobile top action buttons
+   Backup / Restore / Logout
+   ======================================== */
+
+@media (max-width: 760px) {
+
+  .topRight > button.btn,
+  .topRight > label.btn {
+    min-height: 0 !important;
+
+    padding:
+      3px 6px !important;
+
+    font-size:
+      8px !important;
+
+    line-height:
+      1.15 !important;
+
+    border-radius:
+      5px !important;
+  }
+
+
+  .topRight > label.btn {
+    display:
+      inline-flex !important;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
+  }
+
+
+  .topRight .v33-backup-meta {
+    font-size:
+      7px !important;
+
+    line-height:
+      1.1 !important;
+
+    margin:
+      1px 0 0 3px !important;
+
+    opacity:
+      .42 !important;
+  }
+}
