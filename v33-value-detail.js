@@ -851,6 +851,227 @@
   }
 
 
+  function rawNumberFromCellV33(cell) {
+    if (!cell) {
+      return null;
+    }
+
+    const input =
+      cell.querySelector(
+        'input'
+      );
+
+    if (
+      input &&
+      input.value !== ''
+    ) {
+      const n =
+        Number(
+          String(input.value)
+            .replace(/,/g, '')
+        );
+
+      if (
+        Number.isFinite(n)
+      ) {
+        return n;
+      }
+    }
+
+    const text =
+      cleanText(
+        cell.textContent
+      )
+        .replace(/,/g, '')
+        .replace(/원/g, '')
+        .trim();
+
+    if (
+      !text ||
+      /^(n\/a|na|-|—)$/i
+        .test(text)
+    ) {
+      return null;
+    }
+
+    //
+    // 억 / 만원 표시가 있는 경우
+    // 원 단위로 복원.
+    //
+
+    const sign =
+      text.startsWith('-')
+        ? -1
+        : 1;
+
+    const unsigned =
+      text.replace(
+        /^[-+]/,
+        ''
+      );
+
+    const eokMatch =
+      unsigned.match(
+        /([0-9.]+)\s*억/
+      );
+
+    const manMatch =
+      unsigned.match(
+        /([0-9.]+)\s*만원/
+      );
+
+    if (eokMatch) {
+      const eok =
+        Number(
+          eokMatch[1]
+        );
+
+      const man =
+        manMatch
+          ? Number(
+              manMatch[1]
+            )
+          : 0;
+
+      return (
+        sign *
+        (
+          eok *
+          100000000 +
+
+          man *
+          10000
+        )
+      );
+    }
+
+    if (manMatch) {
+      return (
+        sign *
+        Number(
+          manMatch[1]
+        ) *
+        10000
+      );
+    }
+
+    const n =
+      Number(
+        unsigned.replace(
+          /[^0-9.]/g,
+          ''
+        )
+      );
+
+    return Number.isFinite(n)
+      ? sign * n
+      : null;
+  }
+
+
+  function formatWonV33(value) {
+    const n =
+      Number(value);
+
+    if (
+      !Number.isFinite(n)
+    ) {
+      return '';
+    }
+
+    return Math.round(n)
+      .toLocaleString(
+        'ko-KR'
+      );
+  }
+
+
+  function sumColumnWonV33(
+    table,
+    index
+  ) {
+    if (
+      index < 0
+    ) {
+      return null;
+    }
+
+    let total = 0;
+    let found = false;
+
+    table
+      .querySelectorAll(
+        'tbody tr:not(.v33-account-total-row)'
+      )
+      .forEach(
+        row => {
+          const cell =
+            row.children[
+              index
+            ];
+
+          if (!cell) {
+            return;
+          }
+
+          const value =
+            rawNumberFromCellV33(
+              cell
+            );
+
+          if (
+            value != null
+          ) {
+            total += value;
+            found = true;
+          }
+        }
+      );
+
+    return found
+      ? total
+      : null;
+  }
+
+
+  function accountCashWonV33(
+    def,
+    accountValueWon,
+    holdingValueWon
+  ) {
+    //
+    // 계좌 평가액에는 현금이 포함되지만
+    // holdings 평가금액 합에는 현금이
+    // 포함되지 않을 수 있다.
+    //
+    // 따라서:
+    //
+    // account cash
+    // = account total value
+    // - holdings market value
+    //
+
+    if (
+      accountValueWon == null ||
+      holdingValueWon == null
+    ) {
+      return null;
+    }
+
+    const cash =
+      accountValueWon -
+      holdingValueWon;
+
+    //
+    // 소수점/반올림 noise 제거.
+    //
+
+    return Math.abs(cash) < 1
+      ? 0
+      : Math.round(cash);
+  }
+
+
   function installAccountTotal(
     table,
     def
@@ -859,13 +1080,12 @@
       return;
     }
 
+
     //
-    // 계좌별 memo key도
-    // account id 단위로 고정.
+    // Memo도 계좌별 독립 key.
     //
 
-    table.dataset
-      .v33MemoKey =
+    table.dataset.v33MemoKey =
       `계좌·보유::${def.id}::holdings`;
 
 
@@ -877,27 +1097,28 @@
     }
 
 
-    const evalIdx =
-      indexOfHeader(
-        hs,
-        [
-          /^평가액/,
-          /^평가금액/,
-          /^현재평가/
-        ]
-      );
-
     const buyIdx =
       indexOfHeader(
         hs,
         [
-          /^매수액/,
-          /^매입액/,
           /^매수금액/,
+          /^매수액/,
           /^매입금액/,
-          /^투입금/
+          /^매입액/
         ]
       );
+
+
+    const evalIdx =
+      indexOfHeader(
+        hs,
+        [
+          /^평가금액/,
+          /^평가액/,
+          /^현재평가/
+        ]
+      );
+
 
     const pnlIdx =
       indexOfHeader(
@@ -905,10 +1126,29 @@
         [
           /^평가손익/,
           /^총손익/,
-          /^누적손익/,
           /^손익$/
         ]
       );
+
+
+    const realizedIdx =
+      indexOfHeader(
+        hs,
+        [
+          /^실현손익/
+        ]
+      );
+
+
+    const dividendIdx =
+      indexOfHeader(
+        hs,
+        [
+          /^누적배당/,
+          /^배당누적/
+        ]
+      );
+
 
     const trIdx =
       indexOfHeader(
@@ -918,6 +1158,7 @@
           /^수익률$/
         ]
       );
+
 
     const weightIdx =
       indexOfHeader(
@@ -929,63 +1170,125 @@
       );
 
 
-    const m =
-      accountMetrics(
+    //
+    // --------------------------------------------------
+    // 각 holdings 행의 실제 원 단위 숫자를 합산.
+    // --------------------------------------------------
+    //
+
+    const buyWon =
+      sumColumnWonV33(
+        table,
+        buyIdx
+      );
+
+
+    const holdingValueWon =
+      sumColumnWonV33(
+        table,
+        evalIdx
+      );
+
+
+    const pnlWon =
+      sumColumnWonV33(
+        table,
+        pnlIdx
+      );
+
+
+    const realizedWon =
+      sumColumnWonV33(
+        table,
+        realizedIdx
+      );
+
+
+    const dividendWon =
+      sumColumnWonV33(
+        table,
+        dividendIdx
+      );
+
+
+    //
+    // accountValue()는 현재 앱에서
+    // 만원 단위.
+    //
+    // Total 평가액에는 계좌현금까지
+    // 포함해야 하므로 accountValue를 사용.
+    //
+
+    const accountValueMan =
+      accountValueManV33Compat(
         def.id
       );
 
 
-    const buy =
-      m.buy != null
+    const accountValueWon =
+      accountValueMan != null
 
-        ? m.buy
+        ? Math.round(
+            accountValueMan *
+            10000
+          )
 
-        : rowSumMan(
-            table,
-            buyIdx
-          );
-
-
-    const pnl =
-      m.pnl != null
-
-        ? m.pnl
-
-        : rowSumMan(
-            table,
-            pnlIdx
-          );
+        : holdingValueWon;
 
 
-    const value =
-      m.value != null
+    const cashWon =
+      accountCashWonV33(
+        def,
+        accountValueWon,
+        holdingValueWon
+      );
 
-        ? m.value
 
-        : rowSumMan(
-            table,
-            evalIdx
-          );
+    //
+    // Total TR
+    //
+    // 평가손익 + 실현손익 + 누적배당
+    // --------------------------------
+    // 매수금액
+    //
+    // 기존 계좌 정의가 별도로 존재하면
+    // 향후 그 값을 우선하도록 할 수 있다.
+    //
+
+    const totalReturnWon =
+      (
+        pnlWon || 0
+      ) +
+      (
+        realizedWon || 0
+      ) +
+      (
+        dividendWon || 0
+      );
 
 
     const trValue =
-      buy != null &&
-      buy !== 0 &&
-      pnl != null
+      buyWon != null &&
+      buyWon !== 0
 
         ? (
-            pnl /
-            buy *
+            totalReturnWon /
+            buyWon *
             100
           )
 
         : null;
 
 
+    //
+    // --------------------------------------------------
+    // Total row
+    // --------------------------------------------------
+    //
+
     let tr =
       table.querySelector(
-        'tbody ' +
-        '.v33-account-total-row'
+        'tbody .v33-account-total-row'
       );
 
 
@@ -1047,34 +1350,58 @@
           'Total';
 
       } else if (
-        i === evalIdx &&
-        value != null
+        i === buyIdx &&
+        buyWon != null
       ) {
         text =
-          formatMan(
-            value
+          formatWonV33(
+            buyWon
           );
 
       } else if (
-        i === buyIdx &&
-        buy != null
+        i === evalIdx &&
+        accountValueWon != null
       ) {
         text =
-          formatMan(
-            buy
+          formatWonV33(
+            accountValueWon
           );
 
       } else if (
         i === pnlIdx &&
-        pnl != null
+        pnlWon != null
       ) {
         text =
-          formatMan(
-            pnl
+          formatWonV33(
+            pnlWon
           );
 
         negative =
-          pnl < 0;
+          pnlWon < 0;
+
+      } else if (
+        i === realizedIdx &&
+        realizedWon != null
+      ) {
+        text =
+          formatWonV33(
+            realizedWon
+          );
+
+        negative =
+          realizedWon < 0;
+
+      } else if (
+        i === dividendIdx &&
+        dividendWon != null
+      ) {
+        text =
+          formatWonV33(
+            dividendWon
+          );
+
+        negative =
+          dividendWon < 0;
 
       } else if (
         i === trIdx &&
@@ -1092,17 +1419,12 @@
         i === weightIdx
       ) {
         text =
-          '100.0%';
+          '100.00%';
       }
 
 
-      if (
-        td.textContent !==
-        text
-      ) {
-        td.textContent =
-          text;
-      }
+      td.textContent =
+        text;
 
 
       td.classList.toggle(
@@ -1110,8 +1432,66 @@
         negative
       );
     }
-  }
 
+
+    //
+    // --------------------------------------------------
+    // 계좌 현금 diagnostic
+    // --------------------------------------------------
+    //
+    // Total 행의 title에 남겨두면
+    // 화면을 복잡하게 만들지 않고
+    // PC에서는 hover로 확인 가능.
+    //
+
+    if (
+      cashWon != null
+    ) {
+      tr.title =
+        `계좌현금: ${
+          formatWonV33(
+            cashWon
+          )
+        }원`;
+    }
+
+
+    //
+    // Performance에서 동일 source를
+    // 사용할 수 있도록 runtime 저장.
+    //
+
+    if (
+      !window.accountTotalsRuntimeV33
+    ) {
+      window.accountTotalsRuntimeV33 =
+        {};
+    }
+
+
+    window
+      .accountTotalsRuntimeV33[
+        def.id
+      ] = {
+
+        buyWon,
+
+        holdingValueWon,
+
+        accountValueWon,
+
+        cashWon,
+
+        pnlWon,
+
+        realizedWon,
+
+        dividendWon,
+
+        tr:
+          trValue
+      };
+  }
 
   function enhanceAccounts() {
     if (
@@ -1770,6 +2150,60 @@
   function scopeMetrics(
     scope
   ) {
+        const runtime =
+      window.accountTotalsRuntimeV33 ||
+      {};
+
+
+    const runtimeMap = {
+      'DC': 'DC',
+      '연금(1)': 'P1',
+      '연금(2)': 'P2',
+      'ISA': 'ISA',
+      '일반계좌': 'GENERAL',
+      '자녀연금': 'CHILD',
+      '서현서진연금': 'CHILD'
+    };
+
+
+    const normalizedScope =
+      normScope(
+        scope
+      );
+
+
+    for (
+      const [
+        label,
+        id
+      ] of
+      Object.entries(
+        runtimeMap
+      )
+    ) {
+      if (
+        normalizedScope ===
+        normScope(label) &&
+        runtime[id]
+      ) {
+        return {
+          value:
+            runtime[id]
+              .accountValueWon /
+            10000,
+
+          buy:
+            runtime[id]
+              .buyWon /
+            10000,
+
+          pnl:
+            runtime[id]
+              .pnlWon /
+            10000
+        };
+      }
+    }
     const s =
       normScope(
         scope
