@@ -323,6 +323,40 @@
 
 
   function accountValueMan(id) {
+    //
+    // v3.3 canonical account valuation source.
+    //
+    // accountValueKRW()는 앱 본체에서 사용하는
+    // 원(KRW) 단위 계좌 평가액 계산 함수.
+    //
+    // 숫자 크기로 KRW/만원 단위를 추정하지 않고
+    // 명시적으로 KRW -> 만원 변환한다.
+    //
+    try {
+      if (
+        typeof accountValueKRW ===
+        'function'
+      ) {
+        const won =
+          Number(
+            accountValueKRW(id)
+          );
+
+        if (
+          Number.isFinite(won)
+        ) {
+          return won / 10000;
+        }
+      }
+    } catch (e) {}
+
+
+    //
+    // 구버전 호환 fallback.
+    //
+    // canonical 함수가 존재하지 않는 경우에만
+    // 기존 accountValue 경로를 사용한다.
+    //
     try {
       if (
         typeof accountValue ===
@@ -1071,41 +1105,57 @@
       : Math.round(cash);
   }
 
-  function accountValueManV33Compat(
+function accountValueManV33Compat(
     id
   ) {
+    //
+    // accountValueKRW()를 canonical source로 사용.
+    //
+    // 반환값:
+    //   accountValueKRW = 원(KRW)
+    //   이 함수          = 만원
+    //
+    try {
+      if (
+        typeof accountValueKRW ===
+        'function'
+      ) {
+        const won =
+          Number(
+            accountValueKRW(id)
+          );
+
+        if (
+          Number.isFinite(won)
+        ) {
+          return won / 10000;
+        }
+      }
+    } catch (e) {}
+
+
+    //
+    // fallback:
+    // 위에서 수정한 accountValueMan() 사용.
+    //
     try {
       if (
         typeof accountValueMan ===
         'function'
       ) {
-        return accountValueMan(
-          id
-        );
-      }
-    } catch (e) {}
-
-    try {
-      if (
-        typeof accountValue ===
-        'function'
-      ) {
-        const n =
+        const man =
           Number(
-            accountValue(id)
+            accountValueMan(id)
           );
 
         if (
-          Number.isFinite(n)
+          Number.isFinite(man)
         ) {
-          return (
-            Math.abs(n) >= 10000000
-              ? n / 10000
-              : n
-          );
+          return man;
         }
       }
     } catch (e) {}
+
 
     return null;
   }
