@@ -1135,5 +1135,554 @@
   console.info(
     '[Portfolio Control] lifecycle core loaded'
   );
+  // ============================================================
+  // Legacy visible button bridge
+  // ============================================================
+  //
+  // 기존 account renderer가 실제 화면에 만드는
+  // +종목 / 종료 버튼을 그대로 사용한다.
+  //
+  // 새 버튼을 추가하지 않고 기존 버튼에
+  // account / holding id를 직접 binding한다.
+  //
 
+  function legacyAccountContext(
+    button
+  ) {
+    const content =
+      document.getElementById(
+        'content'
+      );
+
+    if (!content) {
+      return null;
+    }
+
+
+    for (
+      const def of
+      ACCOUNT_DEFS
+    ) {
+      const found =
+        findSection(
+          def.labels
+        );
+
+      if (
+        found &&
+        found.el.contains(
+          button
+        )
+      ) {
+        return {
+          account:
+            def.id,
+
+          owner: '',
+
+          section:
+            found.el,
+
+          table:
+            found.table
+        };
+      }
+    }
+
+
+    return null;
+  }
+
+
+  function legacyHoldingForButton(
+    button
+  ) {
+    const row =
+      button.closest(
+        'tr'
+      );
+
+    if (!row) {
+      return null;
+    }
+
+
+    //
+    // 이미 정확한 holding id가
+    // binding되어 있으면 그것을 우선.
+    //
+
+    const boundId =
+      row.dataset
+        .v33HoldingId;
+
+
+    if (boundId) {
+      const bound =
+        (data.holdings || [])
+          .find(
+            h =>
+              clean(
+                h.id
+              ) ===
+              clean(
+                boundId
+              )
+          );
+
+      if (
+        bound &&
+        active(bound)
+      ) {
+        return bound;
+      }
+    }
+
+
+    const context =
+      legacyAccountContext(
+        button
+      );
+
+
+    if (!context) {
+      return null;
+    }
+
+
+    return rowHolding(
+      row,
+      context.account,
+      context.owner
+    );
+  }
+
+
+  function isEmptyNewHolding(
+    h
+  ) {
+    if (!h) {
+      return false;
+    }
+
+
+    const qty =
+      finite(
+        h.qty
+      ) || 0;
+
+
+    const avg =
+      finite(
+        h.avg
+      ) || 0;
+
+
+    const realized =
+      finite(
+        h.realized
+      ) || 0;
+
+
+    const dividend =
+      finite(
+        h.cumDividend
+      ) || 0;
+
+
+    return (
+      active(h) &&
+      qty === 0 &&
+      avg === 0 &&
+      realized === 0 &&
+      dividend === 0
+    );
+  }
+
+
+  function cancelEmptyHolding(
+    id
+  ) {
+    const index =
+      (data.holdings || [])
+        .findIndex(
+          h =>
+            clean(
+              h.id
+            ) ===
+            clean(id)
+        );
+
+
+    if (
+      index < 0
+    ) {
+      alert(
+        '등록 취소할 보유 기록을 찾지 못했습니다.'
+      );
+
+      return;
+    }
+
+
+    const h =
+      data.holdings[
+        index
+      ];
+
+
+    if (
+      !isEmptyNewHolding(
+        h
+      )
+    ) {
+      alert(
+        '수량/평단/실현손익/누적배당 중 값이 있는 보유는 등록 취소할 수 없습니다.\n' +
+        '일반 보유 종료를 사용하세요.'
+      );
+
+      return;
+    }
+
+
+    const scope =
+      h.account ===
+      'CHILD'
+
+        ? `${clean(h.owner)} / ${marketName(h.code)}`
+
+        : `${accountLabel(h.account)} / ${marketName(h.code)}`;
+
+
+    if (
+      !confirm(
+        `${scope} (${h.code})의 신규 등록을 취소할까요?\n\n` +
+        '보유수량과 성과 기록이 모두 0인 holding만 삭제됩니다.\n' +
+        '종목 기준정보(master)는 삭제하지 않습니다.'
+      )
+    ) {
+      return;
+    }
+
+
+    data.holdings.splice(
+      index,
+      1
+    );
+
+
+    saveRender();
+  }
+
+
+  function bindLegacyVisibleButtons() {
+    if (
+      !isAccountView()
+    ) {
+      return;
+    }
+
+
+    const content =
+      document.getElementById(
+        'content'
+      );
+
+
+    if (!content) {
+      return;
+    }
+
+
+    //
+    // ----------------------------------------
+    // 기존 +종목
+    // ----------------------------------------
+    //
+
+    content
+      .querySelectorAll(
+        'button'
+      )
+      .forEach(
+        button => {
+
+          if (
+            button.classList
+              .contains(
+                'v33-life-final-add'
+              ) ||
+            button.classList
+              .contains(
+                'v33-life-final-close'
+              ) ||
+            button.classList
+              .contains(
+                'v33-life-cancel'
+              )
+          ) {
+            return;
+          }
+
+
+          const label =
+            norm(
+              button.textContent
+            );
+
+
+          if (
+            label ===
+              '+종목' ||
+            label ===
+              '종목추가' ||
+            label ===
+              '+종목추가'
+          ) {
+            const context =
+              legacyAccountContext(
+                button
+              );
+
+
+            if (!context) {
+              return;
+            }
+
+
+            button.classList
+              .remove(
+                'v33-life-legacy-hidden'
+              );
+
+
+            button.classList
+              .add(
+                'v33-life-legacy-add'
+              );
+
+
+            button.dataset
+              .v33Account =
+              context.account;
+
+
+            button.dataset
+              .v33Owner =
+              context.owner;
+          }
+        }
+      );
+
+
+    //
+    // ----------------------------------------
+    // 기존 종료
+    // ----------------------------------------
+    //
+
+    content
+      .querySelectorAll(
+        'button'
+      )
+      .forEach(
+        button => {
+
+          if (
+            button.classList
+              .contains(
+                'v33-life-final-close'
+              ) ||
+            button.classList
+              .contains(
+                'v33-life-cancel'
+              )
+          ) {
+            return;
+          }
+
+
+          const label =
+            norm(
+              button.textContent
+            );
+
+
+          if (
+            label !==
+              '종료' &&
+            label !==
+              '보유종료'
+          ) {
+            return;
+          }
+
+
+          const h =
+            legacyHoldingForButton(
+              button
+            );
+
+
+          if (!h) {
+            return;
+          }
+
+
+          button.classList
+            .remove(
+              'v33-life-legacy-hidden'
+            );
+
+
+          if (
+            isEmptyNewHolding(
+              h
+            )
+          ) {
+            button.textContent =
+              '등록 취소';
+
+
+            button.classList
+              .add(
+                'v33-life-cancel'
+              );
+
+
+            button.dataset
+              .v33HoldingId =
+              h.id;
+
+          } else {
+            button.textContent =
+              '보유 종료';
+
+
+            button.classList
+              .add(
+                'v33-life-legacy-close'
+              );
+
+
+            button.dataset
+              .v33HoldingId =
+              h.id;
+          }
+        }
+      );
+
+
+    //
+    // 우리가 전에 추가한 별도 버튼은 숨김.
+    // 화면에는 기존 renderer 버튼 하나만 남긴다.
+    //
+
+    content
+      .querySelectorAll(
+        '.v33-life-final-add,' +
+        '.v33-life-final-close'
+      )
+      .forEach(
+        button => {
+          button.style.display =
+            'none';
+        }
+      );
+  }
+
+
+  function legacyBridgeQueue() {
+    requestAnimationFrame(
+      bindLegacyVisibleButtons
+    );
+  }
+
+
+  window.addEventListener(
+    'v33-life:apply',
+    legacyBridgeQueue
+  );
+
+
+  window.addEventListener(
+    'portfolio:saved',
+    legacyBridgeQueue
+  );
+
+
+  window.v33LifeCore
+    .bindLegacyVisibleButtons =
+    bindLegacyVisibleButtons;
+
+
+  window.v33LifeCore
+    .cancelEmptyHolding =
+    cancelEmptyHolding;
+
+
+  window.v33LifeCore
+    .legacyHoldingForButton =
+    legacyHoldingForButton;
+
+
+  //
+  // 기존 renderer보다 먼저 click을 잡는다.
+  //
+
+  document.addEventListener(
+    'click',
+    function (
+      event
+    ) {
+
+      const cancel =
+        event.target.closest(
+          '.v33-life-cancel'
+        );
+
+
+      if (cancel) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+
+        cancelEmptyHolding(
+          cancel.dataset
+            .v33HoldingId
+        );
+
+
+        return;
+      }
+
+
+      const close =
+        event.target.closest(
+          '.v33-life-legacy-close'
+        );
+
+
+      if (close) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+
+        closeHolding(
+          close.dataset
+            .v33HoldingId
+        );
+
+
+        return;
+      }
+
+    },
+    true
+  );
+
+
+  legacyBridgeQueue();
 })();
