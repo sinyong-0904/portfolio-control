@@ -1,0 +1,980 @@
+"settings": {
+    "isaCycle": 3,
+    "crashRule": "VIX≥30 & S&P DD≤-10% → 1,000 / DD≤-20% → +1,000 / DD≤-30% 또는 VIX≥45 → +1,000",
+    "weeklyBuy": 100,
+    "crashBudget": 3000,
+    "parkingFloor": 10000,
+    "parkingTarget": 30
+  },
+  "dividends": {
+    "APR": {
+      "DC": 194433,
+      "ISA": 52760,
+      "일반": 92220,
+      "삼전우": 959370,
+      "개인연금1": 83304,
+      "개인연금2": 25875
+    },
+    "AUG": {
+      "DC": 337388,
+      "ISA": 64030,
+      "일반": 9500,
+      "삼전우": 633000,
+      "개인연금1": 146001,
+      "개인연금2": 66412
+    },
+    "DEC": {
+      "DC": 0,
+      "ISA": 0,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 0,
+      "개인연금2": 0
+    },
+    "FEB": {
+      "DC": 279624,
+      "ISA": 72800,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 123345,
+      "개인연금2": 51879
+    },
+    "JAN": {
+      "DC": 489630,
+      "ISA": 45624,
+      "일반": 6345,
+      "삼전우": 0,
+      "개인연금1": 80613,
+      "개인연금2": 24706
+    },
+    "JUL": {
+      "DC": 205086,
+      "ISA": 53195,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 90280,
+      "개인연금2": 27240
+    },
+    "JUN": {
+      "DC": 203670,
+      "ISA": 53195,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 88856,
+      "개인연금2": 26905
+    },
+    "MAR": {
+      "DC": 194433,
+      "ISA": 52760,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 83304,
+      "개인연금2": 24399
+    },
+    "MAY": {
+      "DC": 314574,
+      "ISA": 100923,
+      "일반": 18255,
+      "삼전우": 629424,
+      "개인연금1": 136475,
+      "개인연금2": 61176
+    },
+    "NOV": {
+      "DC": 0,
+      "ISA": 0,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 0,
+      "개인연금2": 0
+    },
+    "OCT": {
+      "DC": 0,
+      "ISA": 0,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 0,
+      "개인연금2": 0
+    },
+    "SEP": {
+      "DC": 0,
+      "ISA": 0,
+      "일반": 0,
+      "삼전우": 0,
+      "개인연금1": 0,
+      "개인연금2": 0
+    }
+  },
+  "growthV32": {
+    "years": {
+      "2026": {
+        "APR": {
+          "value": 93634,
+          "legacy": 8860,
+          "locked": true,
+          "cashChange": 305,
+          "totalChange": 11888,
+          "contribution": 58,
+          "investmentReturn": 2665
+        },
+        "AUG": {
+          "value": 99732,
+          "legacy": -900,
+          "locked": true,
+          "cashChange": 391,
+          "totalChange": 198,
+          "contribution": 58,
+          "investmentReturn": 649
+        },
+        "DEC": {
+          "value": null,
+          "legacy": 0,
+          "locked": false,
+          "cashChange": 0,
+          "totalChange": 0,
+          "contribution": 0,
+          "investmentReturn": 0
+        },
+        "FEB": {
+          "value": 91400,
+          "legacy": 6260,
+          "locked": true,
+          "cashChange": 100,
+          "totalChange": 7724,
+          "contribution": 158,
+          "investmentReturn": 1206
+        },
+        "JAN": {
+          "value": 83676,
+          "legacy": 5640,
+          "locked": true,
+          "cashChange": 808,
+          "totalChange": 11936,
+          "contribution": 3058,
+          "investmentReturn": 2430
+        },
+        "JUL": {
+          "value": 99534,
+          "legacy": -4200,
+          "locked": true,
+          "cashChange": 349,
+          "totalChange": -6063,
+          "contribution": 58,
+          "investmentReturn": -2270
+        },
+        "JUN": {
+          "value": 105597,
+          "legacy": 1900,
+          "locked": true,
+          "cashChange": 66,
+          "totalChange": 1018,
+          "contribution": 58,
+          "investmentReturn": -1006
+        },
+        "MAR": {
+          "value": 81746,
+          "legacy": -6940,
+          "locked": true,
+          "cashChange": -825,
+          "totalChange": -9654,
+          "contribution": 58,
+          "investmentReturn": -1947
+        },
+        "MAY": {
+          "value": 104579,
+          "legacy": 8840,
+          "locked": true,
+          "cashChange": 556,
+          "totalChange": 10945,
+          "contribution": 511,
+          "investmentReturn": 1038
+        },
+        "NOV": {
+          "value": null,
+          "legacy": 0,
+          "locked": false,
+          "cashChange": 0,
+          "totalChange": 0,
+          "contribution": 0,
+          "investmentReturn": 0
+        },
+        "OCT": {
+          "value": null,
+          "legacy": 0,
+          "locked": false,
+          "cashChange": 0,
+          "totalChange": 0,
+          "contribution": 0,
+          "investmentReturn": 0
+        },
+        "SEP": {
+          "value": 100263.9638,
+          "legacy": 500,
+          "locked": false,
+          "cashChange": 0,
+          "totalChange": 531.9637999999977,
+          "contribution": 0,
+          "investmentReturn": 31.96379999999772
+        }
+      }
+    },
+    "annual": {
+      "2025": {
+        "value": 71740,
+        "growth": 35.72,
+        "legacy": 9240,
+        "cashChange": -983,
+        "totalChange": 18881,
+        "contribution": 6489,
+        "investmentReturn": 4135
+      }
+    },
+    "version": 1,
+    "currentYear": 2026,
+    "currentStart": {
+      "totalValue": 99732,
+      "legacyValue": 37300,
+      "investmentValue": 43592
+    },
+    "rolloverWarnings": [],
+    "currentMonthIndex": 8
+  },
+  "cashAssets": [
+    {
+      "id": "cash1",
+      "name": "새마을예금 : 5000 (27'8.25) + 3000 (27'2.02)",
+      "rate": 0,
+      "balance": 8000,
+      "base2026": 8000,
+      "category": "예금",
+      "flow2026": -232,
+      "maturity": "2027-08-25",
+      "cumProfit": 663,
+      "ytdProfit": 232
+    },
+    {
+      "id": "cash2",
+      "name": "새마을출자금 : 2026 연이율 (02/26 : 4.65%)",
+      "rate": 4.65,
+      "balance": 2000,
+      "base2026": 2000,
+      "category": "출자금",
+      "flow2026": -93,
+      "maturity": "2027-02-26",
+      "cumProfit": 116,
+      "ytdProfit": 93
+    },
+    {
+      "id": "cash3",
+      "name": "청약2320(2010+H150+J160) 적금1100+2400",
+      "rate": 0,
+      "balance": 5820,
+      "base2026": 3373,
+      "category": "청약/적금",
+      "flow2026": 2447,
+      "maturity": "",
+      "cumProfit": 5820,
+      "ytdProfit": 0
+    },
+    {
+      "id": "cash4",
+      "name": "CMA(MMF) : 3717+3603-4342",
+      "rate": 0,
+      "balance": 3020,
+      "base2026": 3717,
+      "category": "CMA/MMF",
+      "flow2026": -739,
+      "maturity": "",
+      "cumProfit": 79,
+      "ytdProfit": 41
+    }
+  ],
+  "simulation": {
+    "rates": [
+      0.05,
+      0.08,
+      0.1,
+      0.12
+    ],
+    "events": {
+      "2030": 0,
+      "2032": 0
+    },
+    "updatedAt": "2026-09-01T08:21:37.612Z",
+    "horizonYears": 12,
+    "baseEventRate": 0.08,
+    "annualContributionMan": 5000
+  },
+  "tableMemos": {
+    "Unknown::Performance::구분|25 YTD|26 YTD|TR": {
+      "text": "",
+      "updatedAt": null
+    },
+    "Overview::Performance::구분|25 YTD|26 YTD|TR": {
+      "text": "test",
+      "updatedAt": "2026-09-01T09:24:20.731Z"
+    },
+    "계좌보유::Table::구분|종목|보유량|평단": {
+      "text": "",
+      "updatedAt": null
+    },
+    "계좌보유::Table::종목|보유량|목표|비중": {
+      "text": "test",
+      "updatedAt": "2026-09-01T09:24:31.132Z"
+    },
+    "시장가격::Table::종목|전일대비 |전일|현재가": {
+      "text": "",
+      "updatedAt": null
+    },
+    "계좌보유::Table::구분|평가액|누적손익|금 비중": {
+      "text": "",
+      "updatedAt": null
+    },
+    "Allocation::Core Allocation::자산|목표|현재|상대괴리": {
+      "text": "",
+      "updatedAt": null
+    },
+    "Allocation::Portfolio Exposure::구분|매수액|평가액|26 손익": {
+      "text": "",
+      "updatedAt": null
+    },
+    "Allocation::Portfolio Exposure::자산|매수액|평가액|26 손익": {
+      "text": "",
+      "updatedAt": null
+    }
+  },
+  "growthFixed": {
+    "2025": {
+      "value": 71740,
+      "growth": 35.72,
+      "legacy": 9240,
+      "cashChange": -983,
+      "totalChange": 18881,
+      "contribution": 6489,
+      "investmentReturn": 4135
+    }
+  },
+  "weeklyPlans": [
+    {
+      "DC": 200,
+      "P1": 65,
+      "P2": 35,
+      "ISA": 70,
+      "label": "~2025",
+      "weeklyTotal": 300
+    },
+    {
+      "DC": 60,
+      "P1": 20,
+      "P2": 20,
+      "ISA": 40,
+      "label": "2026~",
+      "weeklyTotal": 100
+    },
+    {
+      "DC": 2389,
+      "P1": 654.6,
+      "P2": 360.8,
+      "ISA": 1356.9,
+      "label": "2026 실제매수",
+      "weeklyTotal": null
+    }
+  ],
+  "childProfiles": [
+    {
+      "owner": "서현",
+      "snapshotValueKRW": 9204073,
+      "snapshotCumPnlKRW": 697624
+    },
+    {
+      "owner": "서진",
+      "snapshotValueKRW": 9201170,
+      "snapshotCumPnlKRW": 692129
+    }
+  ],
+  "strategyNotes": {
+    "text": "",
+    "updatedAt": null
+  },
+  "performanceV33": {
+    "ytd25": {
+      "DC": 9.94,
+      "ISA": 17.45,
+      "HEDGE": 18.84,
+      "Total": 12.65,
+      "EQUITY": 21.32,
+      "INCOME": 8.55,
+      "PARKING": 3.24,
+      "연금(1)": 14.03,
+      "연금(2)": 17.3,
+      "연금합산": 11.22,
+      "일반계좌": 37.21,
+      "자녀연금": 1.75
+    },
+    "version": 1,
+    "reference": {
+      "DC": {
+        "tr": 17.22,
+        "twr": 17.48,
+        "y26": 6.86,
+        "cagr": 9.99
+      },
+      "ISA": {
+        "tr": 17.5,
+        "twr": 23.62,
+        "y26": 5.25,
+        "cagr": 13.35
+      },
+      "HEDGE": {
+        "tr": 20.23,
+        "twr": 20.17,
+        "y26": 1.12,
+        "cagr": 11.47
+      },
+      "Total": {
+        "tr": 18.8,
+        "twr": 20.28,
+        "y26": 6.77,
+        "cagr": 11.53
+      },
+      "EQUITY": {
+        "tr": 23.57,
+        "twr": 33.26,
+        "y26": 9.84,
+        "cagr": 18.49
+      },
+      "INCOME": {
+        "tr": 22,
+        "twr": 18.1,
+        "y26": 8.8,
+        "cagr": 10.33
+      },
+      "PARKING": {
+        "tr": 6.12,
+        "twr": 5.42,
+        "y26": 2.12,
+        "cagr": 3.17
+      },
+      "연금(1)": {
+        "tr": 18.62,
+        "twr": 19.68,
+        "y26": 4.95,
+        "cagr": 11.2
+      },
+      "연금(2)": {
+        "tr": 18.64,
+        "twr": 24.21,
+        "y26": 5.89,
+        "cagr": 13.67
+      },
+      "연금합산": {
+        "tr": 17.09,
+        "twr": 18.23,
+        "y26": 6.3,
+        "cagr": 10.4
+      },
+      "일반계좌": {
+        "tr": 66.42,
+        "twr": 66.42,
+        "y26": 21.29,
+        "cagr": 35.12
+      },
+      "자녀연금": {
+        "tr": 8.55,
+        "twr": 9.54,
+        "y26": 7.66,
+        "cagr": 11.43
+      }
+    }
+  },
+  "pensionSnapshot": {
+    "groups": {
+      "HEDGE": {
+        "ytdDenomKRW": 94510978.04391217,
+        "snapshotBuyKRW": 109772169.5,
+        "snapshotEvalKRW": 127359745,
+        "snapshotYtdRate": 10.02,
+        "snapshotCumPnlMan": 2037,
+        "snapshotYtdPnlMan": 947
+      },
+      "INDEX": {
+        "ytdDenomKRW": 86148648.64864865,
+        "snapshotBuyKRW": 82070309.5,
+        "snapshotEvalKRW": 103905705,
+        "snapshotYtdRate": 11.84,
+        "snapshotCumPnlMan": 2567,
+        "snapshotYtdPnlMan": 1020
+      },
+      "PARKING": {
+        "ytdDenomKRW": 108095238.09523809,
+        "snapshotBuyKRW": 96495138,
+        "snapshotEvalKRW": 98776682,
+        "snapshotYtdRate": 2.1,
+        "snapshotCumPnlMan": 577,
+        "snapshotYtdPnlMan": 227
+      }
+    },
+    "details": {
+      "BOND": {
+        "ytdDenomKRW": 20403587.443946186,
+        "snapshotBuyKRW": 18430510.099999998,
+        "snapshotEvalKRW": 20169780,
+        "snapshotYtdRate": 8.92,
+        "snapshotCumPnlMan": 142,
+        "snapshotYtdPnlMan": 182
+      },
+      "GOLD": {
+        "ytdDenomKRW": 25614035.0877193,
+        "snapshotBuyKRW": 25686933,
+        "snapshotEvalKRW": 31977800,
+        "snapshotYtdRate": -2.85,
+        "snapshotCumPnlMan": 713,
+        "snapshotYtdPnlMan": -73
+      },
+      "K-DVD": {
+        "ytdDenomKRW": 22404181.18466899,
+        "snapshotBuyKRW": 27448612.4,
+        "snapshotEvalKRW": 34278660,
+        "snapshotYtdRate": 28.7,
+        "snapshotCumPnlMan": 864,
+        "snapshotYtdPnlMan": 643
+      },
+      "TOTAL": {
+        "ytdDenomKRW": 187690839.6946565,
+        "snapshotBuyKRW": 191842479,
+        "snapshotEvalKRW": 231265450,
+        "snapshotYtdRate": 10.48,
+        "snapshotCumPnlMan": 4604,
+        "snapshotYtdPnlMan": 1967
+      },
+      "WORLD": {
+        "ytdDenomKRW": 6766917.293233082,
+        "snapshotBuyKRW": 6751815,
+        "snapshotEvalKRW": 6980610,
+        "snapshotYtdRate": 3.99,
+        "snapshotCumPnlMan": 27,
+        "snapshotYtdPnlMan": 27
+      },
+      "GLOBAL": {
+        "ytdDenomKRW": 8913502.10970464,
+        "snapshotBuyKRW": 11653716,
+        "snapshotEvalKRW": 13388480,
+        "snapshotYtdRate": 18.96,
+        "snapshotCumPnlMan": 175,
+        "snapshotYtdPnlMan": 169
+      },
+      "NASDAQ": {
+        "ytdDenomKRW": 43064516.12903226,
+        "snapshotBuyKRW": 39688972.5,
+        "snapshotEvalKRW": 52271255,
+        "snapshotYtdRate": 12.4,
+        "snapshotCumPnlMan": 1294,
+        "snapshotYtdPnlMan": 534
+      },
+      "S&P500": {
+        "ytdDenomKRW": 43173431.73431734,
+        "snapshotBuyKRW": 42381337,
+        "snapshotEvalKRW": 51634450,
+        "snapshotYtdRate": 8.13,
+        "snapshotCumPnlMan": 986,
+        "snapshotYtdPnlMan": 351
+      },
+      "US-CVD": {
+        "ytdDenomKRW": 17171717.171717174,
+        "snapshotBuyKRW": 19800583,
+        "snapshotEvalKRW": 20564415,
+        "snapshotYtdRate": 7.92,
+        "snapshotCumPnlMan": 233,
+        "snapshotYtdPnlMan": 136
+      }
+    }
+  },
+  "dividendAccounts": [
+    "DC",
+    "개인연금1",
+    "개인연금2",
+    "ISA",
+    "일반",
+    "삼전우"
+  ],
+  "fixedPerformance": {
+    "HEDGE": {
+      "ytd25": 12.71,
+      "durationYears": 1.6731
+    },
+    "INDEX": {
+      "ytd25": 21.32,
+      "durationYears": 1.6731
+    },
+    "Total": {
+      "ytd25": 12.65,
+      "durationYears": 1.6731
+    },
+    "PARKING": {
+      "ytd25": 3.24,
+      "durationYears": 1.6731
+    },
+    "연금합산": {
+      "ytd25": 11.22,
+      "durationYears": 1.6731
+    }
+  },
+  "incomeTaxHistory": {
+    "note": "[2024]\n2024 근로소득 세전/세후 : 14,020/10,574만원 - 연지출 5,473만원(월평균 456) = 잔액 5,101만원\n\n[2025]\n계약연봉 101,436,000 : 기준급 4,226,000 / 전환급 3,546,000 / 고시외 681,000 / 시급 32,384\n2025 근로소득 세전/세후 : 16,176/11,506만원 - 연지출 6,000만원(월평균 500) = 잔액 5,506만원\n\n[2026]\n계약연봉 105,612,000 : 기준급 4,400,000 / 전환급 3,692,000 / 고시외 709,000 / 시급 33,717",
+    "rows": [
+      {
+        "net": 42123670,
+        "tax": 5541540,
+        "year": 2008,
+        "change": null,
+        "salary": 50341840,
+        "taxRate": 25.18,
+        "finalTax": 14178863,
+        "withheld": 56302533,
+        "deduction": 2676630
+      },
+      {
+        "net": 46164260,
+        "tax": 5593640,
+        "year": 2009,
+        "change": 10.29,
+        "salary": 55838000,
+        "taxRate": 25.66,
+        "finalTax": 15934126,
+        "withheld": 62098386,
+        "deduction": 4080100
+      },
+      {
+        "net": 58516540,
+        "tax": 6435470,
+        "year": 2010,
+        "change": 12.47,
+        "salary": 69274430,
+        "taxRate": 16.22,
+        "finalTax": 11325791,
+        "withheld": 69842331,
+        "deduction": 4322420
+      },
+      {
+        "net": 58546090,
+        "tax": 7149850,
+        "year": 2011,
+        "change": 3.52,
+        "salary": 71079360,
+        "taxRate": 19.03,
+        "finalTax": 13755730,
+        "withheld": 72301820,
+        "deduction": 5383420
+      },
+      {
+        "net": 61597870,
+        "tax": 5692700,
+        "year": 2012,
+        "change": 5.06,
+        "salary": 72884250,
+        "taxRate": 18.91,
+        "finalTax": 14363730,
+        "withheld": 75961600,
+        "deduction": 5593680
+      },
+      {
+        "net": 67811070,
+        "tax": 8539400,
+        "year": 2013,
+        "change": 10.91,
+        "salary": 82569710,
+        "taxRate": 19.51,
+        "finalTax": 16438100,
+        "withheld": 84249170,
+        "deduction": 6219240
+      },
+      {
+        "net": 69354950,
+        "tax": 9184940,
+        "year": 2014,
+        "change": 5.01,
+        "salary": 85475260,
+        "taxRate": 21.61,
+        "finalTax": 19114810,
+        "withheld": 88469760,
+        "deduction": 6935370
+      },
+      {
+        "net": 70547150,
+        "tax": 9192330,
+        "year": 2015,
+        "change": 0.75,
+        "salary": 86200440,
+        "taxRate": 20.85,
+        "finalTax": 18583130,
+        "withheld": 89130280,
+        "deduction": 6460960
+      },
+      {
+        "net": 81288440,
+        "tax": 12940970,
+        "year": 2016,
+        "change": 17.28,
+        "salary": 101000000,
+        "taxRate": 22.23,
+        "finalTax": 23239240,
+        "withheld": 104527680,
+        "deduction": 7031870
+      },
+      {
+        "net": 90122280,
+        "tax": 15535000,
+        "year": 2017,
+        "change": 11.05,
+        "salary": 114000000,
+        "taxRate": 22.36,
+        "finalTax": 25950520,
+        "withheld": 116072800,
+        "deduction": 8244340
+      },
+      {
+        "net": 87514210,
+        "tax": 18470100,
+        "year": 2018,
+        "change": 5.73,
+        "salary": 115000000,
+        "taxRate": 28.69,
+        "finalTax": 35214290,
+        "withheld": 122728500,
+        "deduction": 9403780
+      },
+      {
+        "net": 81650270,
+        "tax": 12597770,
+        "year": 2019,
+        "change": -11.64,
+        "salary": 104000000,
+        "taxRate": 24.71,
+        "finalTax": 26790770,
+        "withheld": 108441040,
+        "deduction": 10071910
+      },
+      {
+        "net": 95288900,
+        "tax": 16542650,
+        "year": 2020,
+        "change": 17.39,
+        "salary": 122000000,
+        "taxRate": 25.14,
+        "finalTax": 32008240,
+        "withheld": 127297140,
+        "deduction": 9760410
+      },
+      {
+        "net": 101792170,
+        "tax": 23869470,
+        "year": 2021,
+        "change": 11.74,
+        "salary": 137000000,
+        "taxRate": 28.43,
+        "finalTax": 40443880,
+        "withheld": 142236050,
+        "deduction": 11816510
+      },
+      {
+        "net": 105433410,
+        "tax": 24490650,
+        "year": 2022,
+        "change": 6.84,
+        "salary": 143000000,
+        "taxRate": 30.62,
+        "finalTax": 46534530,
+        "withheld": 151967940,
+        "deduction": 13184340
+      },
+      {
+        "net": 81436660,
+        "tax": 9053310,
+        "year": 2023,
+        "change": -26.62,
+        "salary": 103000000,
+        "taxRate": 26.97,
+        "finalTax": 30071725,
+        "withheld": 111508385,
+        "deduction": 13009290
+      },
+      {
+        "net": 105742210,
+        "tax": 17856490,
+        "year": 2024,
+        "change": 25.73,
+        "salary": 134000000,
+        "taxRate": 24.58,
+        "finalTax": 34457535,
+        "withheld": 140199745,
+        "deduction": 9983440
+      },
+      {
+        "net": 115063490,
+        "tax": 23712020,
+        "year": 2025,
+        "change": 15.38,
+        "salary": 153000000,
+        "taxRate": 28.87,
+        "finalTax": 46692370,
+        "withheld": 161755860,
+        "deduction": 14203170
+      },
+      {
+        "net": 56939860,
+        "tax": 8840980,
+        "year": 2026,
+        "change": null,
+        "salary": 76332720,
+        "taxRate": null,
+        "finalTax": null,
+        "withheld": null,
+        "deduction": 10551880
+      }
+    ],
+    "notes": {
+      "2024": "2024 근로소득 세전/세후 : 14,020/10,574만원 - 연지출 5,473만원(월평균 456) = 잔액 5,101만원",
+      "2025": "계약연봉 101,436,000 : 기준급 4,226,000 / 전환급 3,546,000 / 고시외 681,000 / 시급 32,384\n2025 근로소득 세전/세후 : 16,176/11,506만원 - 연지출 6,000만원(월평균 500) = 잔액 5,506만원",
+      "2026": "계약연봉 105,612,000 : 기준급 4,400,000 / 전환급 3,692,000 / 고시외 709,000 / 시급 33,717"
+    },
+    "noteUpdatedAt": "2026-09-01T08:45:15.817Z",
+    "unifiedNoteV1": true
+  },
+  "monthlyGrowth2026": {
+    "APR": {
+      "value": 93634,
+      "legacy": 8860,
+      "cashChange": 305,
+      "totalChange": 11888,
+      "contribution": 58,
+      "investmentReturn": 2665
+    },
+    "AUG": {
+      "value": null,
+      "legacy": null,
+      "cashChange": 390,
+      "totalChange": null,
+      "contribution": 58,
+      "investmentReturn": null
+    },
+    "DEC": {
+      "value": null,
+      "legacy": 0,
+      "cashChange": 0,
+      "totalChange": 0,
+      "contribution": 0,
+      "investmentReturn": 0
+    },
+    "FEB": {
+      "value": 91400,
+      "legacy": 6260,
+      "cashChange": 100,
+      "totalChange": 7724,
+      "contribution": 158,
+      "investmentReturn": 1206
+    },
+    "JAN": {
+      "value": 83676,
+      "legacy": 5640,
+      "cashChange": 808,
+      "totalChange": 11936,
+      "contribution": 3058,
+      "investmentReturn": 2430
+    },
+    "JUL": {
+      "value": 99534,
+      "legacy": -4200,
+      "cashChange": 349,
+      "totalChange": -6063,
+      "contribution": 58,
+      "investmentReturn": -2270
+    },
+    "JUN": {
+      "value": 105597,
+      "legacy": 1900,
+      "cashChange": 66,
+      "totalChange": 1018,
+      "contribution": 58,
+      "investmentReturn": -1006
+    },
+    "MAR": {
+      "value": 81746,
+      "legacy": -6940,
+      "cashChange": -825,
+      "totalChange": -9654,
+      "contribution": 58,
+      "investmentReturn": -1947
+    },
+    "MAY": {
+      "value": 104579,
+      "legacy": 8840,
+      "cashChange": 556,
+      "totalChange": 10945,
+      "contribution": 511,
+      "investmentReturn": 1038
+    },
+    "NOV": {
+      "value": null,
+      "legacy": 0,
+      "cashChange": 0,
+      "totalChange": 0,
+      "contribution": 0,
+      "investmentReturn": 0
+    },
+    "OCT": {
+      "value": null,
+      "legacy": 0,
+      "cashChange": 0,
+      "totalChange": 0,
+      "contribution": 0,
+      "investmentReturn": 0
+    },
+    "SEP": {
+      "value": null,
+      "legacy": 0,
+      "cashChange": 0,
+      "totalChange": 0,
+      "contribution": 0,
+      "investmentReturn": 0
+    }
+  },
+  "monthlyGrowthMeta": {
+    "currentMonth": "AUG",
+    "prevLegacyCum": 20360,
+    "prevInvestmentCum": 2116,
+    "priorYearEndValue": 71740
+  },
+  "pensionBucketSnapshot": {
+    "buckets": {
+      "HEDGE": {
+        "snapshotBuyMan": 4212,
+        "snapshotEvalMan": 4874,
+        "snapshotYtdRate": 1.12,
+        "snapshotCumPnlMan": 852,
+        "snapshotYtdPnlMan": 106
+      },
+      "EQUITY": {
+        "snapshotBuyMan": 10160,
+        "snapshotEvalMan": 12398,
+        "snapshotYtdRate": 9.84,
+        "snapshotCumPnlMan": 2395,
+        "snapshotYtdPnlMan": 848
+      },
+      "INCOME": {
+        "snapshotBuyMan": 5010,
+        "snapshotEvalMan": 5797,
+        "snapshotYtdRate": 8.8,
+        "snapshotCumPnlMan": 1102,
+        "snapshotYtdPnlMan": 758
+      },
+      "PARKING": {
+        "snapshotBuyMan": 9454,
+        "snapshotEvalMan": 9681,
+        "snapshotYtdRate": 2.12,
+        "snapshotCumPnlMan": 579,
+        "snapshotYtdPnlMan": 229
+      }
+    },
+    "version": 1,
+    "snapshotDate": "2026-08-28"
+  }
+}
