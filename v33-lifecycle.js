@@ -2526,7 +2526,7 @@
         const button =
           event.target
             .closest(
-              '.v33-life-close-btn'
+              '.v33-life-close-btn:not(.v33-life-v2-close)'
             );
 
         if (!button) {
