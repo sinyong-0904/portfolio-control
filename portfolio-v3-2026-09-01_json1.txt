@@ -1,0 +1,1528 @@
+{
+  "meta": {
+    "migrations": {
+      "growthAug2026ExcelCloseV1": {
+        "source": "user-verified Excel month-end close",
+        "aug2026": {
+          "value": 99732,
+          "legacy": -900,
+          "cashChange": 391,
+          "totalChange": 198,
+          "contribution": 58,
+          "investmentReturn": 649
+        },
+        "sepStart": {
+          "totalValue": 99732,
+          "legacyValue": 37300,
+          "investmentValue": 43592
+        },
+        "appliedAt": "2026-09-01T03:29:27.540Z"
+      }
+    },
+    "initialCash": 18073,
+    "lastSavedAt": "2026-09-01T09:34:44.580Z",
+    "yoyBaseDate": "2025-08-04",
+    "initialValue": 52859,
+    "lastBackupAt": "2026-09-01T09:36:10.506Z",
+    "previousDate": "2026-09-01",
+    "initialLegacy": 8600,
+    "schemaVersion": 33,
+    "valuationDate": "2026-09-01",
+    "yearStartDate": "2026-01-02",
+    "initialInvestment": 26186
+  },
+  "market": [
+    {
+      "fee": 0.139,
+      "code": "133690",
+      "kind": "ETF",
+      "name": "TIGER 미국나스닥100",
+      "low52": 141943,
+      "high52": 208599,
+      "current": 178930,
+      "yoyBase": 144430,
+      "netAssets": "114K",
+      "prevClose": 178930,
+      "yearStart": 163025,
+      "dividendYield": 0.64
+    },
+    {
+      "fee": 0.109,
+      "code": "360750",
+      "kind": "ETF",
+      "name": "TIGER 미국S&P500",
+      "low52": 21546,
+      "high52": 28929,
+      "current": 26225,
+      "yoyBase": 21885,
+      "netAssets": "204K",
+      "prevClose": 26225,
+      "yearStart": 24750,
+      "dividendYield": 1.06
+    },
+    {
+      "fee": 0.414,
+      "code": "441640",
+      "kind": "ETF",
+      "name": "KODEX 미국배당커버드콜액티브",
+      "low52": 10595,
+      "high52": 13752,
+      "current": 12682,
+      "yoyBase": 11690,
+      "netAssets": "16K",
+      "prevClose": 12682,
+      "yearStart": 12655,
+      "dividendYield": 8.59
+    },
+    {
+      "fee": 0.648,
+      "code": "0019K0",
+      "kind": "ETF",
+      "name": "TIME 나스닥채권50액티브",
+      "low52": 10781,
+      "high52": 15240,
+      "current": 13060,
+      "yoyBase": 11055,
+      "netAssets": "5465",
+      "prevClose": 13060,
+      "yearStart": 11440,
+      "dividendYield": 0.18
+    },
+    {
+      "fee": 0.409,
+      "code": "251600",
+      "kind": "ETF",
+      "name": "PLUS 고배당주채권혼합50",
+      "low52": 13172,
+      "high52": 16739,
+      "current": 15515,
+      "yoyBase": 13955,
+      "netAssets": "5942",
+      "prevClose": 15515,
+      "yearStart": 14300,
+      "dividendYield": 3.5
+    },
+    {
+      "fee": 0.618,
+      "code": "411060",
+      "kind": "ETF",
+      "name": "ACE KRX금현물",
+      "low52": 20850,
+      "high52": 37890,
+      "current": 27445,
+      "yoyBase": 21500,
+      "netAssets": "39K",
+      "prevClose": 27445,
+      "yearStart": 29005,
+      "dividendYield": 0
+    },
+    {
+      "fee": 0.225,
+      "code": "0113D0",
+      "kind": "ETF",
+      "name": "TIME 글로벌탑픽액티브",
+      "low52": 9485,
+      "high52": 13250,
+      "current": 11945,
+      "yoyBase": 10065,
+      "netAssets": "766",
+      "prevClose": 11945,
+      "yearStart": 9950,
+      "dividendYield": 0.14
+    },
+    {
+      "fee": 0.469,
+      "code": "0060H0",
+      "kind": "ETF",
+      "name": "TIGER 토탈월드스탁액티브",
+      "low52": 10304,
+      "high52": 14144,
+      "current": 12695,
+      "yoyBase": 10545,
+      "netAssets": "3938",
+      "prevClose": 12695,
+      "yearStart": 11840,
+      "dividendYield": 1.26
+    },
+    {
+      "fee": 0.064,
+      "code": "469830",
+      "kind": "ETF",
+      "name": "SOL 초단기채권액티브",
+      "low52": 52647,
+      "high52": 54367,
+      "current": 54367,
+      "yoyBase": 53495,
+      "netAssets": "10K",
+      "prevClose": 54367,
+      "yearStart": 53230,
+      "dividendYield": 1.57
+    },
+    {
+      "fee": 0.306,
+      "code": "161510",
+      "kind": "ETF",
+      "name": "PLUS 고배당주",
+      "low52": 18140,
+      "high52": 29764,
+      "current": 25430,
+      "yoyBase": 19580,
+      "netAssets": "23K",
+      "prevClose": 25430,
+      "yearStart": 21275,
+      "dividendYield": 3.54
+    },
+    {
+      "fee": 0.395,
+      "code": "466940",
+      "kind": "ETF",
+      "name": "TIGER 은행고배당플러스TOP10",
+      "low52": 18021,
+      "high52": 29591,
+      "current": 26880,
+      "yoyBase": 19380,
+      "netAssets": "7882",
+      "prevClose": 26880,
+      "yearStart": 21365,
+      "dividendYield": 3.44
+    },
+    {
+      "fee": 0.551,
+      "code": "466920",
+      "kind": "ETF",
+      "name": "SOL 조선TOP3플러스",
+      "low52": 24065,
+      "high52": 42968,
+      "current": 27735,
+      "yoyBase": 30875,
+      "netAssets": "15K",
+      "prevClose": 27735,
+      "yearStart": 32385,
+      "dividendYield": 0.11
+    },
+    {
+      "fee": 0.537,
+      "code": "449450",
+      "kind": "ETF",
+      "name": "PLUS K방산",
+      "low52": 42500,
+      "high52": 87945,
+      "current": 53865,
+      "yoyBase": 51475,
+      "netAssets": "10K",
+      "prevClose": 53865,
+      "yearStart": 52115,
+      "dividendYield": 0.13
+    },
+    {
+      "fee": 0.537,
+      "code": "434730",
+      "kind": "ETF",
+      "name": "HANARO 원자력 iSELECT",
+      "low52": 31753,
+      "high52": 97350,
+      "current": 59915,
+      "yoyBase": 37730,
+      "netAssets": "6756",
+      "prevClose": 59915,
+      "yearStart": 47460,
+      "dividendYield": 0.28
+    },
+    {
+      "fee": 0.708,
+      "code": "473640",
+      "kind": "ETF",
+      "name": "HANARO 글로벌금채굴기업",
+      "low52": 19411,
+      "high52": 44305,
+      "current": 35555,
+      "yoyBase": 20760,
+      "netAssets": "627",
+      "prevClose": 35555,
+      "yearStart": 32585,
+      "dividendYield": 0.21
+    },
+    {
+      "fee": 0.8,
+      "code": "570100",
+      "kind": "ETN",
+      "name": "한투 일본종합상사TOP5 ETN",
+      "low52": 14615,
+      "high52": 26800,
+      "current": 21225,
+      "yoyBase": 14790,
+      "netAssets": "650",
+      "prevClose": 21225,
+      "yearStart": 19015,
+      "dividendYield": 0
+    },
+    {
+      "fee": 0.437,
+      "code": "494670",
+      "kind": "ETF",
+      "name": "TIGER 조선TOP10",
+      "low52": 18960,
+      "high52": 33825,
+      "current": 21875,
+      "yoyBase": 24230,
+      "netAssets": "5946",
+      "prevClose": 21875,
+      "yearStart": 25955,
+      "dividendYield": 0.35
+    },
+    {
+      "fee": 0.543,
+      "code": "421320",
+      "kind": "ETF",
+      "name": "PLUS 우주항공",
+      "low52": 20010,
+      "high52": 50405,
+      "current": 26845,
+      "yoyBase": 22765,
+      "netAssets": "2547",
+      "prevClose": 26845,
+      "yearStart": 26380,
+      "dividendYield": 0.27
+    },
+    {
+      "fee": null,
+      "code": "033780",
+      "kind": "Stock",
+      "name": "KT&G",
+      "low52": 129700,
+      "high52": 192400,
+      "current": 177000,
+      "yoyBase": 147200,
+      "netAssets": "189K",
+      "prevClose": 177000,
+      "yearStart": 142100,
+      "dividendYield": 4.33
+    },
+    {
+      "fee": null,
+      "code": "005930",
+      "kind": "Stock",
+      "name": "삼성전자",
+      "low52": 67500,
+      "high52": 374500,
+      "current": 257000,
+      "yoyBase": 71800,
+      "netAssets": "13475K",
+      "prevClose": 257000,
+      "yearStart": 119900,
+      "dividendYield": 2.41
+    },
+    {
+      "fee": null,
+      "code": "005935",
+      "kind": "Stock",
+      "name": "삼성전자우",
+      "low52": 55100,
+      "high52": 243500,
+      "current": 187250,
+      "yoyBase": 58400,
+      "netAssets": "",
+      "prevClose": 187250,
+      "yearStart": 94400,
+      "dividendYield": 0
+    },
+    {
+      "fee": null,
+      "code": "IDX-NASDAQ",
+      "kind": "Index",
+      "name": "NASDAQ",
+      "low52": 20690,
+      "high52": 27190,
+      "current": 26402,
+      "yoyBase": 20650,
+      "netAssets": "",
+      "prevClose": 26402,
+      "yearStart": 23235,
+      "dividendYield": 0
+    },
+    {
+      "fee": null,
+      "code": "IDX-SP500",
+      "kind": "Index",
+      "name": "S&P500",
+      "low52": 6317,
+      "high52": 7800,
+      "current": 7712,
+      "yoyBase": 6238,
+      "netAssets": "",
+      "prevClose": 7712,
+      "yearStart": 6858,
+      "dividendYield": 0
+    },
+    {
+      "fee": null,
+      "code": "IDX-DOW",
+      "kind": "Index",
+      "name": "DOW JONES",
+      "low52": 43911,
+      "high52": 54744,
+      "current": 53560,
+      "yoyBase": 43589,
+      "netAssets": "",
+      "prevClose": 53560,
+      "yearStart": 48382,
+      "dividendYield": 0
+    },
+    {
+      "fee": null,
+      "code": "IDX-KOSPI",
+      "kind": "Index",
+      "name": "KOSPI",
+      "low52": 3032,
+      "high52": 9386,
+      "current": 6782,
+      "yoyBase": 3205,
+      "netAssets": "",
+      "prevClose": 6782,
+      "yearStart": 4309,
+      "dividendYield": 0
+    }
+  ],
+  "months": [
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC"
+  ],
+  "history": {
+    "years": {
+      "2025": {
+        "year": 2025,
+        "frozen": true,
+        "source": "user-verified 2025 year-end snapshot",
+        "assetMix": [
+          [
+            "예금",
+            23.46
+          ],
+          [
+            "Parking",
+            15.09
+          ],
+          [
+            "연금투자",
+            27.8
+          ],
+          [
+            "ISA투자",
+            6.55
+          ],
+          [
+            "일반투자",
+            2.24
+          ],
+          [
+            "삼전우",
+            24.87
+          ]
+        ],
+        "incomeSummary": [
+          [
+            "근로소득 세후",
+            11506,
+            "소비 약 6000"
+          ],
+          [
+            "예금성 자금",
+            5506,
+            ""
+          ],
+          [
+            "DC",
+            1755,
+            "9.94%"
+          ],
+          [
+            "개인(1)",
+            837,
+            "14.03%"
+          ],
+          [
+            "개인(2)",
+            396,
+            "17.30%"
+          ],
+          [
+            "연금전체",
+            2988,
+            "11.22%"
+          ],
+          [
+            "연금계좌 파킹제외",
+            2638,
+            "16.66%"
+          ],
+          [
+            "ISA",
+            698,
+            "17.45%"
+          ],
+          [
+            "일반",
+            435,
+            "37.21%"
+          ],
+          [
+            "ISA/일반 합산수익",
+            1133,
+            "20.96%"
+          ],
+          [
+            "투자계좌 전체",
+            4135,
+            "12.65%"
+          ],
+          [
+            "삼전우",
+            9240,
+            "107.44%"
+          ],
+          [
+            "총 자산증가액",
+            18881,
+            "32.37%"
+          ]
+        ],
+        "pensionDetail": [
+          [
+            "NASDAQ",
+            3558,
+            4303,
+            760,
+            21.36,
+            22.99,
+            23.81
+          ],
+          [
+            "S&P500",
+            3700,
+            4311,
+            636,
+            71.18,
+            16.52,
+            23.86
+          ],
+          [
+            "US CVD",
+            1650,
+            1712,
+            97,
+            5.58,
+            3.77,
+            9.48
+          ],
+          [
+            "K-DIVIDEND",
+            2081,
+            2241,
+            222,
+            10.65,
+            10.65,
+            12.4
+          ],
+          [
+            "BOND ETF",
+            2086,
+            2036,
+            -40,
+            -1.92,
+            -1.92,
+            11.27
+          ],
+          [
+            "GOLD ETF",
+            1873,
+            2576,
+            786,
+            41.95,
+            37.5,
+            14.25
+          ],
+          [
+            "GLOBAL",
+            885,
+            891,
+            6,
+            0.65,
+            0.65,
+            4.93
+          ],
+          [
+            "Sum",
+            15833,
+            18070,
+            2639,
+            16.67,
+            16.67,
+            100
+          ]
+        ],
+        "pensionBuckets": [
+          [
+            "INDEX",
+            7259,
+            8615,
+            1547,
+            21.31,
+            21.32,
+            29.82
+          ],
+          [
+            "HEDGE",
+            8575,
+            9455,
+            1090,
+            12.71,
+            12.71,
+            32.72
+          ],
+          [
+            "PARKING",
+            10787,
+            10824,
+            350,
+            3.24,
+            3.24,
+            37.46
+          ],
+          [
+            "Sum",
+            26621,
+            28894,
+            2988,
+            11.22,
+            11.22,
+            100
+          ]
+        ],
+        "financialAssets": [
+          [
+            "DC",
+            "25.03.24 개설, 12월말 1년치 퇴직급여 in",
+            16907,
+            745,
+            19407,
+            1755,
+            9.94,
+            1755,
+            27.05
+          ],
+          [
+            "개인연금1",
+            "매월 급여일 +579360 (~26.06)",
+            5307,
+            658,
+            6802,
+            837,
+            14.03,
+            837,
+            9.48
+          ],
+          [
+            "개인연금2",
+            "2026 납입한도 설정 필요",
+            1149,
+            1140,
+            2685,
+            396,
+            17.3,
+            396,
+            3.74
+          ],
+          [
+            "ISA",
+            "연 2000 in, 3년 해지(27'12.10)후 재가입",
+            1000,
+            3000,
+            4698,
+            698,
+            17.45,
+            698,
+            6.55
+          ],
+          [
+            "일반계좌",
+            "Pilot 종목 모니터링용 종합계좌",
+            505,
+            664,
+            1604,
+            435,
+            37.21,
+            435,
+            2.24
+          ],
+          [
+            "서현서진연금",
+            "1863=H(800/126)+J(800/137)",
+            1318,
+            282,
+            1614,
+            14,
+            1.75,
+            14,
+            2.25
+          ],
+          [
+            "투자계좌 전체",
+            "",
+            26186,
+            6489,
+            36810,
+            4135,
+            12.65,
+            4135,
+            51.31
+          ],
+          [
+            "새마을예금",
+            "5000 (26'8.25) + 3000 (26'1.31)",
+            13800,
+            -5800,
+            8000,
+            0,
+            null,
+            null,
+            11.15
+          ],
+          [
+            "새마을출자금",
+            "2024 연이율 (02/27 : 5.8%)",
+            500,
+            1500,
+            2000,
+            0,
+            null,
+            null,
+            2.79
+          ],
+          [
+            "청약2273 / 적금1100",
+            "청약2273(2010+H126+J137) / 적금1100",
+            3573,
+            -200,
+            3373,
+            0,
+            null,
+            null,
+            4.7
+          ],
+          [
+            "CMA (MMF)",
+            "200+400+3500-100-8=3992",
+            200,
+            3479,
+            3717,
+            38,
+            null,
+            null,
+            5.18
+          ],
+          [
+            "예금성 자금",
+            "",
+            18073,
+            -1021,
+            17090,
+            38,
+            0.22,
+            null,
+            23.82
+          ],
+          [
+            "삼전우",
+            "2000주 (평단 68710)",
+            8600,
+            0,
+            17840,
+            9240,
+            107.44,
+            5338,
+            24.87
+          ],
+          [
+            "전체 금융자산",
+            "",
+            52859,
+            5468,
+            71740,
+            18881,
+            32.37,
+            9473,
+            100
+          ]
+        ],
+        "personalInvestment": [
+          [
+            "K-DIVIDEND",
+            1086,
+            1296,
+            374,
+            34.64,
+            -2.66,
+            20.58
+          ],
+          [
+            "SHIP",
+            1034,
+            1191,
+            197,
+            19.01,
+            -18.17,
+            18.9
+          ],
+          [
+            "DEFENCE",
+            1019,
+            975,
+            -44,
+            -4.34,
+            -4.34,
+            15.47
+          ],
+          [
+            "NUCLEAR",
+            579,
+            726,
+            148,
+            25.49,
+            -18.34,
+            11.53
+          ],
+          [
+            "MINING",
+            813,
+            987,
+            174,
+            21.4,
+            -6.7,
+            15.67
+          ],
+          [
+            "JPN ETN",
+            463,
+            479,
+            16,
+            3.56,
+            -4.11,
+            7.61
+          ],
+          [
+            "KT&G/SEC",
+            412,
+            645,
+            237,
+            57.65,
+            null,
+            10.24
+          ],
+          [
+            "Sum",
+            5406,
+            6299,
+            1133,
+            20.96,
+            null,
+            100
+          ]
+        ]
+      }
+    },
+    "selectedYear": 2025
+  },
+  "mapping": {
+    "133690": {
+      "NASDAQ": 1
+    },
+    "251600": {
+      "K-DVD": 0.5,
+      "BOND": 0.5
+    },
+    "360750": {
+      "S&P500": 1
+    },
+    "411060": {
+      "GOLD": 1
+    },
+    "441640": {
+      "US-CVD": 1
+    },
+    "466940": {
+      "K-DVD": 1
+    },
+    "469830": {
+      "PARKING": 1
+    },
+    "0019K0": {
+      "BOND": 0.5,
+      "NASDAQ": 0.5
+    },
+    "0060H0": {
+      "WORLD": 1
+    },
+    "0113D0": {
+      "GLOBAL": 1
+    }
+  },
+  "targets": {
+    "BOND": {
+      "band": 0.1,
+      "target": 0.1
+    },
+    "GOLD": {
+      "band": 0.1,
+      "target": 0.15
+    },
+    "K-DVD": {
+      "band": 0.1,
+      "target": 0.15
+    },
+    "NASDAQ": {
+      "band": 0.1,
+      "target": 0.25
+    },
+    "S&P500": {
+      "band": 0.1,
+      "target": 0.25
+    },
+    "US-CVD": {
+      "band": 0.1,
+      "target": 0.1
+    }
+  },
+  "version": 3.3,
+  "accounts": [
+    {
+      "id": "DC",
+      "name": "DC",
+      "note": "25.03.24 개설, 12월말 1년치 퇴직급여 in",
+      "group": "Pension",
+      "ytd25": 9.94,
+      "annual": {
+        "2024": 16907,
+        "2025": 745,
+        "2026": 453
+      },
+      "cashKRW": 17975,
+      "base2026": 19407,
+      "category": "Investment",
+      "durationYears": 1.6731
+    },
+    {
+      "id": "P1",
+      "name": "개인연금1",
+      "note": "매월 급여일 +579360 (~27.06)",
+      "group": "Pension",
+      "ytd25": 14.03,
+      "annual": {
+        "2024": 5307,
+        "2025": 658,
+        "2026": 464
+      },
+      "cashKRW": 9732,
+      "base2026": 6802,
+      "category": "Investment",
+      "durationYears": 1.6731
+    },
+    {
+      "id": "P2",
+      "name": "개인연금2",
+      "note": "2026 납입한도 설정 필요",
+      "group": "Pension",
+      "ytd25": 17.3,
+      "annual": {
+        "2024": 1149,
+        "2025": 1140,
+        "2026": 1000
+      },
+      "cashKRW": 8362,
+      "base2026": 2685,
+      "category": "Investment",
+      "durationYears": 1.6731
+    },
+    {
+      "id": "ISA",
+      "name": "ISA",
+      "note": "연 2000 in, 3년 해지(27.12.10) 후 재가입",
+      "group": "ISA",
+      "ytd25": 17.45,
+      "annual": {
+        "2024": 503,
+        "2025": 3497,
+        "2026": 2000
+      },
+      "cashKRW": 15818,
+      "base2026": 4698,
+      "category": "Investment",
+      "durationYears": 1.6731
+    },
+    {
+      "id": "GENERAL",
+      "name": "일반계좌",
+      "note": "Pilot 종목 모니터링용 종합계좌",
+      "group": "Pilot",
+      "ytd25": 37.21,
+      "annual": {
+        "2024": 505,
+        "2025": 664,
+        "2026": 0
+      },
+      "cashKRW": 16500,
+      "base2026": 1604,
+      "category": "Investment",
+      "durationYears": 1.6731
+    },
+    {
+      "id": "CHILD",
+      "name": "자녀연금계좌",
+      "note": "서현·서진 각각 나스닥채권50 + KRX금현물",
+      "group": "Children",
+      "ytd25": 1.75,
+      "annual": {
+        "2024": 0,
+        "2025": 1600,
+        "2026": 100
+      },
+      "cashKRW": 0,
+      "base2026": 1614,
+      "category": "Investment",
+      "durationYears": 0.8233,
+      "manualValueKRW": 0
+    },
+    {
+      "id": "SAMSUNG_PREF",
+      "name": "삼성전자우",
+      "note": "2000주, 평단 68710",
+      "group": "Legacy",
+      "ytd25": 107.44,
+      "annual": {},
+      "cashKRW": 0,
+      "base2026": 17840,
+      "category": "Legacy",
+      "durationYears": 1.6731
+    }
+  ],
+  "holdings": [
+    {
+      "id": "h1",
+      "avg": 132718,
+      "qty": 148,
+      "code": "133690",
+      "status": "Active",
+      "target": 20,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 178728
+    },
+    {
+      "id": "h2",
+      "avg": 21486,
+      "qty": 1206,
+      "code": "360750",
+      "status": "Active",
+      "target": 25,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 348063
+    },
+    {
+      "id": "h3",
+      "avg": 12275,
+      "qty": 708,
+      "code": "441640",
+      "status": "Active",
+      "target": 10,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 693045
+    },
+    {
+      "id": "h4",
+      "avg": 12168,
+      "qty": 317,
+      "code": "0019K0",
+      "status": "Active",
+      "target": 10,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 4389
+    },
+    {
+      "id": "h5",
+      "avg": 14009,
+      "qty": 1104,
+      "code": "251600",
+      "status": "Active",
+      "target": 10,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 464592
+    },
+    {
+      "id": "h6",
+      "avg": 24173,
+      "qty": 656,
+      "code": "411060",
+      "status": "Active",
+      "target": 15,
+      "account": "DC",
+      "realized": 747202,
+      "cumDividend": 420
+    },
+    {
+      "id": "h7",
+      "avg": 19805,
+      "qty": 910,
+      "code": "466940",
+      "status": "Active",
+      "target": 10,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 828928
+    },
+    {
+      "id": "h8",
+      "avg": 10698,
+      "qty": 580,
+      "code": "0113D0",
+      "status": "Active",
+      "target": 5,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 6656
+    },
+    {
+      "id": "h9",
+      "avg": 12610,
+      "qty": 321,
+      "code": "0060H0",
+      "status": "Active",
+      "target": 5,
+      "account": "DC",
+      "realized": 0,
+      "cumDividend": 17264
+    },
+    {
+      "id": "h10",
+      "avg": 52939,
+      "qty": 1303,
+      "code": "469830",
+      "status": "Active",
+      "target": 30,
+      "account": "DC",
+      "realized": 1096570,
+      "cumDividend": 1320900
+    },
+    {
+      "id": "h11",
+      "avg": 135912,
+      "qty": 73,
+      "code": "133690",
+      "status": "Active",
+      "target": 20,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 115379
+    },
+    {
+      "id": "h12",
+      "avg": 22510,
+      "qty": 452,
+      "code": "360750",
+      "status": "Active",
+      "target": 25,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 126835
+    },
+    {
+      "id": "h13",
+      "avg": 12261,
+      "qty": 712,
+      "code": "441640",
+      "status": "Active",
+      "target": 10,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 712185
+    },
+    {
+      "id": "h14",
+      "avg": 12162,
+      "qty": 324,
+      "code": "0019K0",
+      "status": "Active",
+      "target": 10,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 4599
+    },
+    {
+      "id": "h15",
+      "avg": 14559,
+      "qty": 353,
+      "code": "251600",
+      "status": "Active",
+      "target": 20,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 137542
+    },
+    {
+      "id": "h16",
+      "avg": 21260,
+      "qty": 295,
+      "code": "411060",
+      "status": "Active",
+      "target": 15,
+      "account": "P1",
+      "realized": 59296,
+      "cumDividend": 295
+    },
+    {
+      "id": "h17",
+      "avg": 10397,
+      "qty": 281,
+      "code": "0113D0",
+      "status": "Active",
+      "target": 5,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 3664
+    },
+    {
+      "id": "h18",
+      "avg": 11977,
+      "qty": 140,
+      "code": "0060H0",
+      "status": "Active",
+      "target": 5,
+      "account": "P1",
+      "realized": 0,
+      "cumDividend": 14560
+    },
+    {
+      "id": "h19",
+      "avg": 53615,
+      "qty": 359,
+      "code": "469830",
+      "status": "Active",
+      "target": 30,
+      "account": "P1",
+      "realized": 23139,
+      "cumDividend": 350200
+    },
+    {
+      "id": "h20",
+      "avg": 138898,
+      "qty": 42,
+      "code": "133690",
+      "status": "Active",
+      "target": 20,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 55369
+    },
+    {
+      "id": "h21",
+      "avg": 21702,
+      "qty": 325,
+      "code": "360750",
+      "status": "Active",
+      "target": 25,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 128638
+    },
+    {
+      "id": "h22",
+      "avg": 12496,
+      "qty": 230,
+      "code": "441640",
+      "status": "Active",
+      "target": 10,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 156116
+    },
+    {
+      "id": "h23",
+      "avg": 11725,
+      "qty": 129,
+      "code": "0019K0",
+      "status": "Active",
+      "target": 10,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 1764
+    },
+    {
+      "id": "h24",
+      "avg": 14299,
+      "qty": 207,
+      "code": "251600",
+      "status": "Active",
+      "target": 20,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 97674
+    },
+    {
+      "id": "h25",
+      "avg": 20565,
+      "qty": 173,
+      "code": "411060",
+      "status": "Active",
+      "target": 15,
+      "account": "P2",
+      "realized": 27321,
+      "cumDividend": 173
+    },
+    {
+      "id": "h26",
+      "avg": 10069,
+      "qty": 251,
+      "code": "0113D0",
+      "status": "Active",
+      "target": 5,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 4000
+    },
+    {
+      "id": "h27",
+      "avg": 12085,
+      "qty": 85,
+      "code": "0060H0",
+      "status": "Active",
+      "target": 5,
+      "account": "P2",
+      "realized": 0,
+      "cumDividend": 8840
+    },
+    {
+      "id": "h28",
+      "avg": 53228,
+      "qty": 126,
+      "code": "469830",
+      "status": "Active",
+      "target": 30,
+      "account": "P2",
+      "realized": 208110,
+      "cumDividend": 850
+    },
+    {
+      "id": "h29",
+      "avg": 18656,
+      "qty": 344,
+      "code": "161510",
+      "status": "Active",
+      "target": 15,
+      "account": "ISA",
+      "realized": 624900,
+      "cumDividend": 392190
+    },
+    {
+      "id": "h30",
+      "avg": 18389,
+      "qty": 321,
+      "code": "466940",
+      "status": "Active",
+      "target": 15,
+      "account": "ISA",
+      "realized": 652800,
+      "cumDividend": 393589
+    },
+    {
+      "id": "h31",
+      "avg": 29363,
+      "qty": 262,
+      "code": "466920",
+      "status": "Active",
+      "target": 15,
+      "account": "ISA",
+      "realized": 32740,
+      "cumDividend": 12948
+    },
+    {
+      "id": "h32",
+      "avg": 55423,
+      "qty": 163,
+      "code": "449450",
+      "status": "Active",
+      "target": 15,
+      "account": "ISA",
+      "realized": 0,
+      "cumDividend": 11100
+    },
+    {
+      "id": "h33",
+      "avg": 52153,
+      "qty": 131,
+      "code": "434730",
+      "status": "Active",
+      "target": 10,
+      "account": "ISA",
+      "realized": 0,
+      "cumDividend": 24115
+    },
+    {
+      "id": "h34",
+      "avg": 27767,
+      "qty": 357,
+      "code": "473640",
+      "status": "Active",
+      "target": 15,
+      "account": "ISA",
+      "realized": 0,
+      "cumDividend": 24240
+    },
+    {
+      "id": "h35",
+      "avg": 21067,
+      "qty": 491,
+      "code": "570100",
+      "status": "Active",
+      "target": 15,
+      "account": "ISA",
+      "realized": 0,
+      "cumDividend": 0
+    },
+    {
+      "id": "h36",
+      "avg": 53232,
+      "qty": 116,
+      "code": "469830",
+      "status": "Active",
+      "target": 30,
+      "account": "ISA",
+      "realized": 128570,
+      "cumDividend": 0
+    },
+    {
+      "id": "h37",
+      "avg": 20849,
+      "qty": 153,
+      "code": "494670",
+      "status": "Active",
+      "target": 25,
+      "account": "GENERAL",
+      "realized": 0,
+      "cumDividend": 8140
+    },
+    {
+      "id": "h38",
+      "avg": 49657,
+      "qty": 39,
+      "code": "449450",
+      "status": "Active",
+      "target": 15,
+      "account": "GENERAL",
+      "realized": 0,
+      "cumDividend": 2925
+    },
+    {
+      "id": "h39",
+      "avg": 39683,
+      "qty": 98,
+      "code": "421320",
+      "status": "Active",
+      "target": 20,
+      "account": "GENERAL",
+      "realized": 0,
+      "cumDividend": 5880
+    },
+    {
+      "id": "h40",
+      "avg": 123800,
+      "qty": 20,
+      "code": "033780",
+      "status": "Active",
+      "target": 15,
+      "account": "GENERAL",
+      "realized": 0,
+      "cumDividend": 101530
+    },
+    {
+      "id": "h41",
+      "avg": 54700,
+      "qty": 30,
+      "code": "005930",
+      "status": "Active",
+      "target": 25,
+      "account": "GENERAL",
+      "realized": 0,
+      "cumDividend": 28170
+    },
+    {
+      "id": "h42",
+      "avg": 68710,
+      "qty": 2000,
+      "code": "005935",
+      "status": "Active",
+      "target": 0,
+      "account": "SAMSUNG_PREF",
+      "realized": 0,
+      "cumDividend": 14620000
+    },
+    {
+      "id": "child-h1",
+      "avg": 11577,
+      "qty": 505,
+      "code": "0019K0",
+      "owner": "서현",
+      "status": "Active",
+      "target": 70,
+      "account": "CHILD",
+      "realized": 0,
+      "cumDividend": 0
+    },
+    {
+      "id": "child-h2",
+      "avg": 27709,
+      "qty": 96,
+      "code": "411060",
+      "owner": "서현",
+      "status": "Active",
+      "target": 30,
+      "account": "CHILD",
+      "realized": 0,
+      "cumDividend": 0
+    },
+    {
+      "id": "child-h3",
+      "avg": 11577,
+      "qty": 505,
+      "code": "0019K0",
+      "owner": "서진",
+      "status": "Active",
+      "target": 70,
+      "account": "CHILD",
+      "realized": 0,
+      "cumDividend": 0
+    },
+    {
+      "id": "child-h4",
+      "avg": 27736,
+      "qty": 96,
+      "code": "411060",
+      "owner": "서진",
+      "status": "Active",
+      "target": 30,
+      "account": "CHILD",
+      "realized": 0,
+      "cumDividend": 0
+    }
+  ],
