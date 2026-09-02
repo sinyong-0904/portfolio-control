@@ -663,17 +663,45 @@
   function applyMoneyFormatV33() {
 
     //
-    // Overview Financial Assets만
-    // 안전하게 상세 금액 형식 적용.
-    //
-    // 계좌 평가액 DOM 자동탐색은
-    // Overview / Simulation의 숫자를
-    // 계좌 KPI로 오인할 수 있으므로
-    // v3.3 계좌 view를 직접 수정하기 전까지
-    // 비활성화한다.
+    // Overview
     //
 
     updateFinancialMoneyV33();
+
+
+    //
+    // 계좌·보유 탭에서만
+    // 계좌별 평가액 상세 표시 적용.
+    //
+    // 다른 탭에서는 실행하지 않으므로
+    // Overview donut / Simulation 숫자를
+    // 잘못 덮어쓰는 기존 DOM collision을 방지한다.
+    //
+
+    const activeTab =
+      document.querySelector(
+        '[data-v33-final-tab][aria-selected="true"], ' +
+        '[data-v33-final-tab].active, ' +
+        '[data-v33-final-tab].selected'
+      );
+
+
+    const tabName =
+      String(
+        activeTab?.dataset?.v33FinalTab ||
+        activeTab?.textContent ||
+        ''
+      )
+        .replace(/\s+/g, '')
+        .trim();
+
+
+    if (
+      tabName === '계좌·보유'
+    ) {
+
+      updateAccountMoneyV33();
+    }
   }
 
 
