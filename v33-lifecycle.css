@@ -1,0 +1,284 @@
+/* Portfolio Control v3.3 - Holding lifecycle / advanced settings */
+
+.v33-lifecycle-root {
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid rgba(127, 127, 127, .24);
+  border-radius: 12px;
+  background: rgba(127, 127, 127, .035);
+}
+
+.v33-life-head,
+.v33-life-modal-head,
+.v33-life-actions,
+.v33-life-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.v33-life-title,
+.v33-life-modal-title {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.v33-life-subtitle {
+  margin: 14px 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.v33-life-advanced {
+  margin-top: 10px;
+  border-top: 1px solid rgba(127, 127, 127, .18);
+}
+
+.v33-life-advanced > summary {
+  cursor: pointer;
+  padding: 10px 2px 2px;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: .72;
+  user-select: none;
+}
+
+.v33-life-advanced-body {
+  padding-top: 4px;
+}
+
+.v33-life-master-wrap,
+.v33-life-closed-wrap {
+  margin-top: 8px;
+}
+
+.v33-life-master-table input {
+  width: 100%;
+  min-width: 92px;
+  box-sizing: border-box;
+  font-size: 11px;
+}
+
+.v33-life-master-table .v33-life-code {
+  min-width: 74px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.v33-life-auto {
+  min-width: 130px;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.v33-life-auto.is-live {
+  font-weight: 700;
+}
+
+.v33-life-auto.is-missing {
+  opacity: .55;
+}
+
+.v33-life-help {
+  margin-top: 7px;
+  font-size: 10px;
+  line-height: 1.45;
+  opacity: .62;
+}
+
+.v33-life-actions {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.v33-life-empty {
+  padding: 10px 2px;
+  font-size: 11px;
+  opacity: .55;
+}
+
+.v33-life-closed-title {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(127, 127, 127, .16);
+}
+
+.v33-life-close-btn,
+.v33-life-reopen {
+  white-space: nowrap;
+}
+
+.v33-life-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, .46);
+}
+
+.v33-life-modal-back[hidden] {
+  display: none !important;
+}
+
+.v33-life-modal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid rgba(127, 127, 127, .28);
+  border-radius: 14px;
+  background: var(--card, var(--bg, #fff));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .24);
+}
+
+.v33-life-modal-head {
+  margin-bottom: 14px;
+}
+
+.v33-life-form {
+  display: grid;
+  gap: 10px;
+}
+
+.v33-life-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.v33-life-form input,
+.v33-life-form select {
+  width: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+.v33-life-code-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.v33-life-lookup {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(127, 127, 127, .08);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.v33-life-lookup.is-ok {
+  font-weight: 700;
+}
+
+.v33-life-lookup.is-warn {
+  font-weight: 700;
+}
+
+.v33-life-lookup.is-error {
+  font-weight: 700;
+}
+
+.v33-life-modal-actions {
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+
+  .v33-lifecycle-root {
+    padding: 9px;
+    margin-bottom: 10px;
+    border-radius: 9px;
+  }
+
+  .v33-life-head {
+    align-items: flex-start;
+  }
+
+  .v33-life-title {
+    font-size: 12px;
+  }
+
+  .v33-life-head .small {
+    font-size: 8px;
+  }
+
+  .v33-life-head > .btn {
+    padding: 4px 7px !important;
+    min-height: 0 !important;
+    font-size: 9px !important;
+  }
+
+  .v33-life-advanced > summary {
+    padding-top: 8px;
+    font-size: 10px;
+  }
+
+  .v33-life-master-table {
+    min-width: 650px;
+  }
+
+  .v33-life-master-table input {
+    min-width: 90px;
+    font-size: 9px;
+    padding: 4px 5px;
+  }
+
+  .v33-life-master-table .v33-life-code {
+    min-width: 68px;
+  }
+
+  .v33-life-auto {
+    font-size: 8px;
+    min-width: 105px;
+  }
+
+  .v33-life-help,
+  .v33-life-empty {
+    font-size: 8px;
+  }
+
+  .v33-life-modal-back {
+    align-items: flex-end;
+    padding: 8px;
+  }
+
+  .v33-life-modal {
+    width: 100%;
+    max-height: 88vh;
+    padding: 12px;
+    border-radius: 13px;
+  }
+
+  .v33-life-modal-title {
+    font-size: 13px;
+  }
+
+  .v33-life-form label {
+    font-size: 9px;
+  }
+
+  .v33-life-form input,
+  .v33-life-form select {
+    min-height: 31px;
+    font-size: 11px;
+  }
+
+  .v33-life-lookup {
+    font-size: 8px;
+  }
+
+  .v33-life-close-btn,
+  .v33-life-reopen {
+    padding: 3px 6px !important;
+    min-height: 0 !important;
+    font-size: 8px !important;
+  }
+}
