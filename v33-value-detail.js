@@ -1071,7 +1071,45 @@
       : Math.round(cash);
   }
 
+  function accountValueManV33Compat(
+    id
+  ) {
+    try {
+      if (
+        typeof accountValueMan ===
+        'function'
+      ) {
+        return accountValueMan(
+          id
+        );
+      }
+    } catch (e) {}
 
+    try {
+      if (
+        typeof accountValue ===
+        'function'
+      ) {
+        const n =
+          Number(
+            accountValue(id)
+          );
+
+        if (
+          Number.isFinite(n)
+        ) {
+          return (
+            Math.abs(n) >= 10000000
+              ? n / 10000
+              : n
+          );
+        }
+      }
+    } catch (e) {}
+
+    return null;
+  }
+  
   function installAccountTotal(
     table,
     def
