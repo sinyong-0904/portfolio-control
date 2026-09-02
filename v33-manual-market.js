@@ -367,13 +367,23 @@
       );
 
     const refreshButton =
-      buttons.find(button =>
-        String(
-          button.textContent || ''
-        ).includes(
-          'DB가격 다시 불러오기'
-        )
-      );
+      buttons.find(button => {
+        const text =
+          String(
+            button.textContent || ''
+          )
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        return (
+          text.includes(
+            '자동가격 새로고침'
+          ) ||
+          text.includes(
+            'DB가격 다시 불러오기'
+          )
+        );
+      });
 
     if (!refreshButton) {
       return;
