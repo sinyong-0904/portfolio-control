@@ -12,14 +12,14 @@
     'US-CVD': 0.10
   };
 
-  const CORE_ORDER_V33 = [
-    'GOLD',
-    'BOND',
-    'K-DVD',
-    'NASDAQ',
-    'S&P500',
-    'US-CVD'
-  ];
+const CORE_ORDER_V33 = [
+  'NASDAQ',
+  'S&P500',
+  'US-CVD',
+  'K-DVD',
+  'BOND',
+  'GOLD'
+];
 
   const EXPOSURE_DETAIL_ORDER_V33 = [
     'NASDAQ',
