@@ -3,8 +3,43 @@
 
 (function () {
 
-  const OWNERS = ['서현', '서진'];
+  const OWNERS = ['GIRL', 'BOY'];
+  
+  function migrateChildOwnerNamesV33() {
+  const ownerMap = {
+    '서현': 'GIRL',
+    '서진': 'BOY'
+  };
 
+  if (
+    Array.isArray(data.holdings)
+  ) {
+    data.holdings.forEach(h => {
+      if (
+        h.account === 'CHILD' &&
+        ownerMap[h.owner]
+      ) {
+        h.owner =
+          ownerMap[h.owner];
+      }
+    });
+  }
+
+  if (
+    Array.isArray(
+      data.childProfiles
+    )
+  ) {
+    data.childProfiles.forEach(p => {
+      if (
+        ownerMap[p.owner]
+      ) {
+        p.owner =
+          ownerMap[p.owner];
+      }
+    });
+  }
+} 
 
   function profile(owner) {
     if (!Array.isArray(data.childProfiles)) {
@@ -513,7 +548,7 @@
         )
       ) {
         alert(
-          '서현·서진 계좌 현금을 ' +
+          'GIRL·BOY 계좌 현금을 ' +
           '모두 입력해주세요.'
         );
 
@@ -562,7 +597,7 @@
       const owner =
         String(
           prompt(
-            'Owner 입력: 서현 또는 서진',
+            'Owner 입력: GIRL 또는 BOY',
             '서현'
           ) || ''
         ).trim();
@@ -572,7 +607,7 @@
       ) {
         if (owner) {
           alert(
-            '서현 또는 서진을 입력해주세요.'
+            'GIRL 또는 BOY를 입력해주세요.'
           );
         }
 
@@ -661,6 +696,13 @@
   // patch-v31 CHILD special view를
   // 일반계좌 스타일 v3.3 view로 교체.
   //
+  migrateChildOwnerNamesV33();
+
+window.childOwnerSummary =
+  ownerSummaryV33;
+
+window.childHoldingsView =
+  childHoldingsViewV33;
   window.childOwnerSummary =
     ownerSummaryV33;
 
