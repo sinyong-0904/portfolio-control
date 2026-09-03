@@ -103,23 +103,30 @@
     }
 
     card.classList.remove(
-      'pending'
-    );
+  'pending',
+  'is-pending'
+);
 
-    const pendingState =
-      card.querySelector(
-        '.v33-market-card-state'
-      );
+const pendingNodes =
+  Array.from(
+    card.querySelectorAll(
+      '.v33-market-card-state'
+    )
+  );
 
+pendingNodes.forEach(
+  node => {
     if (
-      pendingState &&
-      pendingState.textContent
-        .includes(
-          '데이터 소스 준비중'
-        )
+      String(
+        node.textContent || ''
+      ).includes(
+        '데이터 소스 준비중'
+      )
     ) {
-      pendingState.remove();
+      node.remove();
     }
+  }
+);
 
     const valueNode =
       card.querySelector(
