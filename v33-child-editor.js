@@ -46,10 +46,24 @@
       data.childProfiles = [];
     }
 
-    let p =
-      data.childProfiles.find(
-        x => x.owner === owner
-      );
+    const legacyOwner = {
+  GIRL: '서현',
+  BOY: '서진'
+}[owner];
+
+let p =
+  data.childProfiles.find(
+    x =>
+      x.owner === owner ||
+      x.owner === legacyOwner
+  );
+
+if (
+  p &&
+  p.owner !== owner
+) {
+  p.owner = owner;
+}
 
     if (!p) {
       p = {
@@ -65,14 +79,31 @@
   }
 
 
-  function ownerHoldings(owner) {
-    return data.holdings.filter(
-      h =>
-        h.account === 'CHILD' &&
-        h.owner === owner &&
-        h.status === 'Active'
-    );
-  }
+function ownerHoldings(owner) {
+  const legacyOwner = {
+    GIRL: '서현',
+    BOY: '서진'
+  }[owner];
+
+  return data.holdings.filter(
+    h => {
+      if (
+        h.account !== 'CHILD' ||
+        h.status !== 'Active'
+      ) {
+        return false;
+      }
+
+      if (
+        h.owner === legacyOwner
+      ) {
+        h.owner = owner;
+      }
+
+      return h.owner === owner;
+    }
+  );
+}
 
 
   function ownerSummaryV33(owner) {
@@ -696,7 +727,6 @@
   // patch-v31 CHILD special view를
   // 일반계좌 스타일 v3.3 view로 교체.
   //
-  migrateChildOwnerNamesV33();
 
 window.childOwnerSummary =
   ownerSummaryV33;
