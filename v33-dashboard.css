@@ -346,8 +346,23 @@
 .v33-market-dashboard-grid {
   display: grid;
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(12, minmax(0, 1fr));
   gap: 8px;
+}
+
+.v33-market-dashboard-grid
+  > .v33-market-card:nth-child(-n+4) {
+  grid-column: span 3;
+}
+
+.v33-market-dashboard-grid
+  > .v33-market-card:nth-child(n+5):nth-child(-n+10) {
+  grid-column: span 4;
+}
+
+.v33-market-dashboard-grid
+  > .v33-market-card:nth-child(n+11):nth-child(-n+12) {
+  grid-column: span 6;
 }
 
 .v33-market-card {
