@@ -9,14 +9,48 @@
 
   function getData() {
     try {
+      //
+      // Canonical source:
+      // portfolio_state / data
+      //
+      if (
+        typeof data !== 'undefined' &&
+        data &&
+        data.manualMarket &&
+        typeof data.manualMarket === 'object'
+      ) {
+        return data.manualMarket;
+      }
+
+      //
+      // Legacy localStorage migration
+      //
       const raw =
         localStorage.getItem(KEY);
 
-      if (!raw) {
-        return {};
+      const legacy =
+        raw
+          ? JSON.parse(raw) || {}
+          : {};
+
+      if (
+        typeof data !== 'undefined' &&
+        data &&
+        Object.keys(legacy).length
+      ) {
+        data.manualMarket = {
+          ...legacy
+        };
+
+        if (
+          typeof save === 'function'
+        ) {
+          save(false);
+        }
       }
 
-      return JSON.parse(raw) || {};
+      return legacy;
+
     } catch (e) {
       return {};
     }
@@ -24,9 +58,47 @@
 
 
   function saveData(value) {
+    const clean = {
+      vkospi:
+        value.vkospi ?? null,
+
+      goldKr:
+        value.goldKr ?? null,
+
+      goldIntl:
+        value.goldIntl ?? null,
+
+      updatedAt:
+        value.updatedAt ||
+        new Date().toISOString()
+    };
+
+
+    //
+    // Canonical storage:
+    // portfolio_state
+    //
+    if (
+      typeof data !== 'undefined' &&
+      data
+    ) {
+      data.manualMarket = clean;
+
+      if (
+        typeof save === 'function'
+      ) {
+        save(false);
+      }
+    }
+
+
+    //
+    // Legacy fallback.
+    // Keep temporarily for rollback safety.
+    //
     localStorage.setItem(
       KEY,
-      JSON.stringify(value)
+      JSON.stringify(clean)
     );
   }
 
