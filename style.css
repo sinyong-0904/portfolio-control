@@ -96,3 +96,32 @@ input,select,textarea{width:100%;padding:7px;border:1px solid #d0d5dd;border-rad
     text-align:right!important;
   }
 }
+
+/* ============================================================
+   Global table alignment
+   - label / first column : left
+   - numeric / data cells : right
+   ============================================================ */
+
+table th,
+table td {
+  text-align: right !important;
+  vertical-align: middle !important;
+}
+
+/* First column = row label / category */
+table th:first-child,
+table td:first-child {
+  text-align: left !important;
+}
+
+/* Holdings tables often use sticky1 for asset names */
+table th.sticky1,
+table td.sticky1 {
+  text-align: left !important;
+}
+
+/* Editable numeric values */
+table input[type="number"] {
+  text-align: right !important;
+}
