@@ -3,9 +3,12 @@ name: Update Market Prices
 on:
   workflow_dispatch:
 
-  schedule:
+schedule:
     # 07:30 KST
     - cron: "30 22 * * 0-4"
+
+    # 12:00 KST
+    - cron: "0 3 * * 1-5"
 
     # 16:30 KST
     - cron: "30 7 * * 1-5"
