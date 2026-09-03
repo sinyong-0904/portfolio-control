@@ -1371,8 +1371,6 @@
 
     enhanceStandardAccounts();
 
-    installChildEditor();
-
     simplifyLifecycleRoot();
 
     resetAddModalOnClose();
