@@ -366,6 +366,18 @@
         )?.value
       );
 
+        const childAccount =
+      (data.accounts || [])
+        .find(
+          a =>
+            a.id === 'CHILD'
+        );
+
+    if (childAccount) {
+      childAccount.cashKRW =
+        s.cashByOwner.서현 +
+        s.cashByOwner.서진;
+    }
 
     if (
       typeof save ===
