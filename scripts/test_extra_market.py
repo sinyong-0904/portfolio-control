@@ -88,6 +88,49 @@ def test_gold():
         values[:20],
     )
 
+        #
+    # Diagnostic snippets around
+    # gold-related labels/values.
+    #
+    diagnostic_terms = [
+        "국내",
+        "국제",
+        "KRX",
+        "괴리",
+        "197428",
+    ]
+
+    print("\n--- GOLD HTML DIAGNOSTICS ---")
+
+    for term in diagnostic_terms:
+        pos = html.find(term)
+
+        if pos < 0:
+            print(
+                f"{term}: NOT FOUND"
+            )
+            continue
+
+        start = max(
+            0,
+            pos - 300,
+        )
+
+        end = min(
+            len(html),
+            pos + 500,
+        )
+
+        snippet = (
+            html[start:end]
+            .replace("\n", " ")
+            .replace("\r", " ")
+        )
+
+        print(
+            f"\n[{term}]\n",
+            snippet,
+        )
     if len(values) < 2:
         raise RuntimeError(
             "Could not extract two gold KRW/g values"
