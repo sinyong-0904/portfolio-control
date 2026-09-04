@@ -325,6 +325,313 @@ Before proposing changes to a large file:
 Do not create a patch that merely hides a recurring core mutation.
 
 ---
+# 9A. Company-PC Git / Deployment Constraint
+
+The company-PC environment has a confirmed GitHub write restriction.
+
+Observed behavior:
+
+```text
+git fetch / git ls-remote
+→ works
+
+git push
+→ object upload begins/completes
+→ HTTP 403 during Git smart-HTTP write
+```
+
+The company network uses an HTTPS proxy/DLP gateway.
+
+Therefore this should **not** automatically be diagnosed as a Git Credential Manager problem.
+
+Do not delete credentials or attempt SSH/firewall bypass merely to work around this restriction.
+
+## Default company-PC workflow
+
+The preferred workflow is:
+
+```text
+AI / local coding assistant
+→ verify HEAD
+→ read actual local source
+→ implement
+→ test
+→ self-review
+→ git add
+→ local commit
+→ STOP
+
+User
+→ identify files changed by the local commit
+→ upload the completed files through GitHub Web UI
+→ create the remote commit
+→ verify GitHub Pages / Actions
+→ verify the actual Web App
+```
+
+The local coding assistant must **not** assume that it can push.
+
+Unless explicitly instructed otherwise:
+
+> local commit is the final automated Git operation.
+
+The user controls remote publication.
+
+---
+
+# 9B. Local Commit vs Remote Commit
+
+Because company-PC local commits are reproduced through GitHub Web Upload, the local commit SHA and remote commit SHA may differ even when their file contents are identical.
+
+Example:
+
+```text
+local:
+A → LOCAL_COMMIT
+
+remote:
+A → WEB_COMMIT
+```
+
+This creates different Git history identities.
+
+Before starting the next local development task:
+
+1. fetch the latest remote state,
+2. compare local and remote,
+3. synchronize safely,
+4. avoid creating unnecessary divergent history.
+
+Do not assume that a local commit exists on GitHub merely because the user uploaded equivalent files through the Web UI.
+
+---
+
+# 9C. Large Files and Modularization Policy
+
+Large files have caused practical problems with GitHub Web editing/upload in the company environment.
+
+However:
+
+> File size alone is not sufficient reason for a risky large-scale refactor.
+
+Modularization should follow **functional ownership**, not arbitrary size thresholds.
+
+Preferred policy:
+
+* New substantial features should preferably live in focused modules.
+* Avoid adding hundreds of lines to already-large legacy files when a clean module boundary exists.
+* Do not split files merely to satisfy an arbitrary KB target.
+* Do not rewrite stable financial logic merely for modular elegance.
+* When touching an oversized legacy file, consider whether the affected responsibility can be safely extracted.
+* Verify load order and global dependencies before extraction.
+* Perform regression testing before considering the extraction complete.
+
+Examples of appropriate independent modules:
+
+```text
+Growth chart
+→ focused Growth-chart module
+
+History Year-End Snapshot
+→ focused History-snapshot module
+```
+
+This is especially useful because focused modules are easier to:
+
+* review,
+* test,
+* upload through the Web UI,
+* revert,
+* and maintain across AI sessions.
+
+---
+
+# 9D. Experimental Refactoring
+
+Large refactoring should not begin directly on the known-good local `main`.
+
+Preferred workflow:
+
+```text
+clean main
+→ create local refactor branch
+→ implement/refactor
+→ make incremental local commits
+→ test
+→ compare with main
+```
+
+If the experiment fails:
+
+```text
+git switch main
+```
+
+restores the local working tree to the known-good main state.
+
+Important:
+
+> Switching the local branch does NOT roll back a version already committed to GitHub `main`.
+
+If a problematic refactor has already been published to remote `main`, restore the Web App through a remote revert/rollback commit.
+
+Before significant refactoring, create or identify a known-good stable tag/release when practical.
+
+---
+
+# 9E. AI Implementation Completion Protocol
+
+An AI coding assistant must not treat "code written" as equivalent to "task complete."
+
+Before creating the local commit, it should perform a requirement-level self-audit.
+
+The completion report should include:
+
+```text
+1. Requirement checklist
+2. Changed files
+3. Data-source changes
+4. Calculation changes
+5. Persistence/schema changes
+6. Regression risks
+7. Tests performed
+8. Known limitations
+```
+
+Each explicit user requirement should be marked individually.
+
+Example:
+
+```text
+Requirements
+
+[PASS] Existing Growth table unchanged
+[PASS] X-axis always shows Jan-Dec
+[PASS] Future months remain empty
+[PASS] Left Y-axis shows monthly total change
+[PASS] Right Y-axis shows valuation
+[PASS] Positive bars are blue
+[PASS] Negative bars are red
+[PASS] Each bar has a visible value label
+[PASS] Valuation line stops at the latest real month
+```
+
+A requirement should not be marked PASS merely because related code exists.
+
+The assistant should explain how it verified the requirement.
+
+Only after this self-audit should the local commit be created.
+
+---
+
+# 9F. Risk-Based Review Policy
+
+Not every modification requires the same review intensity.
+
+## Low-risk / UI-only changes
+
+Examples:
+
+* chart layout
+* CSS
+* labels
+* visual alignment
+* read-only presentation using an existing calculation source
+
+Preferred workflow:
+
+```text
+Implementing AI
+→ implementation
+→ test
+→ Completion Protocol
+→ local commit
+→ user GitHub upload
+→ user Web App verification
+```
+
+Independent second-AI review is optional.
+
+---
+
+## High-risk changes
+
+Examples:
+
+* portfolio_state schema
+* holdings mutation
+* qty / avg / cash
+* save / restore
+* Supabase persistence
+* historical financial records
+* financial calculations
+* migrations
+* Year-End Snapshot architecture
+
+Preferred workflow:
+
+```text
+Implementing AI
+→ inspect source
+→ produce design/schema plan first
+
+Independent reviewing AI
+→ review design
+→ challenge assumptions
+→ verify maintainability and data invariants
+
+User
+→ approve design
+
+Implementing AI
+→ implement
+→ test
+→ Completion Protocol
+→ local commit
+
+User
+→ publish through GitHub
+
+Independent reviewing AI
+→ inspect actual remote commit
+→ final review
+
+User
+→ production regression
+```
+
+Do not skip the design-review stage for high-risk financial-data architecture merely because the implementing AI is confident.
+
+---
+
+# 9G. Special Rule for History Year-End Snapshot
+
+The 2026+ History Year-End Snapshot is classified as a **high-risk architecture change** because it introduces persistent historical financial data.
+
+When implementation begins:
+
+1. Read the current `PROJECT_HANDOFF.md`.
+2. Verify the latest HEAD.
+3. Inspect the actual current:
+
+   * History implementation,
+   * Overview Performance source,
+   * Growth source,
+   * dividend source,
+   * cash-like asset source,
+   * Income & Tax source,
+   * backup/restore behavior.
+4. Produce the proposed snapshot schema and implementation plan **before coding**.
+5. Obtain an independent design review.
+6. Only then implement.
+7. Run the AI Implementation Completion Protocol.
+8. Publish through the user-controlled GitHub workflow.
+9. Perform independent review of the actual remote commit.
+10. Perform production regression.
+
+The central invariant is:
+
+> Historical snapshots must remain trustworthy even if future live portfolio data or calculation logic changes.
 
 # 10. General Design Principle
 
@@ -1462,21 +1769,33 @@ Do not generate code based on assumed repository structure.
 At the time this handoff was created:
 
 ```text
-1. Growth monthly total-change bar + valuation line graph
+1. Complete and verify Growth monthly total-change bar + valuation line graph.
 
-2. 2026+ History Year-End Snapshot
+2. Before coding the 2026+ History Year-End Snapshot:
 
-3. Targeted regression
+   * produce schema/design plan,
+   * perform independent second-AI design review,
+   * obtain user approval.
 
-4. New v3.4 stable release
+3. Implement 2026+ History Year-End Snapshot.
 
-5. Update PROJECT_HANDOFF.md with:
-   - stable tag
-   - stable commit SHA
-   - completed TODOs
-   - remaining TODOs
+4. Perform implementing-AI Completion Protocol.
 
-6. Maintenance mode
+5. Publish and perform independent remote-commit review.
+
+6. Run targeted production regression.
+
+7. Create new v3.4 stable release.
+
+8. Update PROJECT_HANDOFF.md with:
+
+   * stable tag,
+   * stable commit SHA,
+   * completed TODOs,
+   * remaining TODOs.
+
+9. Maintenance mode.
+
 ```
 
 Do not add unrelated features before these unless explicitly requested.
