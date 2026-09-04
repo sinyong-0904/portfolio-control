@@ -248,24 +248,108 @@ if (
     }
   }
 
+  function autoRow(symbol) {
+    const state =
+      window.marketLiveState;
 
+    if (
+      !state ||
+      !state.bySymbol
+    ) {
+      return null;
+    }
+
+    return (
+      state.bySymbol[symbol] ||
+      null
+    );
+  }
+
+
+  function setExtra(
+    label,
+    extra
+  ) {
+    const card =
+      findCard(label);
+
+    if (!card) {
+      return;
+    }
+
+    let extraNode =
+      card.querySelector(
+        '.v33-manual-market-extra'
+      );
+
+    if (!extra) {
+      if (extraNode) {
+        extraNode.remove();
+      }
+
+      return;
+    }
+
+    if (!extraNode) {
+      extraNode =
+        document.createElement(
+          'div'
+        );
+
+      extraNode.className =
+        'v33-manual-market-extra small';
+
+      card.appendChild(
+        extraNode
+      );
+    }
+
+    extraNode.textContent =
+      extra;
+  }
+  
   function paintOverview() {
     const d =
       getData();
 
-    const vkospi =
+    const manualVkospi =
       num(d.vkospi);
 
-    const goldKr =
+    const manualGoldKr =
       num(d.goldKr);
 
-    const goldIntl =
+    const manualGoldIntl =
       num(d.goldIntl);
 
 
+    const autoVkospi =
+      autoRow('VKOSPI');
+
+    const autoGoldKr =
+      autoRow('GOLD_KR');
+
+    const autoGoldIntl =
+      autoRow('GOLD_INTL');
+
+
     //
-    // VKOSPI
+    // VKOSPI:
+    // automatic DB value first,
+    // manual value only as fallback.
     //
+    const vkospi =
+      autoVkospi &&
+      Number.isFinite(
+        Number(
+          autoVkospi.current
+        )
+      )
+        ? Number(
+            autoVkospi.current
+          )
+        : manualVkospi;
+
+
     if (vkospi !== null) {
       let extra = '';
 
@@ -297,62 +381,120 @@ if (
         }
       }
 
-      setCard(
-        'VKOSPI',
-        fmt(vkospi, 2),
-        '',
-        extra
-      );
+
+      if (autoVkospi) {
+        //
+        // Dashboard already painted
+        // current/change/date.
+        // Add only the VIX ratio.
+        //
+        setExtra(
+          'VKOSPI',
+          extra
+        );
+
+      } else {
+        setCard(
+          'VKOSPI',
+          fmt(vkospi, 2),
+          '',
+          extra
+        );
+      }
     }
 
 
     //
-    // Gold
+    // Gold:
+    // automatic DB values first.
     //
+    const goldKr =
+      autoGoldKr &&
+      Number.isFinite(
+        Number(
+          autoGoldKr.current
+        )
+      )
+        ? Number(
+            autoGoldKr.current
+          )
+        : manualGoldKr;
+
+
+    const goldIntl =
+      autoGoldIntl &&
+      Number.isFinite(
+        Number(
+          autoGoldIntl.current
+        )
+      )
+        ? Number(
+            autoGoldIntl.current
+          )
+        : manualGoldIntl;
+
+
+    let goldExtra = '';
+
+    if (
+      goldKr !== null &&
+      goldIntl !== null &&
+      goldIntl > 0
+    ) {
+      const gap =
+        (
+          goldKr /
+          goldIntl -
+          1
+        ) * 100;
+
+      goldExtra =
+        '괴리 ' +
+        (
+          gap > 0
+            ? '+'
+            : ''
+        ) +
+        gap.toFixed(2) +
+        '%';
+    }
+
+
     if (goldKr !== null) {
-      let extra = '';
+      if (autoGoldKr) {
+        setExtra(
+          '국내 금',
+          goldExtra
+        );
 
-      if (
-        goldIntl !== null &&
-        goldIntl > 0
-      ) {
-        const gap =
-          (
-            goldKr /
-            goldIntl -
-            1
-          ) * 100;
-
-        extra =
-          '괴리 ' +
-          (
-            gap > 0
-              ? '+'
-              : ''
-          ) +
-          gap.toFixed(2) +
-          '%';
+      } else {
+        setCard(
+          '국내 금',
+          fmt(goldKr, 0),
+          '원/g',
+          goldExtra
+        );
       }
-
-      setCard(
-        '국내 금',
-        fmt(goldKr, 0),
-        '원/g',
-        extra
-      );
     }
 
 
     if (goldIntl !== null) {
-      setCard(
-        '국제 금',
-        fmt(goldIntl, 0),
-        '원/g',
-        ''
-      );
+      if (autoGoldIntl) {
+        setExtra(
+          '국제 금',
+          ''
+        );
+
+      } else {
+        setCard(
+          '국제 금',
+          fmt(goldIntl, 0),
+          '원/g',
+          ''
+        );
+      }
     }
   }
-
 
   function inputHtml() {
     const d =
