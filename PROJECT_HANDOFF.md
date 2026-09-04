@@ -612,15 +612,87 @@ The 2026+ History Year-End Snapshot is classified as a **high-risk architecture 
 
 Before History Snapshot development, the following stable checkpoint was created:
 
-```text
-Tag:
-v3.3.2-pre-history-20260904
+**Tag:** `v3.3.2-pre-history-20260904`
 
-Commit:
-7c5f052dc5de28da5389868ed64de12605ae95c6
+**Commit:** `7c5f052dc5de28da5389868ed64de12605ae95c6`
 
-Release:
-Portfolio Control v3.3.2 Pre-History Stable - 2026-09-04
+**Release:** `Portfolio Control v3.3.2 Pre-History Stable - 2026-09-04`
+
+Treat this as the known-good rollback reference for History development.
+
+## Mandatory Pre-Implementation Gate
+
+Before any History Snapshot implementation code is written:
+
+1. Read the current `PROJECT_HANDOFF.md`.
+2. Verify the latest Git HEAD.
+3. Inspect the actual current History implementation.
+4. Inspect the actual authoritative source for Overview Performance.
+5. Inspect the actual authoritative source for Monthly Financial Asset Growth.
+6. Inspect the actual authoritative source for dividend records and dividend account totals.
+7. Inspect the actual authoritative source for cash-like assets.
+8. Inspect the actual authoritative source for Income & Tax.
+9. Inspect the portfolio persistence path.
+10. Inspect Backup / Restore behavior.
+11. Produce a **Touch Map**.
+12. Produce the proposed **Snapshot Schema and implementation plan**.
+13. Obtain an independent second-AI design review.
+14. Obtain explicit user approval.
+15. Only then begin implementation.
+
+## Touch Map Requirements
+
+For every required History data source, identify:
+
+* authoritative current data source,
+* calculation function,
+* renderer,
+* whether structured data is externally accessible,
+* whether the History module can reuse it read-only,
+* existing files requiring modification,
+* approximate size of each affected file,
+* whether modification of a 40 KB+ file can be avoided.
+
+The required areas are:
+
+* Overview Performance
+* Monthly Financial Asset Growth
+* Dividend records
+* Dividend account totals
+* Cash-like assets
+* Income & Tax
+* portfolio persistence
+* Backup / Restore
+
+This gate exists partly because the company GitHub Web workflow may fail for large files around the ~50 KB range.
+
+Do not spend a large implementation effort first and discover only afterward that the required modified files cannot practically be published.
+
+Prefer a focused independent History module when the actual architecture permits it.
+
+However:
+
+> Do not duplicate financial calculations merely to avoid touching an existing large file.
+
+## Implementation and Review
+
+After the Touch Map, Snapshot Schema, implementation plan, independent review, and user approval are complete:
+
+1. Create an isolated local History implementation branch.
+2. Implement the approved design.
+3. Run the AI Implementation Completion Protocol.
+4. Create the local commit.
+5. Publish through the user-controlled GitHub Web workflow.
+6. Perform independent review of the actual remote commit.
+7. Run the History Snapshot Test Protocol.
+8. Perform production regression.
+
+The central invariant is:
+
+> Historical snapshots must remain trustworthy even if future live portfolio data or calculation logic changes.
+
+---
+
 
 # 10. General Design Principle
 
@@ -1566,11 +1638,74 @@ The purpose is to prove that:
 
 ## Visual Data Comparison
 
-After creating the test snapshot:
+After creating the test snapshot, select **History → Year 2026** and compare it directly with the current live application.
 
-```text
-History → Year 2026
+### Performance
+
+History 2026 Performance must match the current **Overview → Performance** table, including relevant rows, ordering, values, and totals.
+
+### Growth & Dividend
+
+History 2026 must match the current:
+
+* `2026 월별 금융자산 Growth`
+* `배당금 현황`
+* `계좌별 합계`
+
+The snapshot must preserve the values shown by those three live tables at snapshot-creation time.
+
+### Cash-Like Assets
+
+History 2026 must match the current **자금관리 → 예금성 자금** table, including the account-level values and totals shown at snapshot-creation time.
+
+### Income & Tax
+
+The Income & Tax section must appear correctly and remain editable according to the annual-ledger rules.
+
+## Persistence Test
+
+After snapshot creation:
+
+1. Reload the application with `Ctrl+F5`.
+2. Confirm that the 2026 snapshot remains.
+3. Open the application on another device.
+4. Confirm that the same 2026 snapshot appears there.
+
+This verifies persistence through the application's normal cloud state.
+
+## Immutability Test
+
+After snapshot creation, temporarily change one safe live value.
+
+Expected behavior:
+
+* the current live view changes,
+* the History 2026 financial snapshot does **not** change.
+
+Restore the temporary live value afterward.
+
+This verifies that the snapshot is a deep historical copy rather than a live reference.
+
+## Income & Tax Exception
+
+Income & Tax is intentionally different from the immutable financial snapshot.
+
+After snapshot creation, the 2026 Income & Tax row must remain editable.
+
+A valid Income & Tax edit should update the annual tax ledger even though the financial snapshot itself remains immutable.
+
+When the annual workflow advances, the next year's row must be available according to the Income & Tax requirements.
+
+## Test Snapshot Cleanup
+
+The implementation must provide a controlled way to remove or regenerate the temporary 2026 test snapshot.
+
+Do not leave a mid-year test snapshot permanently indistinguishable from the true year-end snapshot.
+
+Normal year-end snapshots should remain protected from casual overwrite.
+
 ---
+
 
 # 34. History Snapshot Regeneration
 
