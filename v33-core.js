@@ -557,29 +557,6 @@
     }
 
 
-    CHILD_DEFAULTS.forEach(
-      def => {
-
-        const exists =
-          data.holdings.some(
-            h =>
-              h.account === 'CHILD' &&
-              h.owner === def.owner &&
-              h.code === def.code
-          );
-
-
-        if (!exists) {
-
-          data.holdings.push(
-            clone(def)
-          );
-
-          changed = true;
-        }
-      }
-    );
-
 
     return changed;
   }
