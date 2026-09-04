@@ -701,6 +701,9 @@
   window.growthV32Input =
     growthInput;
 
+  window.v32MonthlyRows =
+    v32MonthlyRows;
+
   growthDetailView =
     function () {
       const g =
