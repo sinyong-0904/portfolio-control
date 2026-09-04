@@ -6,6 +6,12 @@
 // v33-ops-ux.js. Reuses the exact same data source as the table
 // (window.v32MonthlyRows, exported from patch-v32.js) — no independent
 // Growth calculation.
+//
+// X-axis is a fixed 12-month grid (Jan..Dec); months without data yet
+// (r.value == null) get a label/slot but no bar/point/line. Left axis =
+// monthly total-change (만원, symmetric around zero). Right axis =
+// valuation (억원, scaled to the actual data range only).
+//
 // Load LAST, after v33-tabs-app.js.
 
 (function () {
@@ -33,16 +39,50 @@
   overflow: hidden;
 }
 
+.v34-growth-chart-scroll {
+  overflow-x: auto;
+}
+
 .v34-growth-chart {
   width: 100%;
+  min-width: 700px;
   height: auto;
-  min-height: 250px;
+  min-height: 280px;
+  display: block;
 }
 
 .v34-growth-chart text {
   fill: currentColor;
   font-size: 10px;
-  opacity: .58;
+}
+
+.v34-month-label {
+  opacity: .55;
+}
+
+.v34-axis-tick-label {
+  opacity: .68;
+}
+
+.v34-axis-caption {
+  font-size: 9.5px;
+  font-weight: 700;
+  opacity: .55;
+}
+
+.v34-axis-line {
+  stroke: rgba(100, 116, 139, .35);
+  stroke-width: 1;
+}
+
+.v34-axis-tick {
+  stroke: rgba(100, 116, 139, .45);
+  stroke-width: 1;
+}
+
+.v34-growth-gridline {
+  stroke: rgba(100, 116, 139, .12);
+  stroke-width: 1;
 }
 
 .v34-growth-zero {
@@ -55,6 +95,19 @@
 }
 
 .v34-growth-bar.neg {
+  fill: var(--v33-red, #dc2626);
+}
+
+.v34-bar-value-label {
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.v34-bar-value-label.pos {
+  fill: var(--v33-blue, #2563eb);
+}
+
+.v34-bar-value-label.neg {
   fill: var(--v33-red, #dc2626);
 }
 
@@ -101,77 +154,142 @@
   }
 
 
-  const MONTHS_V34 = [
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
-  ];
+  // Rounds up to a "nice" number (1/2/5/10 x 10^n) for axis ticks.
+  function niceCeil(v) {
 
-
-  function moneyV34(v) {
-
-    try {
-
-      if (typeof won === 'function') {
-        return won(v);
-      }
-
-    } catch (e) {
-      // fall through to plain formatting
+    if (v <= 0) {
+      return 1;
     }
 
-    return Math.round(Number(v) || 0).toLocaleString('ko-KR');
+    const pow10 = Math.pow(10, Math.floor(Math.log10(v)));
+    const norm = v / pow10;
+
+    let nice;
+
+    if (norm <= 1) {
+      nice = 1;
+    } else if (norm <= 2) {
+      nice = 2;
+    } else if (norm <= 5) {
+      nice = 5;
+    } else {
+      nice = 10;
+    }
+
+    return nice * pow10;
   }
 
 
-  // Pure data -> SVG markup. Reuses window.v32MonthlyRows() as its only
-  // data source; never recomputes contribution/cashChange/totalChange/value.
+  function fmtManwon(vWon, signed) {
+
+    const man = Math.round((Number(vWon) || 0) / 10000);
+    const sign = signed && man > 0 ? '+' : '';
+
+    return sign + man.toLocaleString('ko-KR') + '만';
+  }
+
+
+  function fmtEok(vWon) {
+
+    const eok = (Number(vWon) || 0) / 1e8;
+    const rounded = Math.round(eok * 10) / 10;
+
+    return (
+      Number.isInteger(rounded)
+        ? rounded.toFixed(0)
+        : rounded.toFixed(1)
+    ) + '억';
+  }
+
+
+  // Pure data -> SVG markup. Reuses g.rows (window.v32MonthlyRows()) as
+  // its only data source; never recomputes contribution/cashChange/
+  // totalChange/value. rows is always the full 12-month array (Jan..Dec,
+  // index 0-11); months without data yet have value == null.
   function buildGrowthChartMarkupV34(g) {
 
-    const rows = g.rows.filter(r => r.value != null);
+    const rows = g.rows;
+    const actualRows = rows.filter(r => r.value != null);
 
-    if (!rows.length) {
+    if (!actualRows.length) {
       return '';
     }
 
-    const W = 760, H = 300, L = 60, R = 60, T = 20, B = 34;
+    const N = 12;
+    const W = 800, H = 360;
+    const L = 66, R = 78, T = 40, B = 46;
+
     const plotTop = T;
     const plotBottom = H - B;
     const plotH = plotBottom - plotTop;
-
-    const changes = rows.map(r => Number(r.totalChange) || 0);
-    const values = rows.map(r => Number(r.value) || 0);
-
-    const maxAbsChange =
-      Math.max(1, ...changes.map(v => Math.abs(v))) * 1.15;
-
-    const valMin = Math.min(...values) * 0.97;
-    const valMax = Math.max(...values) * 1.03;
-    const valRange = Math.max(1, valMax - valMin);
-
-    const x = i =>
-      L + (rows.length <= 1
-        ? (W - L - R) / 2
-        : i * (W - L - R) / (rows.length - 1));
-
     const barCenterY = plotTop + plotH / 2;
 
-    const yChange = v =>
-      barCenterY - (v / maxAbsChange) * (plotH / 2);
-
-    const yValue = v =>
-      plotBottom - (v - valMin) / valRange * plotH;
-
-    const slot = rows.length > 1
-      ? (W - L - R) / (rows.length - 1)
-      : W - L - R;
-
+    const slot = (W - L - R) / (N - 1);
+    const x = i => L + i * slot;
     const barWidth = Math.max(8, Math.min(30, slot * 0.42));
 
+    // Left axis: monthly total-change, 만원, symmetric around zero.
+    const changesManwon = rows.map(r =>
+      r.totalChange != null ? Number(r.totalChange) / 10000 : null
+    );
+
+    const maxAbsChangeManwon = niceCeil(
+      Math.max(
+        1,
+        ...changesManwon.filter(v => v != null).map(v => Math.abs(v))
+      )
+    );
+
+    const yChange = vManwon =>
+      barCenterY - (vManwon / maxAbsChangeManwon) * (plotH / 2);
+
+    const leftTickHalfCount = 2;
+    const leftTicks = [];
+
+    for (let k = -leftTickHalfCount; k <= leftTickHalfCount; k++) {
+      leftTicks.push(maxAbsChangeManwon * k / leftTickHalfCount);
+    }
+
+    // Right axis: valuation, 억원, scaled to the actual value range only.
+    const valuesWon = actualRows.map(r => Number(r.value) || 0);
+    const rawMinWon = Math.min(...valuesWon);
+    const rawMaxWon = Math.max(...valuesWon);
+    const padWon = Math.max(
+      (rawMaxWon - rawMinWon) * 0.12,
+      rawMaxWon * 0.02,
+      1
+    );
+
+    const rMinWon = rawMinWon - padWon;
+    const rMaxWon = rawMaxWon + padWon;
+    const rRangeWon = Math.max(1, rMaxWon - rMinWon);
+
+    const yValue = vWon =>
+      plotBottom - (vWon - rMinWon) / rRangeWon * plotH;
+
+    const rightTickCount = 4;
+    const rightTicks = [];
+
+    for (let k = 0; k <= rightTickCount; k++) {
+      rightTicks.push(rMinWon + rRangeWon * k / rightTickCount);
+    }
+
+    // Bars + always-visible value labels. Months with no data yet
+    // (future months) get their x-slot/label below but no bar.
     const bars = rows.map((r, i) => {
-      const v = changes[i];
-      const yTop = Math.min(yChange(v), barCenterY);
-      const h = Math.max(Math.abs(yChange(v) - barCenterY), 0.5);
-      const cls = v >= 0 ? 'pos' : 'neg';
+
+      if (r.value == null || r.totalChange == null) {
+        return '';
+      }
+
+      const vManwon = changesManwon[i];
+      const yTop = Math.min(yChange(vManwon), barCenterY);
+      const h = Math.max(Math.abs(yChange(vManwon) - barCenterY), 0.5);
+      const cls = vManwon >= 0 ? 'pos' : 'neg';
+
+      const labelY = vManwon >= 0
+        ? yTop - 6
+        : yTop + h + 12;
 
       return `
         <rect class="v34-growth-bar ${cls}"
@@ -179,28 +297,40 @@
           y="${yTop.toFixed(1)}"
           width="${barWidth.toFixed(1)}"
           height="${h.toFixed(1)}">
-          <title>${r.month}: ${moneyV34(v)}</title>
+          <title>${r.month}: ${fmtManwon(r.totalChange, true)}</title>
         </rect>
+        <text class="v34-bar-value-label ${cls}"
+          x="${x(i).toFixed(1)}" y="${labelY.toFixed(1)}"
+          text-anchor="middle">${fmtManwon(r.totalChange, true)}</text>
       `;
     }).join('');
 
-    const linePath = values.map((v, i) =>
-      `${i ? 'L' : 'M'} ${x(i).toFixed(1)} ${yValue(v).toFixed(1)}`
-    ).join(' ');
+    // Valuation line/points — only through the last actual month.
+    const linePath = actualRows.map((r, idx) => {
+      const i = rows.indexOf(r);
+      const v = Number(r.value) || 0;
 
-    const dots = rows.map((r, i) => `
-      <circle class="v34-growth-value-dot"
-        cx="${x(i).toFixed(1)}"
-        cy="${yValue(values[i]).toFixed(1)}"
-        r="3.5">
-        <title>${r.month}: ${moneyV34(values[i])}</title>
-      </circle>
-    `).join('');
+      return `${idx === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${yValue(v).toFixed(1)}`;
+    }).join(' ');
 
+    const dots = actualRows.map(r => {
+      const i = rows.indexOf(r);
+      const v = Number(r.value) || 0;
+
+      return `
+        <circle class="v34-growth-value-dot"
+          cx="${x(i).toFixed(1)}"
+          cy="${yValue(v).toFixed(1)}"
+          r="3.5">
+          <title>${r.month}: ${fmtEok(v)}</title>
+        </circle>
+      `;
+    }).join('');
+
+    // X-axis: fixed 12 months, always shown (Jan..Dec).
     const xLabels = rows.map((r, i) => `
-      <text x="${x(i).toFixed(1)}" y="${H - 12}" text-anchor="middle">
-        ${MONTHS_V34.indexOf(r.month) + 1}월
-      </text>
+      <text class="v34-month-label" x="${x(i).toFixed(1)}" y="${H - 14}"
+        text-anchor="middle">${i + 1}월</text>
     `).join('');
 
     const zeroLine = `
@@ -209,15 +339,63 @@
         x2="${W - R}" y2="${barCenterY.toFixed(1)}" />
     `;
 
+    // Left axis ticks/gridlines (총증감, 만원). Zero already drawn above.
+    const leftAxis = leftTicks.map(t => {
+      const y = yChange(t).toFixed(1);
+
+      const gridline = t === 0
+        ? ''
+        : `<line class="v34-growth-gridline"
+            x1="${L}" y1="${y}" x2="${W - R}" y2="${y}" />`;
+
+      return `
+        ${gridline}
+        <line class="v34-axis-tick" x1="${L - 4}" y1="${y}" x2="${L}" y2="${y}" />
+        <text class="v34-axis-tick-label" x="${L - 8}" y="${y}"
+          text-anchor="end" dominant-baseline="middle">
+          ${fmtManwon(t * 10000, true)}
+        </text>
+      `;
+    }).join('');
+
+    // Right axis ticks (평가액, 억원).
+    const rightAxis = rightTicks.map(t => {
+      const y = yValue(t).toFixed(1);
+
+      return `
+        <line class="v34-axis-tick" x1="${W - R}" y1="${y}" x2="${W - R + 4}" y2="${y}" />
+        <text class="v34-axis-tick-label" x="${W - R + 8}" y="${y}"
+          text-anchor="start" dominant-baseline="middle">
+          ${fmtEok(t)}
+        </text>
+      `;
+    }).join('');
+
+    const axisLines = `
+      <line class="v34-axis-line" x1="${L}" y1="${plotTop}" x2="${L}" y2="${plotBottom}" />
+      <line class="v34-axis-line" x1="${W - R}" y1="${plotTop}" x2="${W - R}" y2="${plotBottom}" />
+    `;
+
+    const axisCaptions = `
+      <text class="v34-axis-caption" x="${L}" y="16" text-anchor="start">총증감(만원)</text>
+      <text class="v34-axis-caption" x="${W - R}" y="16" text-anchor="end">평가액(억원)</text>
+    `;
+
     return `
-      <svg class="v34-growth-chart" viewBox="0 0 ${W} ${H}" role="img"
-        aria-label="월별 금융자산 Growth 그래프">
-        ${zeroLine}
-        ${bars}
-        <path class="v34-growth-value-line" d="${linePath}" />
-        ${dots}
-        <g class="axis-labels">${xLabels}</g>
-      </svg>
+      <div class="v34-growth-chart-scroll">
+        <svg class="v34-growth-chart" viewBox="0 0 ${W} ${H}" role="img"
+          aria-label="월별 금융자산 Growth 그래프">
+          ${leftAxis}
+          ${zeroLine}
+          ${axisLines}
+          ${rightAxis}
+          ${bars}
+          <path class="v34-growth-value-line" d="${linePath}" />
+          ${dots}
+          <g class="axis-labels">${xLabels}</g>
+          ${axisCaptions}
+        </svg>
+      </div>
       <div class="v34-growth-legend">
         <span class="pos"><i></i>총증감(+)</span>
         <span class="neg"><i></i>총증감(-)</span>
