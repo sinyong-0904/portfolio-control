@@ -125,3 +125,14 @@ table td.sticky1 {
 table input[type="number"] {
   text-align: right !important;
 }
+
+/* ============================================================
+   Active final navigation tab
+   ============================================================ */
+
+[data-v33-final-tab].active {
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+  font-weight: 700;
+}
