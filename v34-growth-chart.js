@@ -180,18 +180,23 @@
   }
 
 
-  function fmtManwon(vWon, signed) {
+  // r.totalChange / r.value from window.v32MonthlyRows() are already
+  // stored in 만원 units (verified against the Growth table renderer,
+  // which prints them via won() with no /10000 conversion — see commit
+  // message for the real-data check). Do NOT divide by 10000 here.
+  function fmtManwon(vManwon, signed) {
 
-    const man = Math.round((Number(vWon) || 0) / 10000);
+    const man = Math.round(Number(vManwon) || 0);
     const sign = signed && man > 0 ? '+' : '';
 
     return sign + man.toLocaleString('ko-KR') + '만';
   }
 
 
-  function fmtEok(vWon) {
+  // r.value is already in 만원 (see fmtManwon note above); 1억 = 10,000만.
+  function fmtEok(vManwon) {
 
-    const eok = (Number(vWon) || 0) / 1e8;
+    const eok = (Number(vManwon) || 0) / 10000;
     const rounded = Math.round(eok * 10) / 10;
 
     return (
@@ -219,18 +224,28 @@
     const W = 800, H = 360;
     const L = 66, R = 78, T = 40, B = 46;
 
+    // Inner padding so the Jan/Dec bars clear the axis lines and their
+    // tick labels: axis line -> PAD_X gap -> first/last month slot.
+    const PAD_X = 26;
+
     const plotTop = T;
     const plotBottom = H - B;
     const plotH = plotBottom - plotTop;
     const barCenterY = plotTop + plotH / 2;
 
-    const slot = (W - L - R) / (N - 1);
-    const x = i => L + i * slot;
+    const axisLeftX = L;
+    const axisRightX = W - R;
+    const usableLeft = axisLeftX + PAD_X;
+    const usableRight = axisRightX - PAD_X;
+
+    const slot = (usableRight - usableLeft) / (N - 1);
+    const x = i => usableLeft + i * slot;
     const barWidth = Math.max(8, Math.min(30, slot * 0.42));
 
     // Left axis: monthly total-change, 만원, symmetric around zero.
+    // r.totalChange is already 만원 — no conversion, see fmtManwon note.
     const changesManwon = rows.map(r =>
-      r.totalChange != null ? Number(r.totalChange) / 10000 : null
+      r.totalChange != null ? Number(r.totalChange) : null
     );
 
     const maxAbsChangeManwon = niceCeil(
@@ -251,27 +266,28 @@
     }
 
     // Right axis: valuation, 억원, scaled to the actual value range only.
-    const valuesWon = actualRows.map(r => Number(r.value) || 0);
-    const rawMinWon = Math.min(...valuesWon);
-    const rawMaxWon = Math.max(...valuesWon);
-    const padWon = Math.max(
-      (rawMaxWon - rawMinWon) * 0.12,
-      rawMaxWon * 0.02,
+    // r.value is already 만원 — no conversion, see fmtEok note.
+    const valuesManwon = actualRows.map(r => Number(r.value) || 0);
+    const rawMinManwon = Math.min(...valuesManwon);
+    const rawMaxManwon = Math.max(...valuesManwon);
+    const padManwon = Math.max(
+      (rawMaxManwon - rawMinManwon) * 0.12,
+      rawMaxManwon * 0.02,
       1
     );
 
-    const rMinWon = rawMinWon - padWon;
-    const rMaxWon = rawMaxWon + padWon;
-    const rRangeWon = Math.max(1, rMaxWon - rMinWon);
+    const rMinManwon = rawMinManwon - padManwon;
+    const rMaxManwon = rawMaxManwon + padManwon;
+    const rRangeManwon = Math.max(1, rMaxManwon - rMinManwon);
 
-    const yValue = vWon =>
-      plotBottom - (vWon - rMinWon) / rRangeWon * plotH;
+    const yValue = vManwon =>
+      plotBottom - (vManwon - rMinManwon) / rRangeManwon * plotH;
 
     const rightTickCount = 4;
     const rightTicks = [];
 
     for (let k = 0; k <= rightTickCount; k++) {
-      rightTicks.push(rMinWon + rRangeWon * k / rightTickCount);
+      rightTicks.push(rMinManwon + rRangeManwon * k / rightTickCount);
     }
 
     // Bars + always-visible value labels. Months with no data yet
@@ -353,7 +369,7 @@
         <line class="v34-axis-tick" x1="${L - 4}" y1="${y}" x2="${L}" y2="${y}" />
         <text class="v34-axis-tick-label" x="${L - 8}" y="${y}"
           text-anchor="end" dominant-baseline="middle">
-          ${fmtManwon(t * 10000, true)}
+          ${fmtManwon(t, true)}
         </text>
       `;
     }).join('');
