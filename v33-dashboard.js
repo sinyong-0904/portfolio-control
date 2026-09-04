@@ -1271,13 +1271,21 @@ const CORE_ORDER_V33 = [
       );
     }
 
+    if (
+      row.changePct === null ||
+      row.changePct === undefined ||
+      row.changePct === ''
+    ) {
+      return '';
+    }
+
     const change =
       Number(
         row.changePct
       );
 
     if (!Number.isFinite(change)) {
-      return 'n/a';
+      return '';
     }
 
     return (
@@ -1285,7 +1293,6 @@ const CORE_ORDER_V33 = [
       `${change.toFixed(2)}%`
     );
   }
-
 
   function fearLabelV33(
     value
