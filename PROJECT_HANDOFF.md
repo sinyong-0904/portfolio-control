@@ -608,30 +608,19 @@ Do not skip the design-review stage for high-risk financial-data architecture me
 
 The 2026+ History Year-End Snapshot is classified as a **high-risk architecture change** because it introduces persistent historical financial data.
 
-When implementation begins:
+## Known-Good Pre-History Checkpoint
 
-1. Read the current `PROJECT_HANDOFF.md`.
-2. Verify the latest HEAD.
-3. Inspect the actual current:
+Before History Snapshot development, the following stable checkpoint was created:
 
-   * History implementation,
-   * Overview Performance source,
-   * Growth source,
-   * dividend source,
-   * cash-like asset source,
-   * Income & Tax source,
-   * backup/restore behavior.
-4. Produce the proposed snapshot schema and implementation plan **before coding**.
-5. Obtain an independent design review.
-6. Only then implement.
-7. Run the AI Implementation Completion Protocol.
-8. Publish through the user-controlled GitHub workflow.
-9. Perform independent review of the actual remote commit.
-10. Perform production regression.
+```text
+Tag:
+v3.3.2-pre-history-20260904
 
-The central invariant is:
+Commit:
+7c5f052dc5de28da5389868ed64de12605ae95c6
 
-> Historical snapshots must remain trustworthy even if future live portfolio data or calculation logic changes.
+Release:
+Portfolio Control v3.3.2 Pre-History Stable - 2026-09-04
 
 # 10. General Design Principle
 
@@ -961,7 +950,7 @@ KST schedule:
 
 ```text
 12:00
-18:30
+16:30
 ```
 
 The noon update was intentionally added because portfolio purchases are often made in the afternoon and Allocation should use reasonably current market prices.
@@ -1563,7 +1552,24 @@ Future History charts should not need to parse historical table structures merel
 * dividends
 * cash
 * allocation
+# 33A. History Snapshot Test Protocol
 
+The History Snapshot feature must be testable before the actual end of 2026.
+
+Use the **current 2026 live application data** to create a temporary/test 2026 snapshot.
+
+The purpose is not to prove that the current values are the final 2026 year-end values.
+
+The purpose is to prove that:
+
+> the snapshot accurately captures the live state at creation time and remains independent afterward.
+
+## Visual Data Comparison
+
+After creating the test snapshot:
+
+```text
+History → Year 2026
 ---
 
 # 34. History Snapshot Regeneration
@@ -1581,35 +1587,43 @@ If regeneration is supported:
 
 # 35. Release Strategy
 
-Existing earlier checkpoint:
+## Earlier Stable Checkpoint
 
-```text
-v3.3-stable-20260903
-```
+`v3.3-stable-20260903`
 
-This predates several later improvements.
+This remains an earlier historical checkpoint.
 
-Do not treat it as the final current stable state.
+## Current Known-Good Pre-History Checkpoint
 
-Recommended sequence:
+Tag: `v3.3.2-pre-history-20260904`
 
-```text
-1. Add PROJECT_HANDOFF.md
-2. Implement Growth monthly graph
-3. Implement 2026+ History Year-End Snapshot
-4. Run targeted regression
-5. Create new stable release
-6. Update PROJECT_HANDOFF.md with stable SHA/tag
-7. Enter maintenance mode
-```
+Commit: `7c5f052dc5de28da5389868ed64de12605ae95c6`
 
-Because History Snapshot introduces a meaningful long-term data architecture, a minor-version increase is reasonable.
+Release: `Portfolio Control v3.3.2 Pre-History Stable - 2026-09-04`
 
-Suggested future release:
+This is the known-good rollback point immediately before History Year-End Snapshot development.
 
-```text
-v3.4-stable-YYYYMMDD
-```
+If History development causes unacceptable regression:
+
+> Use this tag/commit as the known-good reference for rollback.
+
+Prefer a revert/rollback commit over destructive remote-history rewriting.
+
+## Final History Release
+
+After History Snapshot implementation, independent review, snapshot testing, and production regression are complete, create the next stable release.
+
+Suggested release: `v3.4-stable-YYYYMMDD`
+
+After that release:
+
+1. record the final stable tag,
+2. record the final stable commit SHA,
+3. update completed TODOs,
+4. record remaining maintenance work,
+5. enter maintenance mode.
+
+---
 
 ---
 
@@ -1769,32 +1783,53 @@ Do not generate code based on assumed repository structure.
 At the time this handoff was created:
 
 ```text
-1. Complete and verify Growth monthly total-change bar + valuation line graph.
+1. Pre-History stable checkpoint
+   → COMPLETE
+   → v3.3.2-pre-history-20260904
+   → 7c5f052dc5de28da5389868ed64de12605ae95c6
 
-2. Before coding the 2026+ History Year-End Snapshot:
+2. Before History coding:
+   → verify latest HEAD
+   → inspect all authoritative History data sources
+   → produce Touch Map
+   → identify affected 40 KB+ files
+   → design Snapshot Schema
+   → produce implementation plan
+   → NO implementation yet
 
-   * produce schema/design plan,
-   * perform independent second-AI design review,
-   * obtain user approval.
+3. Independent second-AI design review.
 
-3. Implement 2026+ History Year-End Snapshot.
+4. User approval of Touch Map / architecture / schema.
 
-4. Perform implementing-AI Completion Protocol.
+5. Create an isolated local History implementation branch.
 
-5. Publish and perform independent remote-commit review.
+6. Implement 2026+ History Year-End Snapshot.
 
-6. Run targeted production regression.
+7. Run AI Implementation Completion Protocol.
 
-7. Create new v3.4 stable release.
+8. Publish through the user-controlled GitHub Web workflow.
 
-8. Update PROJECT_HANDOFF.md with:
+9. Independent review of the actual remote commit.
 
-   * stable tag,
-   * stable commit SHA,
-   * completed TODOs,
-   * remaining TODOs.
+10. Run History Snapshot Test Protocol using current 2026 data:
+    → compare required History tables with live data
+    → reload persistence
+    → cross-device persistence
+    → immutability test
+    → Income & Tax editability
+    → remove/regenerate temporary test snapshot
 
-9. Maintenance mode.
+11. Run full targeted production regression.
+
+12. Create final v3.4 stable release.
+
+13. Update PROJECT_HANDOFF.md with:
+    → final stable tag
+    → final stable commit SHA
+    → completed TODOs
+    → remaining TODOs
+
+14. Maintenance mode.
 
 ```
 
