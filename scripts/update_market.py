@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import urllib.request
 from datetime import datetime, timezone
@@ -220,6 +221,205 @@ def cnn_fear_greed():
         ),
     }
 
+def http_text(url, headers=None):
+    req = urllib.request.Request(
+        url,
+        headers=headers or {
+            "User-Agent": (
+                "Mozilla/5.0 "
+                "(Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 "
+                "(KHTML, like Gecko) "
+                "Chrome/149.0 Safari/537.36"
+            ),
+            "Accept-Language":
+                "ko-KR,ko;q=0.9,en;q=0.8",
+        }
+    )
+
+    with urllib.request.urlopen(
+        req,
+        timeout=20
+    ) as response:
+        return response.read().decode(
+            "utf-8",
+            errors="replace"
+        )
+
+
+def parse_number(text):
+    return float(
+        text
+        .replace(",", "")
+        .replace(" ", "")
+        .strip()
+    )
+
+
+def investing_vkospi():
+    html = http_text(
+        "https://www.investing.com/"
+        "indices/kospi-volatility"
+    )
+
+    price_match = re.search(
+        r'data-test="instrument-price-last"'
+        r'[^>]*>\s*'
+        r'([\d,.]+)',
+        html,
+        flags=re.I,
+    )
+
+    if not price_match:
+        raise RuntimeError(
+            "VKOSPI current price not found"
+        )
+
+    current = parse_number(
+        price_match.group(1)
+    )
+
+    #
+    # Investing page exposes Prev. Close.
+    # Use it rather than deriving from
+    # rounded percentage text.
+    #
+    previous_match = re.search(
+        r'Prev\.\s*Close'
+        r'.{0,1000}?'
+        r'([\d,]+(?:\.\d+)?)',
+        html,
+        flags=re.I | re.S,
+    )
+
+    previous = (
+        parse_number(
+            previous_match.group(1)
+        )
+        if previous_match
+        else None
+    )
+
+    change_pct = (
+        (
+            current /
+            previous -
+            1
+        ) * 100
+        if previous not in (
+            None,
+            0
+        )
+        else None
+    )
+
+    today = (
+        datetime
+        .now(timezone.utc)
+        .date()
+        .isoformat()
+    )
+
+    return {
+        "current": current,
+        "previous": previous,
+        "change_pct": change_pct,
+        "change_bp": None,
+        "price_date": today,
+        "previous_date": None,
+    }
+
+
+def gold_kr_prices():
+    html = http_text(
+        "https://gold-kr.web.app/"
+    )
+
+    intl_match = re.search(
+        r'class="converted-price"'
+        r'[^>]*>\s*'
+        r'\(₩([\d,]+(?:\.\d+)?)'
+        r'\s*/g\)',
+        html,
+        flags=re.I,
+    )
+
+    domestic_match = re.search(
+        r'국내\s*금\s*시세'
+        r'.{0,1000}?'
+        r'class="current-price"'
+        r'[^>]*>\s*'
+        r'₩([\d,]+(?:\.\d+)?)',
+        html,
+        flags=re.I | re.S,
+    )
+
+    premium_match = re.search(
+        r'class="premium-value[^"]*"'
+        r'[^>]*>\s*'
+        r'([+-]?\s*[\d.]+)%',
+        html,
+        flags=re.I,
+    )
+
+    if not intl_match:
+        raise RuntimeError(
+            "International gold KRW/g not found"
+        )
+
+    if not domestic_match:
+        raise RuntimeError(
+            "Domestic KRX gold KRW/g not found"
+        )
+
+    gold_intl = parse_number(
+        intl_match.group(1)
+    )
+
+    gold_kr = parse_number(
+        domestic_match.group(1)
+    )
+
+    premium_calc = (
+        gold_kr /
+        gold_intl -
+        1
+    ) * 100
+
+    if premium_match:
+        premium_source = float(
+            premium_match
+            .group(1)
+            .replace(
+                " ",
+                ""
+            )
+        )
+
+        if (
+            abs(
+                premium_calc -
+                premium_source
+            ) > 0.05
+        ):
+            raise RuntimeError(
+                "Gold premium validation mismatch"
+            )
+
+    today = (
+        datetime
+        .now(timezone.utc)
+        .date()
+        .isoformat()
+    )
+
+    return {
+        "gold_kr": gold_kr,
+        "gold_intl": gold_intl,
+        "premium": premium_calc,
+        "price_date": today,
+    }
+    
 def supabase_upsert(rows):
     url = (
         SUPABASE_URL
@@ -350,6 +550,123 @@ def main():
             e
         )
 
+        #
+    # VKOSPI
+    #
+    try:
+        p = investing_vkospi()
+
+        rows.append({
+            "symbol": "VKOSPI",
+            "name": "KOSPI Volatility",
+            "category": "VOLATILITY",
+            "current": p["current"],
+            "previous": p["previous"],
+            "change_pct":
+                p["change_pct"],
+            "change_bp": None,
+            "price_date":
+                p["price_date"],
+            "previous_date":
+                p["previous_date"],
+            "source":
+                "Investing.com",
+            "source_symbol":
+                "KSVKOSPI",
+            "updated_at":
+                datetime.now(
+                    timezone.utc
+                ).isoformat(),
+        })
+
+        print(
+            "[OK] VKOSPI:",
+            p["current"],
+            p["change_pct"],
+        )
+
+    except Exception as e:
+        print(
+            "[FAIL] VKOSPI:",
+            e
+        )
+
+
+    #
+    # KRX / International Gold
+    #
+    try:
+        g = gold_kr_prices()
+
+        rows.append({
+            "symbol": "GOLD_KR",
+            "name": "국내 금",
+            "category": "GOLD",
+            "current":
+                g["gold_kr"],
+            "previous": None,
+            "change_pct": None,
+            "change_bp": None,
+            "price_date":
+                g["price_date"],
+            "previous_date": None,
+            "source":
+                "gold-kr.web.app",
+            "source_symbol":
+                "KRX_GOLD_KRW_G",
+            "updated_at":
+                datetime.now(
+                    timezone.utc
+                ).isoformat(),
+        })
+
+        rows.append({
+            "symbol": "GOLD_INTL",
+            "name": "국제 금",
+            "category": "GOLD",
+            "current":
+                g["gold_intl"],
+            "previous": None,
+            "change_pct": None,
+            "change_bp": None,
+            "price_date":
+                g["price_date"],
+            "previous_date": None,
+            "source":
+                "gold-kr.web.app",
+            "source_symbol":
+                "COMEX_GOLD_KRW_G",
+            "updated_at":
+                datetime.now(
+                    timezone.utc
+                ).isoformat(),
+        })
+
+        print(
+            "[OK] GOLD_KR:",
+            g["gold_kr"]
+        )
+
+        print(
+            "[OK] GOLD_INTL:",
+            g["gold_intl"]
+        )
+
+        print(
+            "[OK] GOLD PREMIUM:",
+            round(
+                g["premium"],
+                2
+            ),
+            "%"
+        )
+
+    except Exception as e:
+        print(
+            "[FAIL] GOLD:",
+            e
+        )
+        
     if not rows:
         raise RuntimeError(
             "No market data collected."
