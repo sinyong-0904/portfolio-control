@@ -49,144 +49,108 @@ def test_gold():
         "bytes",
     )
 
-    #
-    # Keep the test deliberately broad.
-    # We first confirm the labels exist,
-    # then extract nearby KRW/g values.
-    #
-    for label in [
-        "국내",
-        "국제",
-        "KRX",
-        "괴리",
-    ]:
-        print(
-            f"label {label}:",
-            label in html,
-        )
-
-    krw_g = re.findall(
-        r"([\d,]+(?:\.\d+)?)\s*원\s*/?\s*g",
+    intl_match = re.search(
+        r'class="converted-price"'
+        r'[^>]*>\s*'
+        r'\(₩([\d,]+(?:\.\d+)?)'
+        r'\s*/g\)',
         html,
         flags=re.I,
     )
 
-    if not krw_g:
-        krw_g = re.findall(
-            r"₩\s*([\d,]+(?:\.\d+)?)\s*/?\s*g",
-            html,
-            flags=re.I,
-        )
-
-    values = [
-        number(x)
-        for x in krw_g
-    ]
-
-    print(
-        "KRW/g candidates:",
-        values[:20],
+    domestic_match = re.search(
+        r'국내\s*금\s*시세'
+        r'.{0,1000}?'
+        r'class="current-price"'
+        r'[^>]*>\s*'
+        r'₩([\d,]+(?:\.\d+)?)',
+        html,
+        flags=re.I | re.S,
     )
 
-        #
-    # Diagnostic snippets around
-    # gold-related labels/values.
-    #
-    print("\n--- GOLD HTML DIAGNOSTICS ---")
-
-    #
-    # Show HTML around every extracted
-    # KRW/g candidate.
-    #
-    for value_text in krw_g:
-        candidates = [
-            value_text,
-            value_text.replace(",", ""),
-        ]
-
-        found = False
-
-        for term in candidates:
-            pos = html.find(term)
-
-            if pos < 0:
-                continue
-
-            start = max(
-                0,
-                pos - 1000,
-            )
-
-            end = min(
-                len(html),
-                pos + 1000,
-            )
-
-            snippet = (
-                html[start:end]
-                .replace("\n", " ")
-                .replace("\r", " ")
-            )
-
-            print(
-                f"\n[VALUE {term}]\n",
-                snippet,
-            )
-
-            found = True
-            break
-
-        if not found:
-            print(
-                "Candidate not found:",
-                value_text,
-            )
-
-
-    print("\n--- ALL KRX POSITIONS ---")
-
-    positions = [
-        m.start()
-        for m in re.finditer(
-            "KRX",
-            html,
-            flags=re.I,
-        )
-    ]
-
-    print(
-        "KRX occurrence count:",
-        len(positions),
+    premium_match = re.search(
+        r'class="premium-value[^"]*"'
+        r'[^>]*>\s*'
+        r'([+-]?\s*[\d.]+)%',
+        html,
+        flags=re.I,
     )
 
-    for pos in positions[-5:]:
-        start = max(
-            0,
-            pos - 500,
+    if not intl_match:
+        raise RuntimeError(
+            "International gold "
+            "KRW/g not found"
         )
 
-        end = min(
-            len(html),
-            pos + 1000,
+    if not domestic_match:
+        raise RuntimeError(
+            "Domestic KRX gold "
+            "KRW/g not found"
         )
 
-        snippet = (
-            html[start:end]
-            .replace("\n", " ")
-            .replace("\r", " ")
+    gold_intl = number(
+        intl_match.group(1)
+    )
+
+    gold_kr = number(
+        domestic_match.group(1)
+    )
+
+    premium_calc = (
+        gold_kr /
+        gold_intl -
+        1
+    ) * 100
+
+    print(
+        "GOLD_INTL:",
+        gold_intl,
+        "KRW/g",
+    )
+
+    print(
+        "GOLD_KR:",
+        gold_kr,
+        "KRW/g",
+    )
+
+    print(
+        "PREMIUM calculated:",
+        round(
+            premium_calc,
+            2,
+        ),
+        "%",
+    )
+
+    if premium_match:
+        premium_source = float(
+            premium_match
+            .group(1)
+            .replace(
+                " ",
+                "",
+            )
         )
 
         print(
-            "\n[KRX POSITION]\n",
-            snippet,
+            "PREMIUM source:",
+            premium_source,
+            "%",
         )
-    if len(values) < 2:
-        raise RuntimeError(
-            "Could not extract two gold KRW/g values"
-        )
+
+        if (
+            abs(
+                premium_calc -
+                premium_source
+            ) > 0.05
+        ):
+            raise RuntimeError(
+                "Gold premium "
+                "validation mismatch"
+            )
 
     print("GOLD TEST PASS")
-
 
 def test_vkospi():
     print("\n=== VKOSPI TEST ===")
