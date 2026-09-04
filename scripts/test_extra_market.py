@@ -92,33 +92,82 @@ def test_gold():
     # Diagnostic snippets around
     # gold-related labels/values.
     #
-    diagnostic_terms = [
-        "국내",
-        "국제",
-        "KRX",
-        "괴리",
-        "197428",
-    ]
-
     print("\n--- GOLD HTML DIAGNOSTICS ---")
 
-    for term in diagnostic_terms:
-        pos = html.find(term)
+    #
+    # Show HTML around every extracted
+    # KRW/g candidate.
+    #
+    for value_text in krw_g:
+        candidates = [
+            value_text,
+            value_text.replace(",", ""),
+        ]
 
-        if pos < 0:
-            print(
-                f"{term}: NOT FOUND"
+        found = False
+
+        for term in candidates:
+            pos = html.find(term)
+
+            if pos < 0:
+                continue
+
+            start = max(
+                0,
+                pos - 1000,
             )
-            continue
 
+            end = min(
+                len(html),
+                pos + 1000,
+            )
+
+            snippet = (
+                html[start:end]
+                .replace("\n", " ")
+                .replace("\r", " ")
+            )
+
+            print(
+                f"\n[VALUE {term}]\n",
+                snippet,
+            )
+
+            found = True
+            break
+
+        if not found:
+            print(
+                "Candidate not found:",
+                value_text,
+            )
+
+
+    print("\n--- ALL KRX POSITIONS ---")
+
+    positions = [
+        m.start()
+        for m in re.finditer(
+            "KRX",
+            html,
+            flags=re.I,
+        )
+    ]
+
+    print(
+        "KRX occurrence count:",
+        len(positions),
+    )
+
+    for pos in positions[-5:]:
         start = max(
             0,
-            pos - 300,
+            pos - 500,
         )
 
         end = min(
             len(html),
-            pos + 500,
+            pos + 1000,
         )
 
         snippet = (
@@ -128,7 +177,7 @@ def test_gold():
         )
 
         print(
-            f"\n[{term}]\n",
+            "\n[KRX POSITION]\n",
             snippet,
         )
     if len(values) < 2:
