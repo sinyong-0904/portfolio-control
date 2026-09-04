@@ -279,36 +279,33 @@ def investing_vkospi():
         price_match.group(1)
     )
 
-    #
-    # Investing page exposes Prev. Close.
-    # Use it rather than deriving from
-    # rounded percentage text.
-    #
-    previous_match = re.search(
-        r'Prev\.\s*Close'
-        r'.{0,1000}?'
-        r'([\d,]+(?:\.\d+)?)',
+    change_match = re.search(
+        r'data-test="instrument-price-change-percent"'
+        r'[^>]*>\s*'
+        r'\(?\s*([+-]?\s*[\d,.]+)\s*%\s*\)?',
         html,
-        flags=re.I | re.S,
-    )
-
-    previous = (
-        parse_number(
-            previous_match.group(1)
-        )
-        if previous_match
-        else None
+        flags=re.I,
     )
 
     change_pct = (
+        parse_number(
+            change_match
+            .group(1)
+            .replace("+", "")
+        )
+        if change_match
+        else None
+    )
+
+    previous = (
+        current /
         (
-            current /
-            previous -
-            1
-        ) * 100
-        if previous not in (
-            None,
-            0
+            1 +
+            change_pct / 100
+        )
+        if (
+            change_pct is not None and
+            change_pct != -100
         )
         else None
     )
