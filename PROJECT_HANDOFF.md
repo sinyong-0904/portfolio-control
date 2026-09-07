@@ -604,92 +604,162 @@ Do not skip the design-review stage for high-risk financial-data architecture me
 
 ---
 
-# 9G. Special Rule for History Year-End Snapshot
+# 9G. History Table Snapshot — Current Architecture
 
-The 2026+ History Year-End Snapshot is classified as a **high-risk architecture change** because it introduces persistent historical financial data.
+The previous Year-End Snapshot architecture was abandoned before production implementation.
 
-## Known-Good Pre-History Checkpoint
+Do **not** reintroduce the former:
 
-Before History Snapshot development, the following stable checkpoint was created:
+* TEST / DRAFT / FINAL state machine,
+* automatic year-end reconstruction,
+* late-finalize reconstruction logic,
+* immutable FINAL / supersede workflow,
+* annual Performance recalculation inside History,
+* target-year financial recalculation inside History.
 
-**Tag:** `v3.3.2-pre-history-20260904`
+The production implementation uses a deliberately simpler model:
 
-**Commit:** `7c5f052dc5de28da5389868ed64de12605ae95c6`
+> The user explicitly snapshots the table currently visible in the live application.
 
-**Release:** `Portfolio Control v3.3.2 Pre-History Stable - 2026-09-04`
+History does not recalculate historical financial values.
 
-Treat this as the known-good rollback reference for History development.
+## Production Snapshot Types
 
-## Mandatory Pre-Implementation Gate
+Three snapshot types are supported:
 
-Before any History Snapshot implementation code is written:
+* `performance`
+* `growth_dividend`
+* `cash_like`
 
-1. Read the current `PROJECT_HANDOFF.md`.
-2. Verify the latest Git HEAD.
-3. Inspect the actual current History implementation.
-4. Inspect the actual authoritative source for Overview Performance.
-5. Inspect the actual authoritative source for Monthly Financial Asset Growth.
-6. Inspect the actual authoritative source for dividend records and dividend account totals.
-7. Inspect the actual authoritative source for cash-like assets.
-8. Inspect the actual authoritative source for Income & Tax.
-9. Inspect the portfolio persistence path.
-10. Inspect Backup / Restore behavior.
-11. Produce a **Touch Map**.
-12. Produce the proposed **Snapshot Schema and implementation plan**.
-13. Obtain an independent second-AI design review.
-14. Obtain explicit user approval.
-15. Only then begin implementation.
+The UI sources are:
 
-## Touch Map Requirements
+* Overview → Performance
+* Growth & Dividend → Monthly Financial Asset Growth + Dividend Status
+* Cash Management → Cash-Like Assets
 
-For every required History data source, identify:
+The former separate Dividend Account Total table was removed from the live Growth & Dividend view because the Dividend Status table already contains its total row.
 
-* authoritative current data source,
-* calculation function,
-* renderer,
-* whether structured data is externally accessible,
-* whether the History module can reuse it read-only,
-* existing files requiring modification,
-* approximate size of each affected file,
-* whether modification of a 40 KB+ file can be avoided.
+## Snapshot Workflow
 
-The required areas are:
+The user:
 
-* Overview Performance
-* Monthly Financial Asset Growth
-* Dividend records
-* Dividend account totals
-* Cash-like assets
-* Income & Tax
-* portfolio persistence
-* Backup / Restore
+1. opens the relevant live table,
+2. presses `Snapshot`,
+3. selects the target year,
+4. confirms the save.
 
-This gate exists partly because the company GitHub Web workflow may fail for large files around the ~50 KB range.
+If a snapshot already exists for the same:
 
-Do not spend a large implementation effort first and discover only afterward that the required modified files cannot practically be published.
+`user_id + year + snapshot_type`
 
-Prefer a focused independent History module when the actual architecture permits it.
+the application displays the existing snapshot timestamp and asks for confirmation before replacement.
 
-However:
+Confirmed replacement uses UPSERT semantics.
 
-> Do not duplicate financial calculations merely to avoid touching an existing large file.
+Snapshots may be created at any time.
 
-## Implementation and Review
+There is no system-level concept of TEST, DRAFT, or FINAL.
 
-After the Touch Map, Snapshot Schema, implementation plan, independent review, and user approval are complete:
+The user determines when the displayed live table is worth preserving.
 
-1. Create an isolated local History implementation branch.
-2. Implement the approved design.
-3. Run the AI Implementation Completion Protocol.
-4. Create the local commit.
-5. Publish through the user-controlled GitHub Web workflow.
-6. Perform independent review of the actual remote commit.
-7. Run the History Snapshot Test Protocol.
-8. Perform production regression.
+## Storage
+
+2026+ table snapshots are stored separately from `portfolio_state` in Supabase:
+
+`public.portfolio_table_snapshots`
+
+The table uses:
+
+* `user_id`
+* `year`
+* `snapshot_type`
+* `schema_version`
+* `captured_at`
+* `valuation_date`
+* `snapshot_data`
+* `updated_at`
+
+A unique constraint exists on:
+
+`(user_id, year, snapshot_type)`
+
+RLS is enabled for the new table.
+
+Authenticated users may access only rows whose `user_id` matches `auth.uid()`.
+
+The repository schema source is:
+
+`sql/create_portfolio_table_snapshots.sql`
+
+## Historical Integrity
+
+Snapshot data is captured as structured table data:
+
+* headers,
+* rows,
+* table metadata.
+
+Do not store raw HTML.
+
+Do not recalculate the historical table later using current financial formulas, current mappings, or current market prices.
 
 The central invariant is:
 
-> Historical snapshots must remain trustworthy even if future live portfolio data or calculation logic changes.
+> History displays the values that were visible when the user explicitly created that snapshot.
+
+Each History section displays:
+
+* snapshot capture date/time,
+* valuation date when available.
+
+## 2025 Compatibility
+
+The existing 2025 frozen legacy History remains unchanged.
+
+The unified History UI combines:
+
+* 2025 → existing legacy renderer,
+* 2026+ → Supabase table snapshots.
+
+Do not migrate 2025 unless explicitly requested.
+
+## Income & Tax
+
+Income & Tax is not part of the table snapshot payload.
+
+Keep the existing Income & Tax behavior unless a separate requirement explicitly changes it.
+
+## Persistence Isolation
+
+`portfolio_table_snapshots` is physically separate from `portfolio_state`.
+
+Therefore normal portfolio-state saves or restores must not delete table snapshots.
+
+Do not move these snapshots back into the whole-blob `portfolio_state` architecture.
+
+## Implementation Ownership
+
+Primary implementation:
+
+* `v34-table-snapshot.js`
+* `v34-table-snapshot.css`
+* `sql/create_portfolio_table_snapshots.sql`
+
+Load integration:
+
+* `index.html`
+
+The implementation intentionally avoids modifying the large financial calculation files.
+
+History table snapshots must remain a presentation-state preservation feature, not a second financial calculation engine.
+
+## Simplicity Rule
+
+This feature is the reference example for the project's simplicity-first design principle:
+
+> Prefer the smallest mechanism that directly satisfies the user's actual workflow before introducing generalized lifecycle, reconstruction, migration, or recovery architecture.
+
+Do not add complexity merely for hypothetical future requirements.
 
 ---
 
@@ -1333,432 +1403,293 @@ Before coding:
 Do not create a second independent Growth calculation source merely for the chart.
 
 ---
+# 27. History Table Snapshot — Production Requirement
 
-# 27. MAJOR TODO — 2026+ History Year-End Snapshot
+The previous generalized Year-End Snapshot design was abandoned before production implementation.
 
-This is the next major feature after the Growth graph.
+The current production design is intentionally simple:
 
-## 27.1 Existing 2025 History
+> The user snapshots the live table that is currently visible and stores that structured table state under a selected History year.
 
-The current 2025 History is based on legacy Excel information.
+History is a storage and rendering feature.
 
-**Keep the existing 2025 History screen unchanged.**
-
-Do not redesign it merely for consistency.
-
----
-
-# 28. 2026 Onward — Annual Application Snapshot
-
-Beginning with 2026, History should become an application-generated annual archive.
-
-Year selector concept:
-
-```text
-Year [2025] [2026] [2027] [2028] ...
-```
-
-Behavior:
-
-```text
-2025
-→ legacy History view
-
-2026+
-→ Year-End Snapshot view
-```
+History must not become a second financial calculation engine.
 
 ---
 
-# 29. Snapshot Creation
+# 28. Snapshot Sources
 
-Do not automatically create the annual snapshot through a background job.
+Three snapshot types are supported.
 
-Instead, History should offer a user-controlled button when an annual snapshot is due.
+## Performance
 
-Example:
+Source:
 
-```text
-2026 Year-End Snapshot has not been created.
+`Overview → Performance`
 
-[ Create 2026 Year-End Snapshot ]
-```
+Snapshot type:
 
-The user should first verify:
+`performance`
 
-* final market prices
-* holdings
-* dividends
-* cash-like assets
-* valuation date
+The snapshot stores the table values visible to the user at capture time.
 
-and then explicitly create the snapshot.
+## Growth & Dividend
 
-The confirmation dialog should preferably show:
+Sources:
 
-```text
-snapshot year
-current valuationDate
-```
+* Monthly Financial Asset Growth
+* Dividend Status
 
-Automatic logic should only determine that a snapshot **may be created**.
+Snapshot type:
 
-It should not create the snapshot without explicit user confirmation.
+`growth_dividend`
 
-If the user does not create it before year-end, the button should remain available early in the next year.
+These two tables are stored together as one snapshot group.
 
----
-
-# 30. Snapshot Must Be Immutable
-
-This is critical.
-
-The annual snapshot must be a **deep copy of historical values**.
-
-It must not remain a reference to live portfolio structures.
-
-Future changes to:
-
-* holdings
-* account values
-* performance formulas
-* dividends
-* cash
-* allocation
-
-must not alter the historical annual snapshot.
-
----
-
-# 31. 2026+ History Contents
-
-Selecting a snapshot year such as 2026 should display four major sections.
-
-## A. Performance
-
-Snapshot the final Overview → Performance table.
-
-This provides:
-
-* account valuation
-* annual P&L
-* cumulative P&L
-* annual/YTD metrics
-* TR
-* TWR
-* CAGR
-* relevant aggregate rows
-
-Store the actual year-end values.
-
-Do not recalculate historical values years later using future formulas.
-
----
-
-## B. Growth & Dividend
-
-Store/display the three tables from Growth & Dividend:
-
-1. `2026 월별 금융자산 Growth`
-2. `배당금 현황`
-3. `계좌별 합계`
-
-These preserve:
-
-* monthly financial-asset progression
-* annual dividend records
-* account-level dividend totals
-
----
-
-## C. Cash-Like Assets
-
-Store/display the financial-management:
-
-```text
-예금성 자금
-```
-
-table.
-
-Purpose:
-
-* know how much cash-like capital existed by account at year-end
-* compare historical parking/cash levels with current values
-
----
-
-## D. Income & Tax
-
-Income & Tax is the exception to snapshot immutability.
-
-Reason:
-
-Example:
-
-```text
-2026 withholding/tax amount
-→ finalized around April 2027
-```
-
-Therefore Income & Tax should behave as a separate editable annual ledger.
-
-When the 2026 snapshot is created:
-
-```text
-2026 row remains editable
-2027 row is added
-```
-
-When 2027 closes:
-
-```text
-2027 remains editable
-2028 row is added
-```
-
-and so on.
-
-Do not freeze tax data merely because the financial snapshot was created.
-
----
-
-# 32. Future History Analytics
-
-Do not implement this yet.
-
-After approximately three or more annual snapshots accumulate, History can evolve into a long-term analytics dashboard.
-
-Potential charts:
-
-## Year-End Valuation
-
-```text
-line chart
-2025 → 2026 → 2027 → ...
-```
-
-## Annual P&L / Annual Return
-
-```text
-bar chart
-```
-
-## Annual Dividends
-
-```text
-bar chart
-```
+The former separate Dividend Account Total table is not part of the current UI or snapshot requirement because the Dividend Status table already contains its total row.
 
 ## Cash-Like Assets
 
-Historical parking/cash trajectory.
+Source:
 
-## Allocation Evolution
+`Cash Management → Cash-Like Assets`
 
-Potentially:
+Snapshot type:
 
-```text
-EQUITY
-INCOME
-HEDGE
-PARKING
-```
-
-or Core-allocation changes by year.
+`cash_like`
 
 ---
 
-# 33. Snapshot Schema — Maintainability Requirement
+# 29. User-Controlled Snapshot Workflow
 
-Do not merely copy rendered HTML.
+Snapshot creation is explicitly user-triggered.
 
-Store structured data.
+Workflow:
 
-Conceptually:
+1. open the live source table,
+2. press the Snapshot button,
+3. select the History year,
+4. confirm the save.
 
-```text
-historySnapshots
-  2026
-    metadata
-      year
-      valuationDate
-      createdAt
+Snapshots may be created at any time.
 
-    performance
-      rows
-      aggregates
+The system does not attempt to determine whether the current date is the true year-end date.
 
-    growth
-      monthlyRows
-      annualTotals
+The system does not automatically create a year-end snapshot.
 
-    dividends
-      rows
-      accountTotals
-      total
+The user decides when the currently displayed data should be preserved.
 
-    cashLike
-      rows
-      total
+For the current year, the current year should be the default selection.
 
-    summary
-      yearEndValuation
-      annualPnl
-      cumulativePnl
-      annualReturn
-      dividendTotal
-      cashLikeTotal
-      allocation / sleeve aggregates
-```
+Do not allow accidental future-year snapshot creation.
 
-Exact field names must be designed from the actual current data structures when implementation begins.
-
-The `summary` concept is important.
-
-Future History charts should not need to parse historical table structures merely to retrieve:
-
-* valuation
-* annual P&L
-* annual return
-* dividends
-* cash
-* allocation
-# 33A. History Snapshot Test Protocol
-
-The History Snapshot feature must be testable before the actual end of 2026.
-
-Use the **current 2026 live application data** to create a temporary/test 2026 snapshot.
-
-The purpose is not to prove that the current values are the final 2026 year-end values.
-
-The purpose is to prove that:
-
-> the snapshot accurately captures the live state at creation time and remains independent afterward.
-
-## Visual Data Comparison
-
-After creating the test snapshot, select **History → Year 2026** and compare it directly with the current live application.
-
-### Performance
-
-History 2026 Performance must match the current **Overview → Performance** table, including relevant rows, ordering, values, and totals.
-
-### Growth & Dividend
-
-History 2026 must match the current:
-
-* `2026 월별 금융자산 Growth`
-* `배당금 현황`
-* `계좌별 합계`
-
-The snapshot must preserve the values shown by those three live tables at snapshot-creation time.
-
-### Cash-Like Assets
-
-History 2026 must match the current **자금관리 → 예금성 자금** table, including the account-level values and totals shown at snapshot-creation time.
-
-### Income & Tax
-
-The Income & Tax section must appear correctly and remain editable according to the annual-ledger rules.
-
-## Persistence Test
-
-After snapshot creation:
-
-1. Reload the application with `Ctrl+F5`.
-2. Confirm that the 2026 snapshot remains.
-3. Open the application on another device.
-4. Confirm that the same 2026 snapshot appears there.
-
-This verifies persistence through the application's normal cloud state.
-
-## Immutability Test
-
-After snapshot creation, temporarily change one safe live value.
-
-Expected behavior:
-
-* the current live view changes,
-* the History 2026 financial snapshot does **not** change.
-
-Restore the temporary live value afterward.
-
-This verifies that the snapshot is a deep historical copy rather than a live reference.
-
-## Income & Tax Exception
-
-Income & Tax is intentionally different from the immutable financial snapshot.
-
-After snapshot creation, the 2026 Income & Tax row must remain editable.
-
-A valid Income & Tax edit should update the annual tax ledger even though the financial snapshot itself remains immutable.
-
-When the annual workflow advances, the next year's row must be available according to the Income & Tax requirements.
-
-## Test Snapshot Cleanup
-
-The implementation must provide a controlled way to remove or regenerate the temporary 2026 test snapshot.
-
-Do not leave a mid-year test snapshot permanently indistinguishable from the true year-end snapshot.
-
-Normal year-end snapshots should remain protected from casual overwrite.
+If a non-current historical year is selected, show an additional warning because the current live table is about to replace historical data for another year.
 
 ---
 
+# 30. Re-Snapshot / Replacement
 
-# 34. History Snapshot Regeneration
+Only one active snapshot exists for each:
 
-Normal snapshots should be treated as immutable.
+`user_id + year + snapshot_type`
 
-If regeneration is supported:
+If a snapshot already exists for that combination:
 
-* do not expose it as a casual primary action
-* place it behind an explicit advanced action
-* clearly warn that the historical snapshot will be replaced
-* preferably preserve the previous snapshot temporarily for recovery
+1. show that a snapshot already exists,
+2. show its previous capture timestamp,
+3. ask for explicit confirmation,
+4. replace it only after confirmation.
+
+Replacement uses UPSERT semantics.
+
+There is no TEST / DRAFT / FINAL lifecycle.
+
+There is no immutable FINAL concept.
+
+There is no automatic supersede/archive workflow.
+
+If future requirements need snapshot version history, design that feature separately rather than adding it speculatively now.
+
+---
+
+# 31. Snapshot Data Contract
+
+Snapshots must store structured data, not raw HTML.
+
+Minimum table structure:
+
+* table key,
+* table title,
+* headers,
+* rows.
+
+Snapshot metadata must include:
+
+* target year,
+* snapshot type,
+* schema version,
+* captured timestamp,
+* valuation date when available.
+
+The stored values represent what the user saw at snapshot time.
+
+Do not later reconstruct the snapshot using:
+
+* current market prices,
+* current holdings,
+* current mappings,
+* current Performance formulas,
+* current Growth formulas,
+* current Cash formulas.
+
+The historical rendering rule is:
+
+> Render stored snapshot values. Do not recalculate them.
 
 ---
 
-# 35. Release Strategy
+# 32. Supabase Persistence
 
-## Earlier Stable Checkpoint
+2026+ table snapshots are stored in:
 
-`v3.3-stable-20260903`
+`public.portfolio_table_snapshots`
 
-This remains an earlier historical checkpoint.
+This table is separate from:
 
-## Current Known-Good Pre-History Checkpoint
+`portfolio_state`
 
-Tag: `v3.3.2-pre-history-20260904`
+The current schema source is:
 
-Commit: `7c5f052dc5de28da5389868ed64de12605ae95c6`
+`sql/create_portfolio_table_snapshots.sql`
 
-Release: `Portfolio Control v3.3.2 Pre-History Stable - 2026-09-04`
+Snapshot types:
 
-This is the known-good rollback point immediately before History Year-End Snapshot development.
+* `performance`
+* `growth_dividend`
+* `cash_like`
 
-If History development causes unacceptable regression:
+Unique key:
 
-> Use this tag/commit as the known-good reference for rollback.
+`(user_id, year, snapshot_type)`
 
-Prefer a revert/rollback commit over destructive remote-history rewriting.
+RLS is enabled.
 
-## Final History Release
+The authenticated role has the required table privileges.
 
-After History Snapshot implementation, independent review, snapshot testing, and production regression are complete, create the next stable release.
+Row policies restrict access to:
 
-Suggested release: `v3.4-stable-YYYYMMDD`
+`auth.uid() = user_id`
 
-After that release:
+Do not move table snapshots into the existing whole-blob `portfolio_state`.
 
-1. record the final stable tag,
-2. record the final stable commit SHA,
-3. update completed TODOs,
-4. record remaining maintenance work,
-5. enter maintenance mode.
+The separation exists so that normal portfolio-state saves, stale-device saves, or portfolio backup restores do not silently remove historical table snapshots.
 
 ---
+
+# 33. History Rendering
+
+The History UI uses a unified year selector.
+
+## 2025
+
+Use the existing frozen legacy History renderer.
+
+Do not migrate or reinterpret the 2025 data.
+
+## 2026+
+
+Use the table snapshot renderer.
+
+For each stored snapshot section display:
+
+* snapshot capture date/time,
+* valuation date when available,
+* the stored table or tables.
+
+If a snapshot type has not yet been saved for the selected year, show an explicit empty-state message.
+
+The current implementation must preserve compatibility with the existing History note/sticky behavior.
+
+---
+
+# 34. Income & Tax
+
+Income & Tax remains outside the table snapshot payload.
+
+The existing Income & Tax behavior remains in place.
+
+Do not duplicate Income & Tax inside:
+
+`portfolio_table_snapshots`
+
+Any future change to Income & Tax editability, annual rollover, or tax finalization is a separate requirement.
+
+---
+
+# 35. Implementation and Validation Status
+
+## Implementation Files
+
+Primary implementation:
+
+* `v34-table-snapshot.js`
+* `v34-table-snapshot.css`
+* `sql/create_portfolio_table_snapshots.sql`
+
+Integration:
+
+* `index.html`
+
+The implementation intentionally avoids modifying the large financial calculation files.
+
+## Production Commits
+
+Core Table Snapshot implementation:
+
+`ec16047f7857f7360fb7ddce9a09b45ec907e724`
+
+Database schema source:
+
+`dc8bd44bd0e642a2c7da8cbce2e242c91ca54593`
+
+## Verified Behavior
+
+The following behavior has been verified in production:
+
+* Performance snapshot creation,
+* Growth + Dividend snapshot creation,
+* Cash-Like Assets snapshot creation,
+* Supabase persistence,
+* History 2026 rendering,
+* existing 2025 History preservation,
+* snapshot capture timestamp display,
+* valuation-date display,
+* re-snapshot confirmation,
+* UPSERT replacement,
+* live Cash-Like value update followed by re-snapshot and correct History replacement,
+* reload persistence,
+* cross-device History visibility,
+* removal of the redundant Dividend Account Total table from the live Growth & Dividend view.
+
+## Known Architecture
+
+History table snapshots preserve presentation data.
+
+They do not preserve or execute historical financial calculation logic.
+
+This is intentional.
+
+The authoritative historical fact is:
+
+> the structured table state explicitly captured by the user.
+
+## Future History Analytics
+
+Future multi-year History charts may use stored structured snapshot data.
+
+Do not implement those charts until explicitly requested.
+
+Do not redesign the current snapshot storage merely to anticipate hypothetical analytics.
 
 ---
 
@@ -1915,58 +1846,47 @@ Do not generate code based on assumed repository structure.
 
 # 38. Current Preferred Work Order
 
-At the time this handoff was created:
-
 ```text
-1. Pre-History stable checkpoint
+1. History Table Snapshot implementation
    → COMPLETE
-   → v3.3.2-pre-history-20260904
-   → 7c5f052dc5de28da5389868ed64de12605ae95c6
 
-2. Before History coding:
-   → verify latest HEAD
-   → inspect all authoritative History data sources
-   → produce Touch Map
-   → identify affected 40 KB+ files
-   → design Snapshot Schema
-   → produce implementation plan
-   → NO implementation yet
+   Production commits:
+   → ec16047f7857f7360fb7ddce9a09b45ec907e724
+   → dc8bd44bd0e642a2c7da8cbce2e242c91ca54593
 
-3. Independent second-AI design review.
+2. Production verification
+   → COMPLETE
 
-4. User approval of Touch Map / architecture / schema.
+   Verified:
+   → Performance snapshot
+   → Growth + Dividend snapshot
+   → Cash-Like Assets snapshot
+   → re-snapshot / UPSERT replacement
+   → History 2026 rendering
+   → 2025 legacy History compatibility
+   → reload persistence
+   → cross-device visibility
 
-5. Create an isolated local History implementation branch.
+3. PROJECT_HANDOFF.md update
+   → IN PROGRESS
 
-6. Implement 2026+ History Year-End Snapshot.
+   Update the document to describe the actual simple Table Snapshot architecture.
+   Remove obsolete Year-End Snapshot / TEST / DRAFT / FINAL design instructions.
 
-7. Run AI Implementation Completion Protocol.
+4. After Handoff update:
+   → review the final remote commit
+   → run targeted regression if needed
 
-8. Publish through the user-controlled GitHub Web workflow.
+5. Create the next stable release when the Handoff and final verification are complete.
 
-9. Independent review of the actual remote commit.
+   Suggested release:
+   → v3.4-stable-YYYYMMDD
 
-10. Run History Snapshot Test Protocol using current 2026 data:
-    → compare required History tables with live data
-    → reload persistence
-    → cross-device persistence
-    → immutability test
-    → Income & Tax editability
-    → remove/regenerate temporary test snapshot
-
-11. Run full targeted production regression.
-
-12. Create final v3.4 stable release.
-
-13. Update PROJECT_HANDOFF.md with:
-    → final stable tag
-    → final stable commit SHA
-    → completed TODOs
-    → remaining TODOs
-
-14. Maintenance mode.
-
+6. After the stable release:
+   → enter maintenance mode
+   → add unrelated features only when explicitly requested
 ```
+
 
 Do not add unrelated features before these unless explicitly requested.
 
