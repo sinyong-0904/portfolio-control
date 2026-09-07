@@ -606,9 +606,117 @@
     );
   }
 
+  function pensionCagrRateV33() {
+    try {
+      const rows =
+        typeof window.performanceRowsV33 ===
+          'function'
+          ? window.performanceRowsV33()
+          : [];
 
+      const row =
+        rows.find(
+          r =>
+            r.scope === '연금합산'
+        );
+
+      const cagr =
+        Number(
+          row?.cagr
+        );
+
+      if (
+        Number.isFinite(cagr)
+      ) {
+        //
+        // performanceRowsV33().cagr는
+        // % 단위이므로 simulation용
+        // 소수 rate로 변환한다.
+        //
+        return cagr / 100;
+      }
+
+    } catch (e) {
+      console.error(
+        '[v33] pension CAGR read failed',
+        e
+      );
+    }
+
+    return 0;
+  }
+
+
+  function isoWeekV33(
+    date = new Date()
+  ) {
+    const d =
+      new Date(
+        Date.UTC(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        )
+      );
+
+    const day =
+      d.getUTCDay() || 7;
+
+    d.setUTCDate(
+      d.getUTCDate() +
+      4 -
+      day
+    );
+
+    const yearStart =
+      new Date(
+        Date.UTC(
+          d.getUTCFullYear(),
+          0,
+          1
+        )
+      );
+
+    return Math.ceil(
+      (
+        (
+          d - yearStart
+        ) /
+        86400000 +
+        1
+      ) /
+      7
+    );
+  }
+
+
+  function remainingYearFractionV33() {
+    const week =
+      isoWeekV33();
+
+    const completedWeeks =
+      Math.min(
+        52,
+        Math.max(
+          0,
+          week - 1
+        )
+      );
+
+    const remainingWeeks =
+      52 -
+      completedWeeks;
+
+    return {
+      week,
+      completedWeeks,
+      remainingWeeks,
+      fraction:
+        remainingWeeks / 52
+    };
+  }
+  
   function buildSimulationV33() {
-
     const startYear =
       new Date()
         .getFullYear();
@@ -641,10 +749,30 @@
       simulationStartManV33();
 
 
-    const rates =
-      data.simulation
-        .rates
-        .map(Number);
+    const pensionCagr =
+      pensionCagrRateV33();
+
+
+    const rates = [
+      0.05,
+      0.08,
+      0.10,
+      pensionCagr
+    ];
+
+
+    const rateLabels = [
+      '5%',
+      '8%',
+      '10%',
+      `CAGR (${(
+        pensionCagr * 100
+      ).toFixed(2)}%)`
+    ];
+
+
+    const yearFraction =
+      remainingYearFractionV33();
 
 
     const results = [];
@@ -673,7 +801,6 @@
       //
       // 현재 평가액을 투입기준의 시작으로 사용.
       //
-
       const principal =
         start +
         contribution * i;
@@ -697,11 +824,27 @@
                   );
 
 
+            //
+            // 현재 연도만 남은 주차만큼
+            // 연 수익률을 비례 적용한다.
+            //
+            // 이후 연도는 full-year rate.
+            //
+            const appliedRate =
+              i === 0
+
+                ? rate *
+                  yearFraction
+                    .fraction
+
+                : rate;
+
+
             const out =
               before *
               (
                 1 +
-                rate
+                appliedRate
               );
 
 
@@ -737,13 +880,11 @@
       // Event:
       // 기본 8%에 shock을 %p로 가감.
       //
-      // -15 -> 8 - 15 = -7%
+      // -15 -> 연 8 - 15 = -7%
       //
-
-      const effective =
+      const annualEffective =
         Math.max(
           -0.99,
-
           Number(
             data.simulation
               .baseEventRate ||
@@ -751,6 +892,20 @@
           ) +
           shock / 100
         );
+
+
+      //
+      // 현재 연도 Event 역시
+      // 남은 주차만큼만 비례 적용한다.
+      //
+      const effective =
+        i === 0
+
+          ? annualEffective *
+            yearFraction
+              .fraction
+
+          : annualEffective;
 
 
       eventPrev =
@@ -774,7 +929,9 @@
         eventValue:
           eventPrev,
 
-        effective
+        effective,
+
+        annualEffective
       });
     }
 
@@ -791,11 +948,29 @@
 
       rates,
 
+      rateLabels,
+
+      pensionCagr,
+
+      currentWeek:
+        yearFraction.week,
+
+      completedWeeks:
+        yearFraction
+          .completedWeeks,
+
+      remainingWeeks:
+        yearFraction
+          .remainingWeeks,
+
+      remainingFraction:
+        yearFraction
+          .fraction,
+
       results
     };
   }
-
-
+  
   function simulationChartV33(
     sim
   ) {
@@ -820,9 +995,7 @@
             `r${j}`,
 
           label:
-            `${Math.round(
-              rate * 100
-            )}%`,
+            sim.rateLabels[j],
 
           values:
             sim.results.map(
@@ -1174,13 +1347,31 @@
               </b>
 
               <div class="small">
-                실효
                 ${
-                  (
-                    r.effective *
-                    100
-                  ).toFixed(1)
-                }%
+                  r.year ===
+                    sim.startYear
+
+                    ? `
+                      실효
+                      ${(
+                        r.effective *
+                        100
+                      ).toFixed(1)}%
+                      · 연
+                      ${(
+                        r.annualEffective *
+                        100
+                      ).toFixed(1)}%
+                    `
+
+                    : `
+                      실효
+                      ${(
+                        r.effective *
+                        100
+                      ).toFixed(1)}%
+                    `
+                }
               </div>
 
             </td>
@@ -1324,23 +1515,26 @@
                   누적 투입기준
                 </th>
 
-                <th>
-                  5%
-                </th>
-
-                <th
-                  class="v33-sim-target"
-                >
-                  8%
-                </th>
-
-                <th>
-                  10%
-                </th>
-
-                <th>
-                  12%
-                </th>
+                                ${
+                  sim.rateLabels
+                    .map(
+                      (
+                        label,
+                        j
+                      ) => `
+                        <th
+                          class="${
+                            j === 1
+                              ? 'v33-sim-target'
+                              : ''
+                          }"
+                        >
+                          ${esc(label)}
+                        </th>
+                      `
+                    )
+                    .join('')
+                }
 
                 <th>
                   Event
@@ -1388,11 +1582,9 @@
                 <div>
 
                   <small>
-                    ${
-                      Math.round(
-                        rate * 100
-                      )
-                    }%
+                    ${esc(
+                      sim.rateLabels[j]
+                    )}
                   </small>
 
                   <b>
