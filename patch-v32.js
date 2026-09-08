@@ -479,6 +479,9 @@
     save(false);
   }
 
+  window.rollGrowthForwardV32 =
+    rollGrowthForward;
+
   function v32MonthlyRows() {
     ensureGrowthV32();
 
