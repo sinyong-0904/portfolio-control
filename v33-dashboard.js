@@ -1043,7 +1043,11 @@ const CORE_ORDER_V33 = [
               under
                 .map(
                   row =>
-                    esc(row.key)
+                    esc(
+                      row.key === 'BOND'
+                        ? 'HEDGE'
+                        : row.key
+                    )
                 )
                 .join(' · ')
             }
@@ -1675,9 +1679,12 @@ const CORE_ORDER_V33 = [
                 }"
               >
                 ${esc(
-                  statusTextV33(
-                    row.status
-                  )
+                  row.key === 'BOND' &&
+                  row.status === 'UNDER'
+                    ? 'HEDGE 보충'
+                    : statusTextV33(
+                        row.status
+                      )
                 )}
               </span>
             </td>
