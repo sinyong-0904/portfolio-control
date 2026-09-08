@@ -49,19 +49,46 @@
     // Therefore initialize finalizedThrough to the year
     // immediately before the latest existing row.
     //
+    //
+    // Existing data migration:
+    // before this feature, only the latest row was editable.
+    //
+    // Therefore initialize finalizedThrough to the year
+    // immediately before the latest existing row.
+    //
+    const finalizedThrough =
+      Number(
+        h.finalizedThrough
+      );
+
+    const existingYears =
+      rows
+        .map(
+          r => Number(r.year)
+        )
+        .filter(
+          Number.isFinite
+        );
+
+    const earliestExisting =
+      existingYears.length
+        ? Math.min(
+            ...existingYears
+          )
+        : year;
+
     if (
       !Number.isInteger(
-        Number(h.finalizedThrough)
-      )
+        finalizedThrough
+      ) ||
+      finalizedThrough <
+        earliestExisting
     ) {
-      const existingYears =
-        rows
-          .map(r => Number(r.year))
-          .filter(Number.isFinite);
-
       const latestExisting =
         existingYears.length
-          ? Math.max(...existingYears)
+          ? Math.max(
+              ...existingYears
+            )
           : year;
 
       h.finalizedThrough =
