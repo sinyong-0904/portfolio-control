@@ -222,7 +222,7 @@
             });
         }
 
-        return;
+        return false;
       }
 
       // v3.2 이하에 대해서만
@@ -232,6 +232,7 @@
         p.monthIndex
       );
     }
+    return true;
   }
 
   function calculateLiveRow(
@@ -483,7 +484,8 @@
     rollGrowthForward;
 
   function v32MonthlyRows() {
-    ensureGrowthV32();
+    const canCalculateLive =
+      ensureGrowthV32();
 
     const g =
       data.growthV32;
@@ -493,10 +495,12 @@
         g.currentYear
       );
 
-    calculateLiveRow(
-      g.currentYear,
-      g.currentMonthIndex
-    );
+    if (canCalculateLive !== false) {
+      calculateLiveRow(
+        g.currentYear,
+        g.currentMonthIndex
+      );
+    }
 
     const displayed =
       MONTHS.map(
