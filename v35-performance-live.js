@@ -125,6 +125,194 @@
     );
   }
 
+  function currentYearPnlManV35(
+    scope,
+    businessYear
+  ) {
+    if (
+      businessYear <= 2026 ||
+      !rolloverPreviewV35
+    ) {
+      return null;
+    }
+
+    const accountBase =
+      rolloverPreviewV35
+        .accountBaseMan || {};
+
+    const accountMap = {
+      DC: 'DC',
+      '연금(1)': 'P1',
+      '연금(2)': 'P2',
+      ISA: 'ISA',
+      '일반계좌': 'GENERAL',
+      '자녀연금': 'CHILD'
+    };
+
+    if (
+      Object.prototype
+        .hasOwnProperty
+        .call(
+          accountMap,
+          scope
+        )
+    ) {
+      const id =
+        accountMap[scope];
+
+      const value =
+        Number(
+          accountSummary(id).value
+        ) || 0;
+
+      const base =
+        Number(
+          accountBase[id]
+        ) || 0;
+
+      const flow =
+        Number(
+          annualFlow(
+            acct(id),
+            String(
+              businessYear
+            )
+          )
+        ) || 0;
+
+      return (
+        value -
+        base -
+        flow
+      );
+    }
+
+    if (
+      scope ===
+      '연금합산'
+    ) {
+      const ids = [
+        'DC',
+        'P1',
+        'P2'
+      ];
+
+      return ids.reduce(
+        (sum, id) =>
+          sum +
+          (
+            Number(
+              accountSummary(id)
+                .value
+            ) || 0
+          ) -
+          (
+            Number(
+              accountBase[id]
+            ) || 0
+          ) -
+          (
+            Number(
+              annualFlow(
+                acct(id),
+                String(
+                  businessYear
+                )
+              )
+            ) || 0
+          ),
+        0
+      );
+    }
+
+    if (
+      scope ===
+      'Total'
+    ) {
+      const ids = [
+        'DC',
+        'P1',
+        'P2',
+        'ISA',
+        'GENERAL',
+        'CHILD'
+      ];
+
+      return ids.reduce(
+        (sum, id) =>
+          sum +
+          (
+            Number(
+              accountSummary(id)
+                .value
+            ) || 0
+          ) -
+          (
+            Number(
+              accountBase[id]
+            ) || 0
+          ) -
+          (
+            Number(
+              annualFlow(
+                acct(id),
+                String(
+                  businessYear
+                )
+              )
+            ) || 0
+          ),
+        0
+      );
+    }
+
+    if (
+      [
+        'EQUITY',
+        'INCOME',
+        'HEDGE',
+        'PARKING'
+      ].includes(scope)
+    ) {
+      const metric =
+        typeof window
+          .pensionBucketMetricsV33 ===
+          'function'
+          ? window
+              .pensionBucketMetricsV33()
+              .buckets[scope]
+          : null;
+
+      const base =
+        rolloverPreviewV35
+          .pensionBucketSnapshot
+          ?.buckets
+          ?.[scope];
+
+      if (
+        !metric ||
+        !base
+      ) {
+        return null;
+      }
+
+      return (
+        (
+          Number(
+            metric.value
+          ) || 0
+        ) / 10000 -
+        (
+          Number(
+            base.snapshotEvalMan
+          ) || 0
+        )
+      );
+    }
+
+    return null;
+  }
+
   const performanceRowsBeforeV35 =
     window.performanceRows;
 
@@ -483,6 +671,207 @@
       );
     };
 
+  function formatManV35(
+    value
+  ) {
+    const n =
+      Number(value);
+
+    if (
+      !Number.isFinite(n)
+    ) {
+      return 'n/a';
+    }
+
+    return (
+      `${Math.round(n)
+        .toLocaleString(
+          'ko-KR'
+        )}만원`
+    );
+  }
+
+  function applyPerformancePresentationV35() {
+    const businessYear =
+      businessYearV35Safe();
+
+    if (
+      businessYear <= 2026 ||
+      !rolloverPreviewV35
+    ) {
+      return false;
+    }
+
+    const table =
+      document.querySelector(
+        '.v33-performance-table'
+      );
+
+    if (!table) {
+      return false;
+    }
+
+    const headerCells =
+      Array.from(
+        table.querySelectorAll(
+          'thead th'
+        )
+      );
+
+    const headers =
+      headerCells.map(
+        th =>
+          th.textContent
+            .trim()
+      );
+
+    const pnlIdx =
+      headers.findIndex(
+        text =>
+          /^26['’]?손익$/
+            .test(text)
+      );
+
+    const priorYtdIdx =
+      headers.findIndex(
+        text =>
+          text
+            .replace(
+              /\s+/g,
+              ''
+            ) ===
+          '25YTD'
+      );
+
+    const currentYtdIdx =
+      headers.findIndex(
+        text =>
+          text
+            .replace(
+              /\s+/g,
+              ''
+            ) ===
+          '26YTD'
+      );
+
+    if (
+      pnlIdx < 0 ||
+      priorYtdIdx < 0 ||
+      currentYtdIdx < 0
+    ) {
+      return false;
+    }
+
+    headerCells[
+      pnlIdx
+    ].textContent =
+      `${String(
+        businessYear
+      ).slice(-2)}'손익`;
+
+    headerCells[
+      priorYtdIdx
+    ].textContent =
+      `${String(
+        businessYear - 1
+      ).slice(-2)} YTD`;
+
+    headerCells[
+      currentYtdIdx
+    ].textContent =
+      `${String(
+        businessYear
+      ).slice(-2)} YTD`;
+
+    table.querySelectorAll(
+      'tbody tr'
+    )
+      .forEach(
+        row => {
+          if (
+            row.children.length <=
+            1
+          ) {
+            return;
+          }
+
+          const scope =
+            row.children[0]
+              ?.textContent
+              ?.trim();
+
+          if (!scope) {
+            return;
+          }
+
+          const pnl =
+            currentYearPnlManV35(
+              scope,
+              businessYear
+            );
+
+          if (pnl == null) {
+            return;
+          }
+
+          const cell =
+            row.children[
+              pnlIdx
+            ];
+
+          if (!cell) {
+            return;
+          }
+
+          cell.textContent =
+            formatManV35(
+              pnl
+            );
+
+          cell.classList.toggle(
+            'v33-performance-negative',
+            pnl < 0
+          );
+        }
+      );
+
+    //
+    // Overview KPI labels
+    //
+    document
+      .querySelectorAll(
+        '.v33-performance-kpi span'
+      )
+      .forEach(
+        span => {
+          const text =
+            span.textContent
+              .trim();
+
+          if (
+            text ===
+            '연금합산 26 YTD'
+          ) {
+            span.textContent =
+              `연금합산 ${businessYear} YTD`;
+          }
+
+          if (
+            text ===
+            'Total 26 YTD'
+          ) {
+            span.textContent =
+              `Total ${businessYear} YTD`;
+          }
+        }
+      );
+
+    return true;
+  }
+
+  window.applyPerformancePresentationV35 =
+    applyPerformancePresentationV35;
+
   window.performanceDurationV35 =
     function () {
       const now =
@@ -540,4 +929,67 @@
     function () {
       return rolloverPreviewV35;
     };
+
+  function installPerformanceObserverV35() {
+    const content =
+      document.getElementById(
+        'content'
+      );
+
+    if (!content) {
+      return;
+    }
+
+    let queued =
+      false;
+
+    const queueApply =
+      function () {
+        if (queued) {
+          return;
+        }
+
+        queued =
+          true;
+
+        requestAnimationFrame(
+          function () {
+            queued =
+              false;
+
+            applyPerformancePresentationV35();
+          }
+        );
+      };
+
+    const observer =
+      new MutationObserver(
+        queueApply
+      );
+
+    observer.observe(
+      content,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+    queueApply();
+  }
+
+  if (
+    document.readyState ===
+    'loading'
+  ) {
+    document.addEventListener(
+      'DOMContentLoaded',
+      installPerformanceObserverV35,
+      {
+        once: true
+      }
+    );
+  } else {
+    installPerformanceObserverV35();
+  } 
 })();
