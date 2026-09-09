@@ -182,6 +182,19 @@
         rolloverPreviewV35
           .accountBaseMan || {};
 
+      const bucketBase =
+        rolloverPreviewV35
+          .pensionBucketSnapshot
+          ?.buckets || {};
+
+      const bucketMetrics =
+        typeof window
+          .pensionBucketMetricsV33 ===
+          'function'
+          ? window
+              .pensionBucketMetricsV33()
+          : null;
+
       return rows.map(
         row => {
           const prior =
@@ -250,6 +263,180 @@
                 Number(
                   accountBase[id]
                 ) || 0,
+                flow
+              );
+          }
+
+          if (
+            [
+              'EQUITY',
+              'INCOME',
+              'HEDGE',
+              'PARKING'
+            ].includes(
+              row.scope
+            ) &&
+            bucketMetrics
+          ) {
+            const metric =
+              bucketMetrics
+                .buckets[
+                  row.scope
+                ];
+
+            const base =
+              bucketBase[
+                row.scope
+              ];
+
+            if (
+              metric &&
+              base
+            ) {
+              const valueMan =
+                (
+                  Number(
+                    metric.value
+                  ) || 0
+                ) / 10000;
+
+              currentYtd =
+                liveYtdFromBaseV35(
+                  valueMan,
+                  Number(
+                    base
+                      .snapshotEvalMan
+                  ) || 0,
+                  0
+                );
+            }
+          }
+
+          if (
+            row.scope ===
+            '연금합산'
+          ) {
+            const ids = [
+              'DC',
+              'P1',
+              'P2'
+            ];
+
+            const value =
+              ids.reduce(
+                (sum, id) =>
+                  sum +
+                  (
+                    Number(
+                      accountSummary(
+                        id
+                      ).value
+                    ) || 0
+                  ),
+                0
+              );
+
+            const base =
+              ids.reduce(
+                (sum, id) =>
+                  sum +
+                  (
+                    Number(
+                      accountBase[
+                        id
+                      ]
+                    ) || 0
+                  ),
+                0
+              );
+
+            const flow =
+              ids.reduce(
+                (sum, id) =>
+                  sum +
+                  (
+                    Number(
+                      annualFlow(
+                        acct(id),
+                        String(
+                          businessYear
+                        )
+                      )
+                    ) || 0
+                  ),
+                0
+              );
+
+            currentYtd =
+              liveYtdFromBaseV35(
+                value,
+                base,
+                flow
+              );
+          }
+
+          if (
+            row.scope ===
+            'Total'
+          ) {
+            const ids = [
+              'DC',
+              'P1',
+              'P2',
+              'ISA',
+              'GENERAL',
+              'CHILD'
+            ];
+
+            const value =
+              ids.reduce(
+                (sum, id) =>
+                  sum +
+                  (
+                    Number(
+                      accountSummary(
+                        id
+                      ).value
+                    ) || 0
+                  ),
+                0
+              );
+
+            const base =
+              ids.reduce(
+                (sum, id) =>
+                  sum +
+                  (
+                    Number(
+                      accountBase[
+                        id
+                      ]
+                    ) || 0
+                  ),
+                0
+              );
+
+            const flow =
+              ids.reduce(
+                (sum, id) =>
+                  sum +
+                  (
+                    Number(
+                      annualFlow(
+                        acct(id),
+                        String(
+                          businessYear
+                        )
+                      )
+                    ) || 0
+                  ),
+                0
+              );
+
+            currentYtd =
+              liveYtdFromBaseV35(
+                value,
+                base,
                 flow
               );
           }
