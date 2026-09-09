@@ -1,10 +1,22 @@
 //
 // Portfolio Control v3.5
 // Live Performance adjustments.
-// Phase 3B-1: dynamic CAGR.
+// Phase 3B: dynamic CAGR + future-year simulation.
 //
 
 (function () {
+  let rolloverPreviewV35 =
+    null;
+
+  function businessYearV35Safe() {
+    return (
+      typeof window.businessYearV35 ===
+        'function'
+        ? window.businessYearV35()
+        : new Date().getFullYear()
+    );
+  }
+
   function isoWeekV35(date) {
     const d =
       new Date(
@@ -50,18 +62,10 @@
     const now =
       new Date();
 
-    const year =
-      now.getFullYear();
-
-    const week =
-      isoWeekV35(
-        now
-      );
-
     return (
-      year -
+      now.getFullYear() -
       2025 +
-      week / 52
+      isoWeekV35(now) / 52
     );
   }
 
@@ -98,6 +102,29 @@
     );
   }
 
+  function liveYtdFromBaseV35(
+    value,
+    base,
+    flow
+  ) {
+    const denominator =
+      Number(base) +
+      Number(flow);
+
+    if (!denominator) {
+      return 0;
+    }
+
+    return (
+      (
+        Number(value) -
+        denominator
+      ) /
+      denominator *
+      100
+    );
+  }
+
   const performanceRowsBeforeV35 =
     window.performanceRows;
 
@@ -121,19 +148,151 @@
             arguments
           );
 
+      const businessYear =
+        businessYearV35Safe();
+
       const duration =
         durationYearsV35();
 
-      return rows.map(
-        row => ({
-          ...row,
+      //
+      // 실제 2026에서는 CAGR만 dynamic.
+      //
+      if (
+        businessYear <= 2026 ||
+        !rolloverPreviewV35
+      ) {
+        return rows.map(
+          row => ({
+            ...row,
 
-          cagr:
-            cagrFromTwrV35(
-              row.twr,
-              duration
+            cagr:
+              cagrFromTwrV35(
+                row.twr,
+                duration
+              )
+          })
+        );
+      }
+
+      const carry =
+        rolloverPreviewV35
+          .carryRows || {};
+
+      const accountBase =
+        rolloverPreviewV35
+          .accountBaseMan || {};
+
+      return rows.map(
+        row => {
+          const prior =
+            carry[row.scope];
+
+          if (!prior) {
+            return {
+              ...row,
+
+              cagr:
+                cagrFromTwrV35(
+                  row.twr,
+                  duration
+                )
+            };
+          }
+
+          let currentYtd = 0;
+
+          if (
+            [
+              'DC',
+              '연금(1)',
+              '연금(2)',
+              'ISA',
+              '일반계좌',
+              '자녀연금'
+            ].includes(
+              row.scope
             )
-        })
+          ) {
+            const accountMap = {
+              DC: 'DC',
+              '연금(1)': 'P1',
+              '연금(2)': 'P2',
+              ISA: 'ISA',
+              '일반계좌':
+                'GENERAL',
+              '자녀연금':
+                'CHILD'
+            };
+
+            const id =
+              accountMap[
+                row.scope
+              ];
+
+            const value =
+              Number(
+                accountSummary(
+                  id
+                ).value
+              ) || 0;
+
+            const flow =
+              annualFlow(
+                acct(id),
+                String(
+                  businessYear
+                )
+              );
+
+            currentYtd =
+              liveYtdFromBaseV35(
+                value,
+                Number(
+                  accountBase[id]
+                ) || 0,
+                flow
+              );
+          }
+
+          const priorTwr =
+            Number(
+              prior.twr
+            ) || 0;
+
+          const twr =
+            (
+              (
+                1 +
+                priorTwr / 100
+              ) *
+              (
+                1 +
+                currentYtd / 100
+              ) -
+              1
+            ) *
+            100;
+
+          return {
+            ...row,
+
+            y25:
+              Number(
+                prior.ytd
+              ) || 0,
+
+            y26:
+              currentYtd,
+
+            twr,
+
+            cagr:
+              cagrFromTwrV35(
+                twr,
+                duration
+              )
+          };
+        }
       );
     };
 
@@ -154,5 +313,44 @@
         durationYears:
           durationYearsV35()
       };
+    };
+
+  window.setPerformanceRolloverPreviewV35 =
+    function (preview) {
+      if (
+        !preview ||
+        Number(
+          preview.fromYear
+        ) !== 2026 ||
+        Number(
+          preview.toYear
+        ) !== 2027
+      ) {
+        throw new Error(
+          '[v35] invalid Performance rollover preview'
+        );
+      }
+
+      rolloverPreviewV35 =
+        JSON.parse(
+          JSON.stringify(
+            preview
+          )
+        );
+
+      return true;
+    };
+
+  window.clearPerformanceRolloverPreviewV35 =
+    function () {
+      rolloverPreviewV35 =
+        null;
+
+      return true;
+    };
+
+  window.getPerformanceRolloverPreviewV35 =
+    function () {
+      return rolloverPreviewV35;
     };
 })();
