@@ -816,6 +816,7 @@ Growth
 Annual Input
 Performance carry/rebase
 Allocation rebase
+Market yearStart rollover
 Cash-like annual fields
 Dividend reset
 Income & Tax new row
@@ -917,7 +918,57 @@ production state unchanged
 partial rollover를 남기지 않는다.
 
 ---
+## 15.8 Market yearStart Rollover
 
+Holding YTD는 Market의 annual baseline인 yearStart에 의존한다.
+
+현재 계산 의미:
+
+YTD = current / yearStart - 1
+
+따라서 business year label만 새해로 변경하는 것으로는 annual rollover가 완료되지 않는다.
+
+2027 Overview simulation에서 실제 확인된 현상:
+
+삼성전자우 27 YTD label
+→ 27로 정상 전환
+
+삼성전자우 YTD value
+→ 기존 2026 yearStart baseline을 계속 사용
+
+이는 현재 Phase 8 이전 상태에서는 예상되는 동작이며, Overview 자체의 오류가 아니다.
+
+Actual Integrated Annual Rollover에서는 관련 Market item의 yearStart를 새로운 business year의 authoritative baseline으로 전환해야 한다.
+
+기본 정책:
+
+새 business year
+→ 새해 첫 유효 market-session 기준가 확보
+→ Market yearStart 갱신
+→ Holding YTD가 새로운 yearStart 사용
+
+단, calendar year가 전환되는 순간에는 새해 첫 유효 market-session 가격이 아직 존재하지 않을 수 있다.
+
+따라서 Phase 8 implementation plan에서 다음을 실제 source와 함께 확인해야 한다.
+
+- 어떤 Market record가 yearStart를 사용하는가
+- yearStart가 현재 어디에 저장되는가
+- yearStart가 어떻게 persistence 되는가
+- 새해 첫 유효 market price를 언제 확보할 수 있는가
+- 서로 다른 market의 첫 거래일 차이를 어떻게 처리할 것인가
+- yearStart rollover를 언제 완료 상태로 볼 것인가
+
+이 문제를 Overview 전용 YTD 계산으로 우회하지 않는다.
+
+Overview, Holdings 및 다른 YTD consumer는 동일한 authoritative Market state를 사용한다.
+
+yoyBase는 yearStart와 의미가 다르다.
+
+yoyBase는 rolling YoY reference이므로 yearStart rollover와 함께 자동 reset하지 않는다.
+
+yoyBase 변경이 필요하다면 별도 source/semantic 검증 후 결정한다.
+
+---
 # 16. Annual Transition UI
 
 권장 UX:
@@ -995,7 +1046,24 @@ TR 유지
 ```text
 2028 input 표시
 ```
+## Market / Holding YTD
 
+관련 Market annual baseline이 새 business year 기준으로 전환되었는지 확인한다.
+
+최소 검증:
+
+Market yearStart
+→ 새 business-year authoritative baseline
+
+Holding YTD
+→ 새 yearStart 기준
+
+삼성전자우 27 YTD
+→ 기존 2026 yearStart baseline을 사용하지 않음
+
+label만 확인하지 않는다.
+
+실제 underlying yearStart와 그 결과 YTD value를 함께 검증한다.
 ---
 
 # 18. Reload Verification
@@ -1009,6 +1077,8 @@ Rollover 성공 후 반드시 browser reload를 수행한다.
 * 새 annual fields 유지
 * Dividend reset 유지
 * Income & Tax 2027 row 유지
+* Market yearStart rollover 유지
+* Holding YTD가 reload 후에도 새 yearStart 기준 유지
 * Supabase에서 동일 state reload
 
 memory-only 상태에 의존해서는 안 된다.
@@ -1104,6 +1174,7 @@ VERSION_OPERATIONS.md
 [ ] 2026 최종 Cash-like Snapshot 저장 확인
 [ ] Growth month-close pending 없음 확인
 [ ] Market/Korea price 정상 확인
+[ ] 현재 Market yearStart 상태 확인
 [ ] Holdings/current valuation 정상 확인
 ```
 
@@ -1118,6 +1189,8 @@ VERSION_OPERATIONS.md
 [ ] Dividend 72 cells = 0
 [ ] Income & Tax 2027 empty row
 [ ] Annual Input 2028 표시
+[ ] Market yearStart rollover 계획/상태 확인
+[ ] Holding YTD가 새 business-year baseline을 사용할 수 있는지 확인
 ```
 
 ### Execute
@@ -1141,6 +1214,9 @@ VERSION_OPERATIONS.md
 [ ] Income & Tax 정상
 [ ] Annual Input 정상
 [ ] Growth 정상
+[ ] Market yearStart 정상
+[ ] Holding YTD 정상
+[ ] 삼성전자우 27 YTD가 새 yearStart 기준인지 확인
 ```
 
 ### Reference Regression
@@ -1157,7 +1233,75 @@ VERSION_OPERATIONS.md
 ```
 
 ---
+# 21A. Overview Performance 2×4 — Annual Dependency Verification
 
+구현 파일:
+
+v33-overview-performance-kpi.js
+
+기능 checkpoint:
+
+ef3f378b7458897e9fdb167713c0efc63972311c
+
+2027 Performance rollover simulation 결과:
+
+연금합산 27 YTD
+→ +0.00% (0만원)
+→ PASS
+
+Total 27 YTD
+→ +0.00% (0만원)
+→ PASS
+
+Growth rollover dry-run 결과:
+
+currentYear = 2027
+currentMonthIndex = 0
+
+JAN:
+contribution = 0
+cashChange = 0
+investmentReturn = 0
+legacy = 0
+totalChange = 0
+growth = 0
+
+YTD:
+contribution = 0
+cashChange = 0
+investmentReturn = 0
+legacy = 0
+totalChange = 0
+growth = 0
+
+따라서 2027 start의 authoritative Household 결과:
+
+Household Asset 27 YTD
+→ +0.00% (0만원)
+
+Growth dry-run은 clone state에서 수행했으며 save()를 차단했다.
+
+검증 종료 후:
+
+data.growthV32
+→ 원본 2026 state 복구
+
+window.save
+→ 원본 function 복구
+
+삼성전자우 검증:
+
+삼성전자우 27 YTD label
+→ PASS
+
+삼성전자우 27 YTD value
+→ 기존 yearStart baseline 유지
+
+따라서 Market yearStart rollover가 Phase 8의 필수 dependency임을 runtime으로 확인했다.
+
+Overview 전용 workaround를 만들지 않는다.
+
+---
 # 22. Rules for Future Annual Transitions
 
 2027 → 2028 이후에도 같은 원칙을 적용한다.

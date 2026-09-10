@@ -324,6 +324,45 @@ Before proposing changes to a large file:
 
 Do not create a patch that merely hides a recurring core mutation.
 
+
+### Source Inspection / Runtime Verification 역할 분담
+
+GitHub source 접근이 가능한 경우 source inspection은 AI가 직접 수행한다.
+
+AI가 직접 확인할 항목:
+
+- 함수 정의 위치
+- 함수 override 관계
+- script load order
+- selector / DOM dependency
+- CSS 위치
+- save / persistence path
+- 관련 helper / patch 존재 여부
+- root / 와 /v35/ 의 공통/분리 구조
+
+이러한 source 검색을 사용자에게 PowerShell, Console, VS Code 검색으로 대신 시키지 않는다.
+
+사용자는 AI가 직접 확인할 수 없는 runtime 항목을 검증한다.
+
+예:
+
+- localhost 실제 DOM
+- Supabase에서 load된 실제 state
+- 실제 portfolio 값
+- click / edit interaction
+- Save 결과
+- reload persistence
+- browser computed style
+
+Console 검증이 필요한 경우 AI는 실행할 전체 명령을 매번 다시 제공한다.
+
+다음과 같은 모호한 지시는 사용하지 않는다.
+
+- "아까와 동일한 명령"
+- "위 명령을 다시 실행"
+- "이전 snippet 사용"
+
+긴 세션이나 새 세션에서도 사용자가 과거 메시지를 찾아 올라갈 필요가 없도록 한다.
 ---
 # 9A. Company-PC Git / Deployment Constraint
 
@@ -1692,7 +1731,114 @@ Do not implement those charts until explicitly requested.
 Do not redesign the current snapshot storage merely to anticipate hypothetical analytics.
 
 ---
+# 35A. Overview Performance 2×4 KPI
 
+현재 구현 파일:
+
+v33-overview-performance-kpi.js
+
+기능 구현 checkpoint:
+
+ef3f378b7458897e9fdb167713c0efc63972311c
+
+Commit:
+
+Add Overview Performance 2x4 KPI cards
+
+Overview → Performance KPI는 desktop 기준 2 rows × 4 columns이다.
+
+배치:
+
+Row 1
+1. 연금합산 {YY} YTD
+2. 연금합산 SI CAGR
+3. Total {YY} YTD
+4. Total SI CAGR
+
+Row 2
+5. 삼성전자우 {YY} YTD
+6. 삼성전자우 TR
+7. Household Asset {YY} YTD
+8. Household Asset TR
+
+YTD 카드 표시:
+
++x.xx% (증감액)
+
+증감액은 YTD %보다 작은 font와 muted color를 사용한다.
+
+Accent:
+
+- 기존 SI CAGR: blue
+- 삼성전자우 TR: purple
+- Household Asset TR: green
+
+이 기능은 새로운 Performance 계산 engine이 아니다.
+
+Authoritative source:
+
+연금합산 / Total
+→ 기존 Performance calculation / presentation
+
+삼성전자우
+→ holdingMetric 및 Market yearStart
+
+Household Asset
+→ 기존 Growth / v32MonthlyRows
+
+Overview 전용 annual state 또는 별도의 YTD 계산 engine을 만들지 않는다.
+
+동일한 v33-overview-performance-kpi.js를 root / 와 /v35/ 에서 공통으로 load한다.
+
+단 Annual Transition behavior는 /v35/ 전용이다.
+
+2026 runtime 검증:
+
+root /
+→ PASS
+
+/v35/
+→ PASS
+
+/v35/ 의 SI CAGR은 v35의 year-aware / dynamic-duration semantics를 사용하므로 root / 의 SI CAGR과 반드시 동일할 필요는 없다.
+
+2027 Performance rollover simulation:
+
+연금합산 27 YTD
+→ +0.00% (0만원)
+→ PASS
+
+Total 27 YTD
+→ +0.00% (0만원)
+→ PASS
+
+2027 Growth rollover dry-run:
+
+Household Asset 27 YTD authoritative start state
+→ +0.00% (0만원)
+→ PASS
+
+삼성전자우:
+
+27 YTD label
+→ PASS
+
+27 YTD value
+→ 아직 2027 기준으로 유효하지 않음
+
+원인:
+
+holding YTD = current / market.yearStart - 1
+
+Market yearStart rollover가 아직 구현되지 않았다.
+
+이 문제를 Overview 전용 계산으로 우회하지 않는다.
+
+Phase 8 Integrated Annual Rollover에서 authoritative Market state를 수정하여 해결한다.
+
+자세한 내용은 ANNUAL_TRANSITION.md를 따른다.
+
+---
 # 36. Regression Checklist Before Next Stable Release
 
 At minimum verify the following.
@@ -1813,9 +1959,32 @@ This is the Portfolio Control project:
 
 https://github.com/sinyong-0904/portfolio-control
 
-Read PROJECT_HANDOFF.md first.
+새 AI 세션에서는 다음 문서를 먼저 읽는다.
 
-The code-modification rules in that file are mandatory.
+1. PROJECT_HANDOFF.md
+2. ANNUAL_TRANSITION.md
+3. VERSION_OPERATIONS.md
+
+각 문서의 역할은 다음과 같다.
+
+PROJECT_HANDOFF.md
+- 코드 수정 및 유지보수 절차
+- HEAD → READ → VERIFY → PATCH 원칙
+- 프로젝트의 주요 구조와 현재 작업 상태
+
+ANNUAL_TRANSITION.md
+- 연도 전환 설계
+- Phase 1~7 구현 및 검증 상태
+- Phase 8 Integrated Annual Rollover 요구사항
+
+VERSION_OPERATIONS.md
+- /v35/ Production / Authoritative Writer 정책
+- root / Stable Reference 정책
+- 버전 공존 및 비교 원칙
+
+새 세션은 과거 대화 내용을 알고 있다고 가정하지 않는다.
+
+위 3개 문서와 최신 Git HEAD만 읽고도 현재 작업을 이어갈 수 있어야 한다.
 
 Before proposing any code:
 1. determine the latest HEAD commit SHA,
@@ -1843,79 +2012,97 @@ If repository access still fails:
 Do not generate code based on assumed repository structure.
 
 ---
-
 # 38. Current Preferred Work Order
 
-```text
-1. History Table Snapshot implementation
-   → COMPLETE
+현재 Phase 8 코드 구현 전 기능 checkpoint:
 
-   Production commits:
-   → ec16047f7857f7360fb7ddce9a09b45ec907e724
-   → dc8bd44bd0e642a2c7da8cbce2e242c91ca54593
+ef3f378b7458897e9fdb167713c0efc63972311c
 
-2. Production verification
-   → COMPLETE
+Commit:
 
-   Verified:
-   → Performance snapshot
-   → Growth + Dividend snapshot
-   → Cash-Like Assets snapshot
-   → re-snapshot / UPSERT replacement
-   → History 2026 rendering
-   → 2025 legacy History compatibility
-   → reload persistence
-   → cross-device visibility
+Add Overview Performance 2x4 KPI cards
 
-3. PROJECT_HANDOFF.md update
-   → IN PROGRESS
+현재 상태:
 
-   Update the document to describe the actual simple Table Snapshot architecture.
-   Remove obsolete Year-End Snapshot / TEST / DRAFT / FINAL design instructions.
+History Table Snapshot
+→ COMPLETE
 
-4. After Handoff update:
-   → review the final remote commit
-   → run targeted regression if needed
+v3.5 Annual Transition Phase 1~7
+→ IMPLEMENTED
+→ future-year simulation VERIFIED
+→ 세부 내용은 ANNUAL_TRANSITION.md 참고
 
-5. Create the next stable release when the Handoff and final verification are complete.
+/v35/ authoritative-writer coexistence
+→ 실제 portfolio edit / Save / reload로 VERIFIED
 
-   Suggested release:
-   → v3.4-stable-YYYYMMDD
+Overview Performance 2×4 KPI
+→ COMPLETE
 
-6. After the stable release:
-   → enter maintenance mode
-   → add unrelated features only when explicitly requested
-```
+Actual Integrated Annual Rollover
+→ NOT YET IMPLEMENTED
 
+다음 주요 작업:
 
-Do not add unrelated features before these unless explicitly requested.
+Phase 8 — Actual Integrated Annual Rollover
+
+Phase 8 코드 수정 전에 반드시:
+
+1. local repository를 최신 remote HEAD와 sync
+2. PROJECT_HANDOFF.md 확인
+3. ANNUAL_TRANSITION.md 확인
+4. VERSION_OPERATIONS.md 확인
+5. immutable HEAD의 실제 Phase 1~7 source 확인
+6. Phase 8 implementation plan 작성
+7. high-risk design review 수행
+8. 사용자 승인
+9. 실제 구현
+
+Phase 1~7에서 이미 검증된 future-year behavior를 Phase 8 actual rollover의 specification으로 사용한다.
+
+새로운 source/runtime evidence 없이 기존 검증 결과를 임의로 재설계하지 않는다.
+
+Phase 8 필수 누락사항:
+
+Market yearStart rollover
+
+현재 holding YTD:
+
+current / yearStart - 1
+
+2027 simulation에서 business-year label만 27로 전환할 경우 삼성전자우 YTD가 기존 2026 yearStart를 계속 사용하는 것이 실제 확인되었다.
+
+따라서 Phase 8에서 Market yearStart를 authoritative하게 rollover해야 한다.
+
+Overview 전용 workaround를 만들지 않는다.
+
+구체적인 Phase 8 요구사항은 ANNUAL_TRANSITION.md를 따른다.
+
+버전 운영 정책은 VERSION_OPERATIONS.md를 따른다.
 
 ---
 
-# 39. Final Maintenance Principle
+# 39. Final Maintenance Rule
 
-This application is intended to operate for many years.
+Portfolio Control은 여러 세대의 compatibility logic과 patch layer가 존재한다.
 
-The desired outcome is not maximum feature count.
+따라서 유지보수 순서는 다음을 기본으로 한다.
 
-The desired outcome is:
+HEAD
+→ READ
+→ VERIFY
+→ ownership / load order 확인
+→ invariant 확인
+→ 최소 수정안 선택
+→ PATCH
+→ static self-review
+→ localhost runtime verification
+→ Completion Protocol
+→ 사용자 commit 승인
+→ remote commit verification
 
-> **A reliable, understandable, maintainable personal portfolio-control system whose historical financial records remain trustworthy over time.**
+architectural elegance보다 다음을 우선한다.
 
-When choosing between:
-
-```text
-clever
-```
-
-and:
-
-```text
-simple + verifiable
-```
-
-prefer:
-
-```text
-simple + verifiable
-```
+correct financial state
+→ preserved historical meaning
+→ minimal regression surface
+→ maintainability across future AI sessions

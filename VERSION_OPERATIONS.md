@@ -96,7 +96,42 @@ root `/`에서는 Save하지 않는다.
 * regression comparison 시 입력 state를 동일하게 유지
 
 ---
+### 실제 shared-state coexistence 검증
 
+2026-09-10 실제 portfolio edit를 사용하여 single-writer 운영 모델을 검증했다.
+
+/v35/:
+
+DC / ISA holdings 및 cash 실제 수정
+→ Save
+→ Ctrl+F5
+→ persistence 확인
+
+root /:
+
+수정하지 않음
+→ Save하지 않음
+→ Ctrl+F5
+
+결과:
+
+root / 에서 /v35/가 저장한 holdings / cash 변경 state가 동일하게 load됨
+
+따라서:
+
+/v35/
+→ Authoritative Writer
+
+root /
+→ shared state를 읽는 Stable Reference
+
+운영 모델이 실제 portfolio data로 VERIFIED 되었다.
+
+이 검증은 root / 에서 일반 Save를 허용한다는 의미가 아니다.
+
+일반 write / Save는 계속 /v35/에서만 수행한다.
+
+---
 ## 4. Shared Market Data
 
 Market Price 및 Korea Price는 버전별 별도 데이터가 아니다.
@@ -192,6 +227,21 @@ root /
 
 이 둘은 같은 의미의 column이 아니므로 직접 비교하지 않는다.
 
+이 차이는 Actual Annual Transition 이후에만 발생하는 것은 아니다.
+
+/v35/는 root /보다 새로운 year-aware 또는 dynamic-duration Performance semantics를 사용할 수 있다.
+
+따라서:
+
+동일한 holdings / current state
+≠
+모든 annual-derived Performance 값의 숫자 일치
+
+annual-derived 값이 다르다는 사실만으로 regression으로 판단하지 않는다.
+
+먼저 두 version이 의도적으로 서로 다른 annual semantics를 사용하는지 확인한다.
+
+Regression comparison의 우선 대상은 계속 core current-state invariant이다.
 ---
 
 ## 7. Reference Version Lifecycle
@@ -318,7 +368,40 @@ Reference를 만들 때는 반드시 source commit SHA를 기록한다.
 기억이나 파일 복사 시점만으로 reference version을 정의하지 않는다.
 
 ---
+### Phase 8 코드 구현 전 기능 checkpoint
 
+Actual Integrated Annual Rollover 구현 직전의 검증된 기능 checkpoint:
+
+ef3f378b7458897e9fdb167713c0efc63972311c
+
+Commit:
+
+Add Overview Performance 2x4 KPI cards
+
+이 checkpoint에는 다음이 포함된다.
+
+- /v35/ authoritative-writer 운영
+- root / Stable Reference 운영
+- Phase 1~7 Annual Transition future-year behavior
+- Overview Performance 2×4 KPI
+- root / 2026 KPI 검증
+- /v35/ 2026 KPI 검증
+- Performance 2027 simulation 검증
+- Household Growth 2027 start semantics 검증
+
+포함되지 않는 것:
+
+Actual Integrated Annual Rollover
+
+Market yearStart rollover
+
+Phase 8 persistent transition
+
+이번 문서 업데이트 commit으로 HEAD가 변경되더라도 ef3f378은 Phase 8 코드 구현 전 기능 checkpoint로 유지한다.
+
+실제 Phase 8 작업 시작 시에는 항상 최신 verified remote HEAD를 사용한다.
+
+---
 ## 12. Local / GitHub Synchronization Rule
 
 GitHub Web UI에서 commit한 후 local repository를 계속 사용할 때는 다음 순서를 따른다.
