@@ -101,11 +101,14 @@
   function performanceAnnualSourceV35(
     activeYear
   ) {
+    const businessYear =
+      businessYearV35Safe();
+
     if (
       rolloverPreviewV35 &&
       Number(
         rolloverPreviewV35.toYear
-      ) === activeYear
+      ) === businessYear
     ) {
       return rolloverPreviewV35;
     }
@@ -113,6 +116,22 @@
     return persistentPerformanceSourceV35(
       activeYear
     );
+  }
+
+  function performanceEffectiveYearV35() {
+    const businessYear =
+      businessYearV35Safe();
+
+    if (
+      rolloverPreviewV35 &&
+      Number(
+        rolloverPreviewV35.toYear
+      ) === businessYear
+    ) {
+      return businessYear;
+    }
+
+    return activeAnnualYearV35Safe();
   }
 
   function isoWeekV35(date) {
@@ -227,6 +246,9 @@
     scope,
     businessYear
   ) {
+    const effectiveYear =
+      performanceEffectiveYearV35();
+
     const activeYear =
       activeAnnualYearV35Safe();
 
@@ -236,7 +258,7 @@
       );
 
     if (
-      activeYear <= 2026 ||
+      effectiveYear <= 2026 ||
       !annualSource
     ) {
       return null;
@@ -281,7 +303,7 @@
           annualFlow(
             acct(id),
             String(
-              activeYear
+              effectiveYear
             )
           )
         ) || 0;
@@ -322,7 +344,7 @@
               annualFlow(
                 acct(id),
                 String(
-                  activeYear
+                  effectiveYear
                 )
               )
             ) || 0
@@ -363,7 +385,7 @@
               annualFlow(
                 acct(id),
                 String(
-                  activeYear
+                  effectiveYear
                 )
               )
             ) || 0
@@ -445,6 +467,9 @@
     const activeYear =
       activeAnnualYearV35Safe();
 
+    const effectiveYear =
+      performanceEffectiveYearV35();
+
     const duration =
       durationYearsV35();
 
@@ -453,14 +478,8 @@
         activeYear
       );
 
-    //
-    // Annual Transition 전 또는
-    // persistent/DEV annual source가 없으면
-    // 기존 Performance를 유지하고
-    // CAGR만 dynamic하게 계산한다.
-    //
     if (
-      activeYear <= 2026 ||
+      effectiveYear <= 2026 ||
       !annualSource
     ) {
       return rows.map(
@@ -555,7 +574,7 @@
             annualFlow(
               acct(id),
               String(
-                activeYear
+                effectiveYear
               )
             );
 
@@ -661,7 +680,7 @@
                     annualFlow(
                       acct(id),
                       String(
-                        activeYear
+                        effectiveYear
                       )
                     )
                   ) || 0
@@ -727,7 +746,7 @@
                     annualFlow(
                       acct(id),
                       String(
-                        activeYear
+                        effectiveYear
                       )
                     )
                   ) || 0
@@ -765,11 +784,6 @@
         return {
           ...row,
 
-          //
-          // Stable renderer contract:
-          // y25 = prior-year slot
-          // y26 = active-year slot
-          //
           y25:
             Number(
               prior.ytd
@@ -789,6 +803,22 @@
       }
     );
   };
+
+  function formatPerformancePercentV35(
+    value
+  ) {
+    const n =
+      Number(value);
+
+    if (!Number.isFinite(n)) {
+      return 'n/a';
+    }
+
+    return (
+      `${n > 0 ? '+' : ''}` +
+      `${n.toFixed(2)}%`
+    );
+  }
 
   function formatManV35(
     value
@@ -811,218 +841,249 @@
   }
 
   function applyPerformancePresentationV35() {
-    const activeYear =
-      activeAnnualYearV35Safe();
+  const activeYear =
+    activeAnnualYearV35Safe();
 
-    const annualSource =
-      performanceAnnualSourceV35(
-        activeYear
-      );
+  const effectiveYear =
+    performanceEffectiveYearV35();
 
-    if (
-      activeYear <= 2026 ||
-      !annualSource
-    ) {
-      return false;
-    }
+  const annualSource =
+    performanceAnnualSourceV35(
+      activeYear
+    );
 
-    const table =
-      document.querySelector(
-        '.v33-performance-table'
-      );
+  if (
+    effectiveYear <= 2026 ||
+    !annualSource
+  ) {
+    return false;
+  }
 
-    if (!table) {
-      return false;
-    }
+  const table =
+    document.querySelector(
+      '.v33-performance-table'
+    );
 
-    const headerCells =
-      Array.from(
-        table.querySelectorAll(
-          'thead th'
-        )
-      );
+  if (!table) {
+    return false;
+  }
 
-    const headers =
-      headerCells.map(
-        th =>
-          th.textContent
-            .trim()
-      );
+  const performance =
+    performanceRows();
 
-    //
-    // Stable Performance table contract:
-    // - one annual PnL column
-    // - two YTD slots:
-    //   prior year / active year
-    //
-    // Header text may already have been
-    // relabeled by an earlier render, so
-    // identify the slots generically.
-    //
-    const pnlIdx =
-      headers.findIndex(
-        text =>
-          /^\d{2}['’]?손익$/
-            .test(
-              text.replace(
-                /\s+/g,
-                ''
-              )
+  const performanceByScope =
+    new Map(
+      performance.map(
+        row => [
+          row.scope,
+          row
+        ]
+      )
+    );
+
+  const headerCells =
+    Array.from(
+      table.querySelectorAll(
+        'thead th'
+      )
+    );
+
+  const headers =
+    headerCells.map(
+      th =>
+        th.textContent
+          .trim()
+    );
+
+  const pnlIdx =
+    headers.findIndex(
+      text =>
+        /^\d{2}['’]?손익$/
+          .test(
+            text.replace(
+              /\s+/g,
+              ''
             )
+          )
+    );
+
+  const ytdIndices =
+    headers
+      .map(
+        (text, index) => ({
+          text:
+            text.replace(
+              /\s+/g,
+              ''
+            ),
+          index
+        })
+      )
+      .filter(
+        item =>
+          /^\d{2}YTD$/
+            .test(
+              item.text
+            )
+      )
+      .map(
+        item =>
+          item.index
       );
 
-    const ytdIndices =
-      headers
-        .map(
-          (text, index) => ({
-            text:
-              text.replace(
-                /\s+/g,
-                ''
-              ),
-            index
-          })
-        )
-        .filter(
-          item =>
-            /^\d{2}YTD$/
-              .test(
-                item.text
-              )
-        )
-        .map(
-          item =>
-            item.index
-        );
+  const priorYtdIdx =
+    ytdIndices.length >= 2
+      ? ytdIndices[0]
+      : -1;
 
-    const priorYtdIdx =
-      ytdIndices.length >= 2
-        ? ytdIndices[0]
-        : -1;
+  const currentYtdIdx =
+    ytdIndices.length >= 2
+      ? ytdIndices[1]
+      : -1;
 
-    const currentYtdIdx =
-      ytdIndices.length >= 2
-        ? ytdIndices[1]
-        : -1;
+  if (
+    pnlIdx < 0 ||
+    priorYtdIdx < 0 ||
+    currentYtdIdx < 0
+  ) {
+    return false;
+  }
 
-    if (
-      pnlIdx < 0 ||
-      priorYtdIdx < 0 ||
-      currentYtdIdx < 0
-    ) {
-      return false;
-    }
+  headerCells[
+    pnlIdx
+  ].textContent =
+    `${String(
+      effectiveYear
+    ).slice(-2)}'손익`;
 
-    headerCells[
-      pnlIdx
-    ].textContent =
-      `${String(
-        activeYear
-      ).slice(-2)}'손익`;
+  headerCells[
+    priorYtdIdx
+  ].textContent =
+    `${String(
+      effectiveYear - 1
+    ).slice(-2)} YTD`;
 
-    headerCells[
-      priorYtdIdx
-    ].textContent =
-      `${String(
-        activeYear - 1
-      ).slice(-2)} YTD`;
+  headerCells[
+    currentYtdIdx
+  ].textContent =
+    `${String(
+      effectiveYear
+    ).slice(-2)} YTD`;
 
-    headerCells[
-      currentYtdIdx
-    ].textContent =
-      `${String(
-        activeYear
-      ).slice(-2)} YTD`;
+  table.querySelectorAll(
+    'tbody tr'
+  )
+    .forEach(
+      row => {
+        if (
+          row.children.length <=
+          1
+        ) {
+          return;
+        }
 
-    table.querySelectorAll(
-      'tbody tr'
-    )
-      .forEach(
-        row => {
-          if (
-            row.children.length <=
-            1
-          ) {
-            return;
-          }
+        const scope =
+          row.children[0]
+            ?.textContent
+            ?.trim();
 
-          const scope =
-            row.children[0]
-              ?.textContent
-              ?.trim();
+        if (!scope) {
+          return;
+        }
 
-          if (!scope) {
-            return;
-          }
+        const performanceRow =
+          performanceByScope.get(
+            scope
+          );
 
-          const pnl =
-            currentYearPnlManV35(
-              scope,
-              activeYear
-            );
+        if (!performanceRow) {
+          return;
+        }
 
-          if (pnl == null) {
-            return;
-          }
+        const pnl =
+          currentYearPnlManV35(
+            scope,
+            effectiveYear
+          );
 
-          const cell =
-            row.children[
-              pnlIdx
-            ];
+        const pnlCell =
+          row.children[
+            pnlIdx
+          ];
 
-          if (!cell) {
-            return;
-          }
-
-          cell.textContent =
+        if (
+          pnl != null &&
+          pnlCell
+        ) {
+          pnlCell.textContent =
             formatManV35(
               pnl
             );
 
-          cell.classList.toggle(
+          pnlCell.classList.toggle(
             'v33-performance-negative',
             pnl < 0
           );
         }
-      );
 
-    //
-    // Overview KPI labels.
-    //
-    // Existing DOM may contain either the
-    // legacy 26 label or a label already
-    // rewritten during an earlier render.
-    //
-    document
-      .querySelectorAll(
-        '.v33-performance-kpi span'
-      )
-      .forEach(
-        span => {
-          const text =
-            span.textContent
-              .trim();
+        const priorYtd =
+          Number(
+            performanceRow.y25
+          );
 
-          if (
-            /^연금합산\s+\d{2,4}\s+YTD$/
-              .test(text)
-          ) {
-            span.textContent =
-              `연금합산 ${activeYear} YTD`;
-          }
+        const currentYtd =
+          Number(
+            performanceRow.y26
+          );
 
-          if (
-            /^Total\s+\d{2,4}\s+YTD$/
-              .test(text)
-          ) {
-            span.textContent =
-              `Total ${activeYear} YTD`;
-          }
+        const priorCell =
+          row.children[
+            priorYtdIdx
+          ];
+
+        const currentCell =
+          row.children[
+            currentYtdIdx
+          ];
+
+        if (
+          priorCell &&
+          Number.isFinite(
+            priorYtd
+          )
+        ) {
+          priorCell.textContent =
+            formatPerformancePercentV35(
+              priorYtd
+            );
+
+          priorCell.classList.toggle(
+            'v33-performance-negative',
+            priorYtd < 0
+          );
         }
-      );
 
-    return true;
-  }
+        if (
+          currentCell &&
+          Number.isFinite(
+            currentYtd
+          )
+        ) {
+          currentCell.textContent =
+            formatPerformancePercentV35(
+              currentYtd
+            );
+
+          currentCell.classList.toggle(
+            'v33-performance-negative',
+            currentYtd < 0
+          );
+        }
+      }
+    );
+
+  return true;
+}
 
   window.applyPerformancePresentationV35 =
     applyPerformancePresentationV35;
