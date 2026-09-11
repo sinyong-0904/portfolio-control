@@ -20,21 +20,24 @@
   // v3.5에서는 business year의 annual 값을 사용한다.
   //
   window.annualFlow =
-    function (a, year) {
-      const targetYear =
-        year == null
-          ? String(
-              businessYearV35Safe()
-            )
-          : String(year);
+  function (a, year) {
+    const targetYear =
+      year == null
+        ? String(
+            typeof window.activeAnnualYearV35 ===
+              'function'
+              ? window.activeAnnualYearV35()
+              : businessYearV35Safe()
+          )
+        : String(year);
 
-      return Number(
-        (a.annual || {})[
-          targetYear
-        ]
-      ) || 0;
-    };
-
+    return Number(
+      (a.annual || {})[
+        targetYear
+      ]
+    ) || 0;
+  };
+  
   function findAnnualInputTableV35() {
     const tables =
       Array.from(
