@@ -17,6 +17,104 @@
     );
   }
 
+  function activeAnnualYearV35Safe() {
+    return (
+      typeof window.activeAnnualYearV35 ===
+        'function'
+        ? Number(
+            window.activeAnnualYearV35()
+          )
+        : 2026
+    );
+  }
+
+  function persistentPerformanceSourceV35(
+    activeYear
+  ) {
+    const state =
+      data &&
+      data.performanceV35;
+
+    const carryByYear =
+      state &&
+      state.carryByYear;
+
+    const prior =
+      carryByYear &&
+      carryByYear[
+        String(activeYear - 1)
+      ];
+
+    if (
+      !prior ||
+      !prior.rows
+    ) {
+      return null;
+    }
+
+    const accountBaseMan = {};
+
+    [
+      'DC',
+      'P1',
+      'P2',
+      'ISA',
+      'GENERAL',
+      'CHILD'
+    ].forEach(
+      function (id) {
+        const account =
+          acct(id);
+
+        accountBaseMan[id] =
+          Number(
+            account &&
+            account[
+              'base' +
+              String(activeYear)
+            ]
+          ) || 0;
+      }
+    );
+
+    const bucketSnapshot =
+      data &&
+      data.pensionBucketSnapshot;
+
+    return {
+      fromYear:
+        activeYear - 1,
+
+      toYear:
+        activeYear,
+
+      carryRows:
+        prior.rows,
+
+      accountBaseMan,
+
+      pensionBucketSnapshot:
+        bucketSnapshot || null
+    };
+  }
+
+  function performanceAnnualSourceV35(
+    activeYear
+  ) {
+    if (
+      rolloverPreviewV35 &&
+      Number(
+        rolloverPreviewV35.toYear
+      ) === activeYear
+    ) {
+      return rolloverPreviewV35;
+    }
+
+    return persistentPerformanceSourceV35(
+      activeYear
+    );
+  }
+
   function isoWeekV35(date) {
     const d =
       new Date(
@@ -129,15 +227,23 @@
     scope,
     businessYear
   ) {
+    const activeYear =
+      activeAnnualYearV35Safe();
+
+    const annualSource =
+      performanceAnnualSourceV35(
+        activeYear
+      );
+
     if (
-      businessYear <= 2026 ||
-      !rolloverPreviewV35
+      activeYear <= 2026 ||
+      !annualSource
     ) {
       return null;
     }
 
     const accountBase =
-      rolloverPreviewV35
+      annualSource
         .accountBaseMan || {};
 
     const accountMap = {
@@ -175,7 +281,7 @@
           annualFlow(
             acct(id),
             String(
-              businessYear
+              activeYear
             )
           )
         ) || 0;
@@ -216,7 +322,7 @@
               annualFlow(
                 acct(id),
                 String(
-                  businessYear
+                  activeYear
                 )
               )
             ) || 0
@@ -257,7 +363,7 @@
               annualFlow(
                 acct(id),
                 String(
-                  businessYear
+                  activeYear
                 )
               )
             ) || 0
@@ -284,7 +390,7 @@
           : null;
 
       const base =
-        rolloverPreviewV35
+        annualSource
           .pensionBucketSnapshot
           ?.buckets
           ?.[scope];
@@ -328,29 +434,76 @@
   }
 
   window.performanceRows =
-    function () {
-      const rows =
-        performanceRowsBeforeV35
-          .apply(
-            this,
-            arguments
-          );
+  function () {
+    const rows =
+      performanceRowsBeforeV35
+        .apply(
+          this,
+          arguments
+        );
 
-      const businessYear =
-        businessYearV35Safe();
+    const activeYear =
+      activeAnnualYearV35Safe();
 
-      const duration =
-        durationYearsV35();
+    const duration =
+      durationYearsV35();
 
-      //
-      // 실제 2026에서는 CAGR만 dynamic.
-      //
-      if (
-        businessYear <= 2026 ||
-        !rolloverPreviewV35
-      ) {
-        return rows.map(
-          row => ({
+    const annualSource =
+      performanceAnnualSourceV35(
+        activeYear
+      );
+
+    //
+    // Annual Transition 전 또는
+    // persistent/DEV annual source가 없으면
+    // 기존 Performance를 유지하고
+    // CAGR만 dynamic하게 계산한다.
+    //
+    if (
+      activeYear <= 2026 ||
+      !annualSource
+    ) {
+      return rows.map(
+        row => ({
+          ...row,
+
+          cagr:
+            cagrFromTwrV35(
+              row.twr,
+              duration
+            )
+        })
+      );
+    }
+
+    const carry =
+      annualSource
+        .carryRows || {};
+
+    const accountBase =
+      annualSource
+        .accountBaseMan || {};
+
+    const bucketBase =
+      annualSource
+        .pensionBucketSnapshot
+        ?.buckets || {};
+
+    const bucketMetrics =
+      typeof window
+        .pensionBucketMetricsV33 ===
+        'function'
+        ? window
+            .pensionBucketMetricsV33()
+        : null;
+
+    return rows.map(
+      row => {
+        const prior =
+          carry[row.scope];
+
+        if (!prior) {
+          return {
             ...row,
 
             cagr:
@@ -358,318 +511,284 @@
                 row.twr,
                 duration
               )
-          })
-        );
-      }
-
-      const carry =
-        rolloverPreviewV35
-          .carryRows || {};
-
-      const accountBase =
-        rolloverPreviewV35
-          .accountBaseMan || {};
-
-      const bucketBase =
-        rolloverPreviewV35
-          .pensionBucketSnapshot
-          ?.buckets || {};
-
-      const bucketMetrics =
-        typeof window
-          .pensionBucketMetricsV33 ===
-          'function'
-          ? window
-              .pensionBucketMetricsV33()
-          : null;
-
-      return rows.map(
-        row => {
-          const prior =
-            carry[row.scope];
-
-          if (!prior) {
-            return {
-              ...row,
-
-              cagr:
-                cagrFromTwrV35(
-                  row.twr,
-                  duration
-                )
-            };
-          }
-
-          let currentYtd = 0;
-
-          if (
-            [
-              'DC',
-              '연금(1)',
-              '연금(2)',
-              'ISA',
-              '일반계좌',
-              '자녀연금'
-            ].includes(
-              row.scope
-            )
-          ) {
-            const accountMap = {
-              DC: 'DC',
-              '연금(1)': 'P1',
-              '연금(2)': 'P2',
-              ISA: 'ISA',
-              '일반계좌':
-                'GENERAL',
-              '자녀연금':
-                'CHILD'
-            };
-
-            const id =
-              accountMap[
-                row.scope
-              ];
-
-            const value =
-              Number(
-                accountSummary(
-                  id
-                ).value
-              ) || 0;
-
-            const flow =
-              annualFlow(
-                acct(id),
-                String(
-                  businessYear
-                )
-              );
-
-            currentYtd =
-              liveYtdFromBaseV35(
-                value,
-                Number(
-                  accountBase[id]
-                ) || 0,
-                flow
-              );
-          }
-
-          if (
-            [
-              'EQUITY',
-              'INCOME',
-              'HEDGE',
-              'PARKING'
-            ].includes(
-              row.scope
-            ) &&
-            bucketMetrics
-          ) {
-            const metric =
-              bucketMetrics
-                .buckets[
-                  row.scope
-                ];
-
-            const base =
-              bucketBase[
-                row.scope
-              ];
-
-            if (
-              metric &&
-              base
-            ) {
-              const valueMan =
-                (
-                  Number(
-                    metric.value
-                  ) || 0
-                ) / 10000;
-
-              currentYtd =
-                liveYtdFromBaseV35(
-                  valueMan,
-                  Number(
-                    base
-                      .snapshotEvalMan
-                  ) || 0,
-                  0
-                );
-            }
-          }
-
-          if (
-            row.scope ===
-            '연금합산'
-          ) {
-            const ids = [
-              'DC',
-              'P1',
-              'P2'
-            ];
-
-            const value =
-              ids.reduce(
-                (sum, id) =>
-                  sum +
-                  (
-                    Number(
-                      accountSummary(
-                        id
-                      ).value
-                    ) || 0
-                  ),
-                0
-              );
-
-            const base =
-              ids.reduce(
-                (sum, id) =>
-                  sum +
-                  (
-                    Number(
-                      accountBase[
-                        id
-                      ]
-                    ) || 0
-                  ),
-                0
-              );
-
-            const flow =
-              ids.reduce(
-                (sum, id) =>
-                  sum +
-                  (
-                    Number(
-                      annualFlow(
-                        acct(id),
-                        String(
-                          businessYear
-                        )
-                      )
-                    ) || 0
-                  ),
-                0
-              );
-
-            currentYtd =
-              liveYtdFromBaseV35(
-                value,
-                base,
-                flow
-              );
-          }
-
-          if (
-            row.scope ===
-            'Total'
-          ) {
-            const ids = [
-              'DC',
-              'P1',
-              'P2',
-              'ISA',
-              'GENERAL',
-              'CHILD'
-            ];
-
-            const value =
-              ids.reduce(
-                (sum, id) =>
-                  sum +
-                  (
-                    Number(
-                      accountSummary(
-                        id
-                      ).value
-                    ) || 0
-                  ),
-                0
-              );
-
-            const base =
-              ids.reduce(
-                (sum, id) =>
-                  sum +
-                  (
-                    Number(
-                      accountBase[
-                        id
-                      ]
-                    ) || 0
-                  ),
-                0
-              );
-
-            const flow =
-              ids.reduce(
-                (sum, id) =>
-                  sum +
-                  (
-                    Number(
-                      annualFlow(
-                        acct(id),
-                        String(
-                          businessYear
-                        )
-                      )
-                    ) || 0
-                  ),
-                0
-              );
-
-            currentYtd =
-              liveYtdFromBaseV35(
-                value,
-                base,
-                flow
-              );
-          }
-
-          const priorTwr =
-            Number(
-              prior.twr
-            ) || 0;
-
-          const twr =
-            (
-              (
-                1 +
-                priorTwr / 100
-              ) *
-              (
-                1 +
-                currentYtd / 100
-              ) -
-              1
-            ) *
-            100;
-
-          return {
-            ...row,
-
-            y25:
-              Number(
-                prior.ytd
-              ) || 0,
-
-            y26:
-              currentYtd,
-
-            twr,
-
-            cagr:
-              cagrFromTwrV35(
-                twr,
-                duration
-              )
           };
         }
-      );
-    };
+
+        let currentYtd = 0;
+
+        if (
+          [
+            'DC',
+            '연금(1)',
+            '연금(2)',
+            'ISA',
+            '일반계좌',
+            '자녀연금'
+          ].includes(
+            row.scope
+          )
+        ) {
+          const accountMap = {
+            DC: 'DC',
+            '연금(1)': 'P1',
+            '연금(2)': 'P2',
+            ISA: 'ISA',
+            '일반계좌':
+              'GENERAL',
+            '자녀연금':
+              'CHILD'
+          };
+
+          const id =
+            accountMap[
+              row.scope
+            ];
+
+          const value =
+            Number(
+              accountSummary(
+                id
+              ).value
+            ) || 0;
+
+          const flow =
+            annualFlow(
+              acct(id),
+              String(
+                activeYear
+              )
+            );
+
+          currentYtd =
+            liveYtdFromBaseV35(
+              value,
+              Number(
+                accountBase[id]
+              ) || 0,
+              flow
+            );
+        }
+
+        if (
+          [
+            'EQUITY',
+            'INCOME',
+            'HEDGE',
+            'PARKING'
+          ].includes(
+            row.scope
+          ) &&
+          bucketMetrics
+        ) {
+          const metric =
+            bucketMetrics
+              .buckets[
+                row.scope
+              ];
+
+          const base =
+            bucketBase[
+              row.scope
+            ];
+
+          if (
+            metric &&
+            base
+          ) {
+            const valueMan =
+              (
+                Number(
+                  metric.value
+                ) || 0
+              ) / 10000;
+
+            currentYtd =
+              liveYtdFromBaseV35(
+                valueMan,
+                Number(
+                  base
+                    .snapshotEvalMan
+                ) || 0,
+                0
+              );
+          }
+        }
+
+        if (
+          row.scope ===
+          '연금합산'
+        ) {
+          const ids = [
+            'DC',
+            'P1',
+            'P2'
+          ];
+
+          const value =
+            ids.reduce(
+              (sum, id) =>
+                sum +
+                (
+                  Number(
+                    accountSummary(
+                      id
+                    ).value
+                  ) || 0
+                ),
+              0
+            );
+
+          const base =
+            ids.reduce(
+              (sum, id) =>
+                sum +
+                (
+                  Number(
+                    accountBase[
+                      id
+                    ]
+                  ) || 0
+                ),
+              0
+            );
+
+          const flow =
+            ids.reduce(
+              (sum, id) =>
+                sum +
+                (
+                  Number(
+                    annualFlow(
+                      acct(id),
+                      String(
+                        activeYear
+                      )
+                    )
+                  ) || 0
+                ),
+              0
+            );
+
+          currentYtd =
+            liveYtdFromBaseV35(
+              value,
+              base,
+              flow
+            );
+        }
+
+        if (
+          row.scope ===
+          'Total'
+        ) {
+          const ids = [
+            'DC',
+            'P1',
+            'P2',
+            'ISA',
+            'GENERAL',
+            'CHILD'
+          ];
+
+          const value =
+            ids.reduce(
+              (sum, id) =>
+                sum +
+                (
+                  Number(
+                    accountSummary(
+                      id
+                    ).value
+                  ) || 0
+                ),
+              0
+            );
+
+          const base =
+            ids.reduce(
+              (sum, id) =>
+                sum +
+                (
+                  Number(
+                    accountBase[
+                      id
+                    ]
+                  ) || 0
+                ),
+              0
+            );
+
+          const flow =
+            ids.reduce(
+              (sum, id) =>
+                sum +
+                (
+                  Number(
+                    annualFlow(
+                      acct(id),
+                      String(
+                        activeYear
+                      )
+                    )
+                  ) || 0
+                ),
+              0
+            );
+
+          currentYtd =
+            liveYtdFromBaseV35(
+              value,
+              base,
+              flow
+            );
+        }
+
+        const priorTwr =
+          Number(
+            prior.twr
+          ) || 0;
+
+        const twr =
+          (
+            (
+              1 +
+              priorTwr / 100
+            ) *
+            (
+              1 +
+              currentYtd / 100
+            ) -
+            1
+          ) *
+          100;
+
+        return {
+          ...row,
+
+          //
+          // Stable renderer contract:
+          // y25 = prior-year slot
+          // y26 = active-year slot
+          //
+          y25:
+            Number(
+              prior.ytd
+            ) || 0,
+
+          y26:
+            currentYtd,
+
+          twr,
+
+          cagr:
+            cagrFromTwrV35(
+              twr,
+              duration
+            )
+        };
+      }
+    );
+  };
 
   function formatManV35(
     value
@@ -692,12 +811,17 @@
   }
 
   function applyPerformancePresentationV35() {
-    const businessYear =
-      businessYearV35Safe();
+    const activeYear =
+      activeAnnualYearV35Safe();
+
+    const annualSource =
+      performanceAnnualSourceV35(
+        activeYear
+      );
 
     if (
-      businessYear <= 2026 ||
-      !rolloverPreviewV35
+      activeYear <= 2026 ||
+      !annualSource
     ) {
       return false;
     }
@@ -725,34 +849,61 @@
             .trim()
       );
 
+    //
+    // Stable Performance table contract:
+    // - one annual PnL column
+    // - two YTD slots:
+    //   prior year / active year
+    //
+    // Header text may already have been
+    // relabeled by an earlier render, so
+    // identify the slots generically.
+    //
     const pnlIdx =
       headers.findIndex(
         text =>
-          /^26['’]?손익$/
-            .test(text)
+          /^\d{2}['’]?손익$/
+            .test(
+              text.replace(
+                /\s+/g,
+                ''
+              )
+            )
       );
+
+    const ytdIndices =
+      headers
+        .map(
+          (text, index) => ({
+            text:
+              text.replace(
+                /\s+/g,
+                ''
+              ),
+            index
+          })
+        )
+        .filter(
+          item =>
+            /^\d{2}YTD$/
+              .test(
+                item.text
+              )
+        )
+        .map(
+          item =>
+            item.index
+        );
 
     const priorYtdIdx =
-      headers.findIndex(
-        text =>
-          text
-            .replace(
-              /\s+/g,
-              ''
-            ) ===
-          '25YTD'
-      );
+      ytdIndices.length >= 2
+        ? ytdIndices[0]
+        : -1;
 
     const currentYtdIdx =
-      headers.findIndex(
-        text =>
-          text
-            .replace(
-              /\s+/g,
-              ''
-            ) ===
-          '26YTD'
-      );
+      ytdIndices.length >= 2
+        ? ytdIndices[1]
+        : -1;
 
     if (
       pnlIdx < 0 ||
@@ -766,21 +917,21 @@
       pnlIdx
     ].textContent =
       `${String(
-        businessYear
+        activeYear
       ).slice(-2)}'손익`;
 
     headerCells[
       priorYtdIdx
     ].textContent =
       `${String(
-        businessYear - 1
+        activeYear - 1
       ).slice(-2)} YTD`;
 
     headerCells[
       currentYtdIdx
     ].textContent =
       `${String(
-        businessYear
+        activeYear
       ).slice(-2)} YTD`;
 
     table.querySelectorAll(
@@ -807,7 +958,7 @@
           const pnl =
             currentYearPnlManV35(
               scope,
-              businessYear
+              activeYear
             );
 
           if (pnl == null) {
@@ -836,7 +987,11 @@
       );
 
     //
-    // Overview KPI labels
+    // Overview KPI labels.
+    //
+    // Existing DOM may contain either the
+    // legacy 26 label or a label already
+    // rewritten during an earlier render.
     //
     document
       .querySelectorAll(
@@ -849,19 +1004,19 @@
               .trim();
 
           if (
-            text ===
-            '연금합산 26 YTD'
+            /^연금합산\s+\d{2,4}\s+YTD$/
+              .test(text)
           ) {
             span.textContent =
-              `연금합산 ${businessYear} YTD`;
+              `연금합산 ${activeYear} YTD`;
           }
 
           if (
-            text ===
-            'Total 26 YTD'
+            /^Total\s+\d{2,4}\s+YTD$/
+              .test(text)
           ) {
             span.textContent =
-              `Total ${businessYear} YTD`;
+              `Total ${activeYear} YTD`;
           }
         }
       );
