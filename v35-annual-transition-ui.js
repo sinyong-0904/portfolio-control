@@ -24,6 +24,15 @@
     backup: false
   };
 
+  let previewStateV35 =
+    null;
+
+  let executionStateV35 =
+    null;
+
+  let executionBusyV35 =
+    false;
+
   function escapeHtmlV35(value) {
     return String(
       value == null ? '' : value
@@ -153,8 +162,13 @@
         cursor: pointer;
       }
 
-      #${PANEL_ID} .atv35-btn:hover {
+      #${PANEL_ID} .atv35-btn:not(:disabled):hover {
         background: rgba(51, 65, 85, 0.95);
+      }
+
+      #${PANEL_ID} .atv35-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
 
       #${PANEL_ID} .atv35-ready {
@@ -355,7 +369,229 @@
     );
   }
 
-  function renderPanelV35(
+    function productionSystemReadyV35(
+    result
+  ) {
+    if (
+      !result ||
+      !Array.isArray(
+        result.checks
+      )
+    ) {
+      return false;
+    }
+
+    const wanted =
+      new Set([
+        'years',
+        'nextYear',
+        'productionClock',
+        'growth',
+        'market'
+      ]);
+
+    return result.checks
+      .filter(function (check) {
+        return wanted.has(
+          check.id
+        );
+      })
+      .every(function (check) {
+        return check.ok === true;
+      });
+  }
+
+  function buildProductionPreviewV35(
+    fromYear,
+    toYear
+  ) {
+    try {
+      const built =
+        window
+          .buildAnnualTransitionCandidateV35(
+            fromYear,
+            toYear
+          );
+
+      const validation =
+        window
+          .validateAnnualTransitionCandidateV35(
+            built
+          );
+
+      return {
+        ok:
+          !!validation &&
+          validation.ok === true,
+
+        code:
+          validation &&
+          validation.ok === true
+            ? 'PREVIEW_READY'
+            : 'PREVIEW_VALIDATION_FAILED',
+
+        fromYear,
+        toYear,
+
+        checkCount:
+          validation &&
+          Array.isArray(
+            validation.checks
+          )
+            ? validation.checks.length
+            : 0,
+
+        failed:
+          validation &&
+          Array.isArray(
+            validation.checks
+          )
+            ? validation.checks
+                .filter(function (check) {
+                  return check.ok !== true;
+                })
+                .map(function (check) {
+                  return check.id;
+                })
+            : []
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        code:
+          'PREVIEW_BUILD_FAILED',
+
+        fromYear,
+        toYear,
+
+        error:
+          String(
+            error &&
+            error.message
+              ? error.message
+              : error
+          )
+      };
+    }
+  }
+
+  function setExecutionOverlayV35(
+    visible,
+    text
+  ) {
+    const id =
+      'annual-transition-overlay-v35';
+
+    const existing =
+      document.getElementById(
+        id
+      );
+
+    if (!visible) {
+      if (existing) {
+        existing.remove();
+      }
+
+      return;
+    }
+
+    const overlay =
+      existing ||
+      document.createElement(
+        'div'
+      );
+
+    overlay.id =
+      id;
+
+    overlay.style.cssText = [
+      'position:fixed',
+      'inset:0',
+      'z-index:99999',
+      'display:flex',
+      'align-items:center',
+      'justify-content:center',
+      'padding:24px',
+      'background:rgba(2,6,23,.82)',
+      'backdrop-filter:blur(3px)'
+    ].join(';');
+
+    overlay.innerHTML =
+      '<div style="' +
+        'max-width:520px;' +
+        'padding:22px 24px;' +
+        'border:1px solid rgba(148,163,184,.35);' +
+        'border-radius:14px;' +
+        'background:#0f172a;' +
+        'color:#e2e8f0;' +
+        'text-align:center;' +
+      '">' +
+        '<div style="' +
+          'font-size:17px;' +
+          'font-weight:900;' +
+          'margin-bottom:8px;' +
+        '">' +
+          'Annual Transition 실행 중' +
+        '</div>' +
+        '<div style="' +
+          'font-size:13px;' +
+          'line-height:1.6;' +
+          'color:#cbd5e1;' +
+        '">' +
+          escapeHtmlV35(
+            text ||
+            'Supabase 저장 및 read-back을 검증하고 있습니다.'
+          ) +
+        '</div>' +
+        '<div style="' +
+          'margin-top:10px;' +
+          'font-size:12px;' +
+          'color:#fbbf24;' +
+        '">' +
+          '완료될 때까지 페이지를 닫거나 다른 작업을 하지 마세요.' +
+        '</div>' +
+      '</div>';
+
+    if (!existing) {
+      document.body.appendChild(
+        overlay
+      );
+    }
+  }
+
+  function executionMessageV35(
+    state
+  ) {
+    if (!state) {
+      return '';
+    }
+
+    if (state.ok === true) {
+      return (
+        '✓ Annual Transition commit 및 cloud read-back 검증이 완료되었습니다.'
+      );
+    }
+
+    if (
+      state.code ===
+      'CRITICAL_ROLLBACK_FAILED'
+    ) {
+      return (
+        'CRITICAL — 자동 rollback을 검증하지 못했습니다. ' +
+        '추가 저장을 하지 말고 Backup 및 cloud 상태를 확인하십시오.'
+      );
+    }
+
+    return (
+      'Annual Transition 실패: ' +
+      String(
+        state.code ||
+        'UNKNOWN'
+      )
+    );
+  }
+
+    function renderPanelV35(
     page,
     status
   ) {
@@ -372,7 +608,9 @@
           'section'
         );
 
-      panel.id = PANEL_ID;
+      panel.id =
+        PANEL_ID;
+
       panel.className =
         'v33-section';
 
@@ -383,9 +621,10 @@
     }
 
     const result =
-      window.annualTransitionPrerequisitesV35(
-        confirmationState
-      );
+      window
+        .annualTransitionPrerequisitesV35(
+          confirmationState
+        );
 
     const fromYear =
       result.fromYear;
@@ -393,17 +632,106 @@
     const toYear =
       result.toYear;
 
+    const systemReady =
+      productionSystemReadyV35(
+        result
+      );
+
+    const previewReady =
+      previewStateV35 &&
+      previewStateV35.ok === true &&
+      Number(
+        previewStateV35.fromYear
+      ) === Number(fromYear) &&
+      Number(
+        previewStateV35.toYear
+      ) === Number(toYear);
+
+    const executeReady =
+      result.ready === true &&
+      previewReady &&
+      !executionBusyV35;
+
+    const previewHtml =
+      previewStateV35
+        ? (
+            '<div class="atv35-ready">' +
+              (
+                previewStateV35.ok
+                  ? (
+                      '✓ Preview validation PASS · ' +
+                      escapeHtmlV35(
+                        previewStateV35
+                          .checkCount
+                      ) +
+                      ' checks'
+                    )
+                  : (
+                      '✕ Preview 실패 · ' +
+                      escapeHtmlV35(
+                        previewStateV35
+                          .code
+                      ) +
+                      (
+                        previewStateV35.error
+                          ? (
+                              ' · ' +
+                              escapeHtmlV35(
+                                previewStateV35
+                                  .error
+                              )
+                            )
+                          : ''
+                      )
+                    )
+              ) +
+            '</div>'
+          )
+        : '';
+
+    const executionHtml =
+      executionStateV35
+        ? (
+            '<div class="atv35-ready ' +
+              (
+                executionStateV35.code ===
+                  'CRITICAL_ROLLBACK_FAILED'
+                  ? 'atv35-block'
+                  : (
+                      executionStateV35.ok
+                        ? 'atv35-ok'
+                        : ''
+                    )
+              ) +
+            '">' +
+              escapeHtmlV35(
+                executionMessageV35(
+                  executionStateV35
+                )
+              ) +
+            '</div>'
+          )
+        : '';
+
     panel.innerHTML =
       '<div class="atv35-head">' +
         '<h2 class="atv35-title">' +
-          escapeHtmlV35(toYear) +
+          escapeHtmlV35(
+            toYear
+          ) +
           ' Annual Transition' +
         '</h2>' +
+
         '<div class="atv35-desc">' +
-          escapeHtmlV35(fromYear) +
+          escapeHtmlV35(
+            fromYear
+          ) +
           '년 데이터를 마감하고 ' +
-          escapeHtmlV35(toYear) +
-          '년 기준으로 전환하기 위한 준비 상태입니다.' +
+          escapeHtmlV35(
+            toYear
+          ) +
+          '년 기준으로 전환합니다. ' +
+          'Preview → 최종 확인 → Execute 순서로 진행합니다.' +
         '</div>' +
       '</div>' +
 
@@ -418,21 +746,24 @@
           confirmationHtmlV35(
             'performanceSnapshot',
             fromYear +
-              ' 최종 Performance Snapshot을 저장했습니다.'
+              ' 최종 Performance Snapshot을 확인했습니다.'
           ) +
+
           confirmationHtmlV35(
             'growthDividendSnapshot',
             fromYear +
-              ' 최종 Growth & Dividend Snapshot을 저장했습니다.'
+              ' 최종 Growth & Dividend Snapshot을 확인했습니다.'
           ) +
+
           confirmationHtmlV35(
             'cashLikeSnapshot',
             fromYear +
-              ' 최종 Cash-like Snapshot을 저장했습니다.'
+              ' 최종 Cash-like Snapshot을 확인했습니다.'
           ) +
+
           confirmationHtmlV35(
             'backup',
-            '복구용 Backup을 저장했습니다.'
+            '복구용 Backup을 다운로드했습니다.'
           ) +
         '</div>' +
 
@@ -442,45 +773,91 @@
             'data-atv35-action="history">' +
             'History 확인' +
           '</button>' +
+
           '<button type="button" ' +
             'class="atv35-btn" ' +
             'data-atv35-action="backup">' +
             'Backup 다운로드' +
+          '</button>' +
+
+          '<button type="button" ' +
+            'class="atv35-btn" ' +
+            'data-atv35-action="preview"' +
+            (
+              systemReady &&
+              !executionBusyV35
+                ? ''
+                : ' disabled'
+            ) +
+          '>' +
+            'Transition Preview' +
+          '</button>' +
+
+          '<button type="button" ' +
+            'class="atv35-btn" ' +
+            'data-atv35-action="execute"' +
+            (
+              executeReady
+                ? ''
+                : ' disabled'
+            ) +
+          '>' +
+            (
+              executionBusyV35
+                ? '실행 중...'
+                : 'Execute Annual Transition'
+            ) +
           '</button>' +
         '</div>' +
 
         '<div class="atv35-ready">' +
           (
             result.ready
-              ? '✓ 모든 prerequisite가 충족되었습니다.'
-              : 'Annual Transition 실행 조건을 확인 중입니다.'
+              ? (
+                  previewReady
+                    ? '✓ 모든 prerequisite와 Preview가 완료되었습니다. Execute할 수 있습니다.'
+                    : '✓ prerequisite 완료. Transition Preview를 실행하십시오.'
+                )
+              : (
+                  systemReady
+                    ? '사용자 확인 4개를 완료하십시오.'
+                    : 'System prerequisite가 아직 준비되지 않았습니다.'
+                )
           ) +
         '</div>' +
+
+        previewHtml +
+        executionHtml +
       '</div>';
 
     panel
       .querySelectorAll(
         '[data-atv35-confirm]'
       )
-      .forEach(function (input) {
-        input.addEventListener(
-          'change',
-          function () {
-            const id =
-              input.getAttribute(
-                'data-atv35-confirm'
+      .forEach(
+        function (input) {
+          input.addEventListener(
+            'change',
+            function () {
+              const id =
+                input.getAttribute(
+                  'data-atv35-confirm'
+                );
+
+              confirmationState[id] =
+                input.checked === true;
+
+              executionStateV35 =
+                null;
+
+              renderPanelV35(
+                page,
+                status
               );
-
-            confirmationState[id] =
-              input.checked === true;
-
-            renderPanelV35(
-              page,
-              status
-            );
-          }
-        );
-      });
+            }
+          );
+        }
+      );
 
     const historyButton =
       panel.querySelector(
@@ -492,12 +869,14 @@
         'click',
         function () {
           if (
-            typeof window.selectFinalTabV33 ===
+            typeof window
+              .selectFinalTabV33 ===
               'function'
           ) {
-            window.selectFinalTabV33(
-              'History'
-            );
+            window
+              .selectFinalTabV33(
+                'History'
+              );
           }
         }
       );
@@ -513,11 +892,211 @@
         'click',
         function () {
           if (
-            typeof window.exportData ===
+            typeof window
+              .exportData ===
               'function'
           ) {
             window.exportData();
+
+            confirmationState
+              .backup =
+                true;
+
+            renderPanelV35(
+              page,
+              status
+            );
           }
+        }
+      );
+    }
+
+    const previewButton =
+      panel.querySelector(
+        '[data-atv35-action="preview"]'
+      );
+
+    if (previewButton) {
+      previewButton.addEventListener(
+        'click',
+        function () {
+          previewStateV35 =
+            buildProductionPreviewV35(
+              fromYear,
+              toYear
+            );
+
+          executionStateV35 =
+            null;
+
+          renderPanelV35(
+            page,
+            status
+          );
+        }
+      );
+    }
+
+    const executeButton =
+      panel.querySelector(
+        '[data-atv35-action="execute"]'
+      );
+
+    if (executeButton) {
+      executeButton.addEventListener(
+        'click',
+        async function () {
+          if (
+            !executeReady ||
+            executionBusyV35
+          ) {
+            return;
+          }
+
+          const confirmed =
+            window.confirm(
+              [
+                `${fromYear} → ${toYear} Annual Transition을 실행합니다.`,
+                '',
+                '이 작업은 portfolio_state를 실제로 변경하고 Supabase에 저장합니다.',
+                '실행 후 cloud read-back까지 검증합니다.',
+                '',
+                'Backup 파일을 보관하고 있는지 다시 확인하십시오.',
+                '',
+                '계속하시겠습니까?'
+              ].join('\n')
+            );
+
+          if (!confirmed) {
+            return;
+          }
+
+          executionBusyV35 =
+            true;
+
+          executionStateV35 =
+            null;
+
+          renderPanelV35(
+            page,
+            status
+          );
+
+          setExecutionOverlayV35(
+            true,
+            'Portfolio state를 전환하고 Supabase 저장 결과를 확인하고 있습니다.'
+          );
+
+          let execution;
+
+          try {
+            execution =
+              await window
+                .executeProductionAnnualTransitionV35({
+                  fromYear,
+                  toYear,
+
+                  confirmations: {
+                    performanceSnapshot:
+                      confirmationState
+                        .performanceSnapshot,
+
+                    growthDividendSnapshot:
+                      confirmationState
+                        .growthDividendSnapshot,
+
+                    cashLikeSnapshot:
+                      confirmationState
+                        .cashLikeSnapshot,
+
+                    backup:
+                      confirmationState
+                        .backup
+                  }
+                });
+          } catch (error) {
+            execution = {
+              ok: false,
+
+              code:
+                'ANNUAL_UI_EXECUTION_EXCEPTION',
+
+              error:
+                String(
+                  error &&
+                  error.message
+                    ? error.message
+                    : error
+                )
+            };
+          } finally {
+            executionBusyV35 =
+              false;
+
+            setExecutionOverlayV35(
+              false
+            );
+          }
+
+          executionStateV35 =
+            execution;
+
+          if (
+            execution &&
+            execution.ok === true
+          ) {
+            window.alert(
+              [
+                `${toYear} Annual Transition 완료`,
+                '',
+                'Supabase commit 및 read-back 검증이 완료되었습니다.',
+                '',
+                '이제 Ctrl+F5 후 Performance / Allocation / Cash / Dividend / History / Growth를 확인하십시오.'
+              ].join('\n')
+            );
+
+            queueRefreshV35();
+
+            return;
+          }
+
+          if (
+            execution &&
+            execution.code ===
+              'CRITICAL_ROLLBACK_FAILED'
+          ) {
+            window.alert(
+              [
+                'CRITICAL — Annual Transition 자동 복구를 검증하지 못했습니다.',
+                '',
+                '추가 Save를 하지 마십시오.',
+                '페이지를 닫거나 새로고침하기 전에 Backup 및 cloud 상태를 확인해야 합니다.',
+                '',
+                'Code: CRITICAL_ROLLBACK_FAILED'
+              ].join('\n')
+            );
+          } else {
+            window.alert(
+              [
+                'Annual Transition이 완료되지 않았습니다.',
+                '',
+                'Code: ' +
+                  String(
+                    execution &&
+                    execution.code
+                      ? execution.code
+                      : 'UNKNOWN'
+                  ),
+                '',
+                '검증된 commit이 아니므로 상태를 확인한 뒤 다시 진행하십시오.'
+              ].join('\n')
+            );
+          }
+
+          renderPanelV35(
+            page,
+            status
+          );
         }
       );
     }
@@ -534,11 +1113,24 @@
     }
   }
 
-  function refreshAnnualTransitionUiV35() {
+    function refreshAnnualTransitionUiV35() {
     if (
-      typeof window.annualTransitionStatusV35 !==
+      typeof window
+        .annualRolloverRehearsalStateV35 ===
+        'function' &&
+      window
+        .annualRolloverRehearsalStateV35()
+    ) {
+      removePanelV35();
+      return;
+    }
+
+    if (
+      typeof window
+        .annualTransitionStatusV35 !==
         'function' ||
-      typeof window.annualTransitionPrerequisitesV35 !==
+      typeof window
+        .annualTransitionPrerequisitesV35 !==
         'function'
     ) {
       removePanelV35();
@@ -546,14 +1138,22 @@
     }
 
     const status =
-      window.annualTransitionStatusV35();
+      window
+        .annualTransitionStatusV35();
 
     if (
       !status ||
       status.transitionRequired !==
         true
     ) {
+      previewStateV35 =
+        null;
+
+      executionStateV35 =
+        null;
+
       removePanelV35();
+
       return;
     }
 
