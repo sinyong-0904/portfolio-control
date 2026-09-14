@@ -1745,6 +1745,707 @@
     };
   }
 
+    let annualTransitionExecutionLockV35 =
+    false;
+
+  function canonicalAnnualStateV35(
+    value
+  ) {
+    if (
+      value == null ||
+      typeof value !== 'object'
+    ) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(
+        canonicalAnnualStateV35
+      );
+    }
+
+    const result = {};
+
+    Object.keys(value)
+      .sort()
+      .forEach(
+        key => {
+          result[key] =
+            canonicalAnnualStateV35(
+              value[key]
+            );
+        }
+      );
+
+    return result;
+  }
+
+  function annualStatesEqualV35(
+    left,
+    right
+  ) {
+    return (
+      JSON.stringify(
+        canonicalAnnualStateV35(
+          left
+        )
+      ) ===
+      JSON.stringify(
+        canonicalAnnualStateV35(
+          right
+        )
+      )
+    );
+  }
+
+    function annualPersistedStateComparableV35(
+    value
+  ) {
+    const copy =
+      cloneAnnualTransitionV35(
+        value
+      );
+
+    if (
+      copy &&
+      copy.meta &&
+      typeof copy.meta ===
+        'object'
+    ) {
+      delete copy.meta
+        .lastSavedAt;
+    }
+
+    return copy;
+  }
+
+  function annualPersistedStatesEqualV35(
+    left,
+    right
+  ) {
+    return annualStatesEqualV35(
+      annualPersistedStateComparableV35(
+        left
+      ),
+      annualPersistedStateComparableV35(
+        right
+      )
+    );
+  }
+
+  function createMemoryAnnualPersistenceV35(
+    options
+  ) {
+    const config =
+      options &&
+      typeof options === 'object'
+        ? options
+        : {};
+
+    let stored =
+      config.initialState == null
+        ? null
+        : cloneAnnualTransitionV35(
+            config.initialState
+          );
+
+    let writeCount = 0;
+    let readCount = 0;
+    let rollbackCount = 0;
+
+    return {
+      kind: 'memory',
+
+      async write(
+        value,
+        context
+      ) {
+        writeCount += 1;
+
+        if (
+          config.failWrite === true
+        ) {
+          return false;
+        }
+
+        stored =
+          cloneAnnualTransitionV35(
+            value
+          );
+
+        if (
+          config.throwAfterWrite ===
+            true
+        ) {
+          throw new Error(
+            'MEMORY_WRITE_THROW_AFTER_COMMIT'
+          );
+        }
+
+        return true;
+      },
+
+      async read() {
+        readCount += 1;
+
+        if (
+          config.readMismatch ===
+            true &&
+          readCount === 1
+        ) {
+          const mismatch =
+            cloneAnnualTransitionV35(
+              stored
+            );
+
+          if (
+            mismatch &&
+            typeof mismatch ===
+              'object'
+          ) {
+            mismatch
+              .__annualMismatchV35 =
+                true;
+          }
+
+          return mismatch;
+        }
+
+        return cloneAnnualTransitionV35(
+          stored
+        );
+      },
+
+      async rollback(
+        original
+      ) {
+        rollbackCount += 1;
+
+        if (
+          config.failRollback === true
+        ) {
+          return false;
+        }
+
+        stored =
+          cloneAnnualTransitionV35(
+            original
+          );
+
+        return true;
+      },
+
+      inspect() {
+        return {
+          stored:
+            cloneAnnualTransitionV35(
+              stored
+            ),
+
+          writeCount,
+          readCount,
+          rollbackCount
+        };
+      }
+    };
+  }
+
+  async function executeAnnualTransitionTransactionV35(
+    options
+  ) {
+    const config =
+      options &&
+      typeof options === 'object'
+        ? options
+        : {};
+
+    if (
+      annualTransitionExecutionLockV35
+    ) {
+      return {
+        ok: false,
+        code:
+          'ANNUAL_TRANSITION_ALREADY_RUNNING'
+      };
+    }
+
+    const from =
+      integerYearV35(
+        config.fromYear
+      );
+
+    const to =
+      integerYearV35(
+        config.toYear
+      );
+
+    if (
+      from == null ||
+      to == null ||
+      to !== from + 1
+    ) {
+      return {
+        ok: false,
+        code:
+          'INVALID_TRANSITION_YEARS'
+      };
+    }
+
+    const persistence =
+      config.persistence;
+
+    if (
+      !persistence ||
+      typeof persistence.write !==
+        'function' ||
+      typeof persistence.read !==
+        'function' ||
+      typeof persistence.rollback !==
+        'function'
+    ) {
+      return {
+        ok: false,
+        code:
+          'INVALID_PERSISTENCE_ADAPTER'
+      };
+    }
+
+    const statesEqual =
+      typeof persistence
+        .statesEqual ===
+        'function'
+        ? persistence
+            .statesEqual
+        : annualStatesEqualV35;
+
+    annualTransitionExecutionLockV35 =
+      true;
+
+    const original =
+      cloneAnnualTransitionV35(
+        data
+      );
+
+    let built = null;
+    let candidate = null;
+    let validation = null;
+    let writeAttempted = false;
+    let writeConfirmed = false;
+
+    try {
+      built =
+        buildAnnualTransitionCandidateV35(
+          from,
+          to
+        );
+
+      validation =
+        validateAnnualTransitionCandidateV35(
+          built
+        );
+
+      if (
+        !validation ||
+        validation.ok !== true
+      ) {
+        return {
+          ok: false,
+          code:
+            'CANDIDATE_VALIDATION_FAILED',
+          validation
+        };
+      }
+
+      candidate =
+        cloneAnnualTransitionV35(
+          built.candidate
+        );
+
+      writeAttempted =
+        true;
+
+      let writeResult;
+
+      try {
+        writeResult =
+          await persistence.write(
+            candidate,
+            {
+              phase: 'commit',
+              fromYear: from,
+              toYear: to
+            }
+          );
+      } catch (writeError) {
+        //
+        // Write throw는 commit 여부가
+        // 불명확하므로 반드시 read-back.
+        //
+        const observed =
+          await persistence.read();
+
+        if (
+          statesEqual(
+            observed,
+            candidate
+          )
+        ) {
+          writeConfirmed =
+            true;
+        } else if (
+          statesEqual(
+            observed,
+            original
+          )
+        ) {
+          return {
+            ok: false,
+            code:
+              'PERSISTENCE_WRITE_FAILED',
+            error:
+              String(
+                writeError &&
+                writeError.message
+                  ? writeError.message
+                  : writeError
+              )
+          };
+        } else {
+          const rollbackOk =
+            await persistence.rollback(
+              original,
+              {
+                phase:
+                  'rollback-after-write-throw',
+                fromYear: from,
+                toYear: to
+              }
+            );
+
+          const rollbackObserved =
+            await persistence.read();
+
+          const rollbackVerified =
+            rollbackOk === true &&
+            statesEqual(
+              rollbackObserved,
+              original
+            );
+
+          return {
+            ok: false,
+            code:
+              rollbackVerified
+                ? 'PERSISTENCE_WRITE_AMBIGUOUS_ROLLED_BACK'
+                : 'CRITICAL_ROLLBACK_FAILED',
+            rollbackVerified,
+            error:
+              String(
+                writeError &&
+                writeError.message
+                  ? writeError.message
+                  : writeError
+              )
+          };
+        }
+      }
+
+      if (!writeConfirmed) {
+        if (
+          writeResult !== true
+        ) {
+          return {
+            ok: false,
+            code:
+              'PERSISTENCE_WRITE_FAILED'
+          };
+        }
+
+        writeConfirmed =
+          true;
+      }
+
+      const persisted =
+        await persistence.read();
+
+      if (
+        !statesEqual(
+          persisted,
+          candidate
+        )
+      ) {
+        const rollbackOk =
+          await persistence.rollback(
+            original,
+            {
+              phase:
+                'rollback-after-read-mismatch',
+              fromYear: from,
+              toYear: to
+            }
+          );
+
+        const rollbackObserved =
+          await persistence.read();
+
+        const rollbackVerified =
+          rollbackOk === true &&
+          statesEqual(
+            rollbackObserved,
+            original
+          );
+
+        return {
+          ok: false,
+          code:
+            rollbackVerified
+              ? 'PERSISTENCE_VERIFY_FAILED_ROLLED_BACK'
+              : 'CRITICAL_ROLLBACK_FAILED',
+          rollbackVerified
+        };
+      }
+
+      return {
+        ok: true,
+        code:
+          'TRANSACTION_VERIFIED',
+        fromYear: from,
+        toYear: to,
+        candidate,
+        validation,
+        persistence:
+          typeof persistence.inspect ===
+            'function'
+            ? persistence.inspect()
+            : null
+      };
+    } catch (error) {
+      //
+      // Candidate build 등 write 이전
+      // failure는 persistence rollback이
+      // 필요 없다.
+      //
+      if (!writeAttempted) {
+        return {
+          ok: false,
+          code:
+            'TRANSACTION_PRECOMMIT_FAILED',
+          error:
+            String(
+              error &&
+              error.message
+                ? error.message
+                : error
+            )
+        };
+      }
+
+      //
+      // Commit 이후 예상하지 못한 예외.
+      // 가능한 한 original persistence를
+      // 복구한다.
+      //
+      try {
+        const rollbackOk =
+          await persistence.rollback(
+            original,
+            {
+              phase:
+                'rollback-after-exception',
+              fromYear: from,
+              toYear: to
+            }
+          );
+
+        const rollbackObserved =
+          await persistence.read();
+
+        const rollbackVerified =
+          rollbackOk === true &&
+          statesEqual(
+            rollbackObserved,
+            original
+          );
+
+        return {
+          ok: false,
+          code:
+            rollbackVerified
+              ? 'TRANSACTION_FAILED_ROLLED_BACK'
+              : 'CRITICAL_ROLLBACK_FAILED',
+          rollbackVerified,
+          error:
+            String(
+              error &&
+              error.message
+                ? error.message
+                : error
+            )
+        };
+      } catch (
+        rollbackError
+      ) {
+        return {
+          ok: false,
+          code:
+            'CRITICAL_ROLLBACK_FAILED',
+          rollbackVerified:
+            false,
+          error:
+            String(
+              error &&
+              error.message
+                ? error.message
+                : error
+            ),
+          rollbackError:
+            String(
+              rollbackError &&
+              rollbackError.message
+                ? rollbackError.message
+                : rollbackError
+            )
+        };
+      }
+    } finally {
+      //
+      // 8G-1 transaction core는
+      // authoritative browser data를
+      // 절대로 변경하지 않는다.
+      //
+      annualTransitionExecutionLockV35 =
+        false;
+    }
+  }
+
+    async function readAnnualPortfolioStateCloudV35() {
+    if (
+      !sb ||
+      !currentUser
+    ) {
+      throw new Error(
+        'ANNUAL_CLOUD_NOT_READY'
+      );
+    }
+
+    const response =
+      await sb
+        .from(
+          'portfolio_state'
+        )
+        .select(
+          'data'
+        )
+        .eq(
+          'user_id',
+          currentUser.id
+        )
+        .maybeSingle();
+
+    if (
+      response.error
+    ) {
+      throw response.error;
+    }
+
+    if (
+      !response.data ||
+      !response.data.data ||
+      typeof response.data.data !==
+        'object'
+    ) {
+      throw new Error(
+        'ANNUAL_CLOUD_STATE_MISSING'
+      );
+    }
+
+    return cloneAnnualTransitionV35(
+      response.data.data
+    );
+  }
+
+  function createProductionAnnualPersistenceV35() {
+  return {
+    kind:
+      'production-cloud',
+
+    statesEqual:
+      annualPersistedStatesEqualV35,
+
+    async preflight() {
+      try {
+        await readAnnualPortfolioStateCloudV35();
+
+        return (
+          cloudReady === true &&
+          !!currentUser &&
+          !!sb &&
+          cloudBusy === false
+        );
+      } catch (error) {
+        return false;
+      }
+    },
+
+    async write(
+      value
+    ) {
+      if (
+        cloudReady !== true ||
+        !currentUser ||
+        !sb ||
+        cloudBusy !== false
+      ) {
+        return false;
+      }
+
+      //
+      // flushCloud는 global data를
+      // payload source로 사용하므로
+      // candidate를 memory에 잠시 설치.
+      // localStorage ownership은
+      // production Execute wrapper가 담당.
+      //
+      data =
+        cloneAnnualTransitionV35(
+          value
+        );
+
+      const result =
+        await flushCloud();
+
+      return result === true;
+    },
+
+    async read() {
+      return await
+        readAnnualPortfolioStateCloudV35();
+    },
+
+    async rollback(
+      original
+    ) {
+      if (
+        !currentUser ||
+        !sb ||
+        cloudBusy !== false
+      ) {
+        return false;
+      }
+
+      data =
+        cloneAnnualTransitionV35(
+          original
+        );
+
+      const result =
+        await flushCloud();
+
+      return result === true;
+    }
+  };
+}
+
   window.validateAnnualTransitionCandidateV35 =
     validateAnnualTransitionCandidateV35;
     
@@ -1765,4 +2466,25 @@
 
   window.annualTransitionPrerequisitesV35 =
     annualTransitionPrerequisitesV35;
+
+  window.canonicalAnnualStateV35 =
+    canonicalAnnualStateV35;
+
+  window.annualStatesEqualV35 =
+    annualStatesEqualV35;
+
+  window.createMemoryAnnualPersistenceV35 =
+    createMemoryAnnualPersistenceV35;
+
+  window.executeAnnualTransitionTransactionV35 =
+    executeAnnualTransitionTransactionV35;  
+
+  window.readAnnualPortfolioStateCloudV35 =
+    readAnnualPortfolioStateCloudV35;
+    
+  window.annualPersistedStatesEqualV35 =
+    annualPersistedStatesEqualV35;
+
+  window.createProductionAnnualPersistenceV35 =
+    createProductionAnnualPersistenceV35;  
 })();
