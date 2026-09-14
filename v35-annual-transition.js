@@ -1745,7 +1745,7 @@
     };
   }
 
-    let annualTransitionExecutionLockV35 =
+  let annualTransitionExecutionLockV35 =
     false;
 
   function canonicalAnnualStateV35(
@@ -1794,41 +1794,6 @@
         canonicalAnnualStateV35(
           right
         )
-      )
-    );
-  }
-
-    function annualPersistedStateComparableV35(
-    value
-  ) {
-    const copy =
-      cloneAnnualTransitionV35(
-        value
-      );
-
-    if (
-      copy &&
-      copy.meta &&
-      typeof copy.meta ===
-        'object'
-    ) {
-      delete copy.meta
-        .lastSavedAt;
-    }
-
-    return copy;
-  }
-
-  function annualPersistedStatesEqualV35(
-    left,
-    right
-  ) {
-    return annualStatesEqualV35(
-      annualPersistedStateComparableV35(
-        left
-      ),
-      annualPersistedStateComparableV35(
-        right
       )
     );
   }
@@ -2318,134 +2283,6 @@
     }
   }
 
-    async function readAnnualPortfolioStateCloudV35() {
-    if (
-      !sb ||
-      !currentUser
-    ) {
-      throw new Error(
-        'ANNUAL_CLOUD_NOT_READY'
-      );
-    }
-
-    const response =
-      await sb
-        .from(
-          'portfolio_state'
-        )
-        .select(
-          'data'
-        )
-        .eq(
-          'user_id',
-          currentUser.id
-        )
-        .maybeSingle();
-
-    if (
-      response.error
-    ) {
-      throw response.error;
-    }
-
-    if (
-      !response.data ||
-      !response.data.data ||
-      typeof response.data.data !==
-        'object'
-    ) {
-      throw new Error(
-        'ANNUAL_CLOUD_STATE_MISSING'
-      );
-    }
-
-    return cloneAnnualTransitionV35(
-      response.data.data
-    );
-  }
-
-  function createProductionAnnualPersistenceV35() {
-  return {
-    kind:
-      'production-cloud',
-
-    statesEqual:
-      annualPersistedStatesEqualV35,
-
-    async preflight() {
-      try {
-        await readAnnualPortfolioStateCloudV35();
-
-        return (
-          cloudReady === true &&
-          !!currentUser &&
-          !!sb &&
-          cloudBusy === false
-        );
-      } catch (error) {
-        return false;
-      }
-    },
-
-    async write(
-      value
-    ) {
-      if (
-        cloudReady !== true ||
-        !currentUser ||
-        !sb ||
-        cloudBusy !== false
-      ) {
-        return false;
-      }
-
-      //
-      // flushCloud는 global data를
-      // payload source로 사용하므로
-      // candidate를 memory에 잠시 설치.
-      // localStorage ownership은
-      // production Execute wrapper가 담당.
-      //
-      data =
-        cloneAnnualTransitionV35(
-          value
-        );
-
-      const result =
-        await flushCloud();
-
-      return result === true;
-    },
-
-    async read() {
-      return await
-        readAnnualPortfolioStateCloudV35();
-    },
-
-    async rollback(
-      original
-    ) {
-      if (
-        !currentUser ||
-        !sb ||
-        cloudBusy !== false
-      ) {
-        return false;
-      }
-
-      data =
-        cloneAnnualTransitionV35(
-          original
-        );
-
-      const result =
-        await flushCloud();
-
-      return result === true;
-    }
-  };
-}
-
   window.validateAnnualTransitionCandidateV35 =
     validateAnnualTransitionCandidateV35;
     
@@ -2479,12 +2316,4 @@
   window.executeAnnualTransitionTransactionV35 =
     executeAnnualTransitionTransactionV35;  
 
-  window.readAnnualPortfolioStateCloudV35 =
-    readAnnualPortfolioStateCloudV35;
-    
-  window.annualPersistedStatesEqualV35 =
-    annualPersistedStatesEqualV35;
-
-  window.createProductionAnnualPersistenceV35 =
-    createProductionAnnualPersistenceV35;  
 })();
