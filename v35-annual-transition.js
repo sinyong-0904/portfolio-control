@@ -934,6 +934,368 @@
     );
   }
 
+  function annualCandidateAllowedDeltaV35(
+  original,
+  candidate,
+  fromYear,
+  toYear
+) {
+  if (
+    !original ||
+    typeof original !== 'object' ||
+    !candidate ||
+    typeof candidate !== 'object'
+  ) {
+    return {
+      ok: false,
+      code: 'INVALID_STATE'
+    };
+  }
+
+  const expected =
+    cloneAnnualTransitionV35(
+      original
+    );
+
+  const from =
+    String(fromYear);
+
+  const to =
+    String(toYear);
+
+  //
+  // Performance:
+  // fromYear carry만 annual transition
+  // mutation으로 허용.
+  //
+  expected.performanceV35 =
+    expected.performanceV35 &&
+    typeof expected.performanceV35 ===
+      'object'
+      ? expected.performanceV35
+      : {};
+
+  expected.performanceV35
+    .carryByYear =
+      expected.performanceV35
+        .carryByYear &&
+      typeof expected.performanceV35
+        .carryByYear ===
+        'object'
+        ? expected.performanceV35
+            .carryByYear
+        : {};
+
+  const candidateCarry =
+    candidate.performanceV35 &&
+    candidate.performanceV35
+      .carryByYear
+      ? candidate.performanceV35
+          .carryByYear[from]
+      : undefined;
+
+  expected.performanceV35
+    .carryByYear[from] =
+      cloneAnnualTransitionV35(
+        candidateCarry
+      );
+
+  //
+  // Account:
+  // 6개 annual account의
+  // base<toYear>만 허용.
+  //
+  const accountIds =
+    new Set([
+      'DC',
+      'P1',
+      'P2',
+      'ISA',
+      'GENERAL',
+      'CHILD'
+    ]);
+
+  if (
+    Array.isArray(
+      expected.accounts
+    ) &&
+    Array.isArray(
+      candidate.accounts
+    )
+  ) {
+    expected.accounts.forEach(
+      account => {
+        if (
+          !account ||
+          !accountIds.has(
+            account.id
+          )
+        ) {
+          return;
+        }
+
+        const source =
+          candidate.accounts.find(
+            row =>
+              row &&
+              row.id ===
+                account.id
+          );
+
+        if (!source) {
+          return;
+        }
+
+        account[
+          'base' + to
+        ] =
+          cloneAnnualTransitionV35(
+            source[
+              'base' + to
+            ]
+          );
+      }
+    );
+  }
+
+  //
+  // Pension annual baseline.
+  //
+  expected.pensionBucketSnapshot =
+    cloneAnnualTransitionV35(
+      candidate
+        .pensionBucketSnapshot
+    );
+
+  expected.pensionSnapshot =
+    cloneAnnualTransitionV35(
+      candidate
+        .pensionSnapshot
+    );
+
+  //
+  // Growth rollover는 기존
+  // rollGrowthForwardV32가 소유하므로
+  // growthV32 domain 전체 결과를 허용.
+  // Growth 자체 validation은 기존
+  // positive checks가 별도로 담당.
+  //
+  expected.growthV32 =
+    cloneAnnualTransitionV35(
+      candidate.growthV32
+    );
+
+  //
+  // Cash-like:
+  // 기존 row identity/order는 그대로,
+  // base<toYear>/flow<toYear>만 허용.
+  //
+  if (
+    Array.isArray(
+      expected.cashAssets
+    ) &&
+    Array.isArray(
+      candidate.cashAssets
+    )
+  ) {
+    expected.cashAssets.forEach(
+      item => {
+        if (!item) {
+          return;
+        }
+
+        const source =
+          candidate.cashAssets.find(
+            row =>
+              row &&
+              row.id ===
+                item.id
+          );
+
+        if (!source) {
+          return;
+        }
+
+        item[
+          'base' + to
+        ] =
+          cloneAnnualTransitionV35(
+            source[
+              'base' + to
+            ]
+          );
+
+        item[
+          'flow' + to
+        ] =
+          cloneAnnualTransitionV35(
+            source[
+              'flow' + to
+            ]
+          );
+      }
+    );
+  }
+
+  //
+  // Dividend:
+  // candidate producer가 next-year
+  // zero matrix로 authoritative
+  // replacement하는 domain.
+  //
+  expected.dividends =
+    cloneAnnualTransitionV35(
+      candidate.dividends
+    );
+
+  //
+  // Income & Tax:
+  // toYear row와 toYear note만 허용.
+  // finalizedYears 등 다른 field는
+  // original 그대로 남아야 한다.
+  //
+  expected.incomeTaxHistory =
+    expected.incomeTaxHistory &&
+    typeof expected
+      .incomeTaxHistory ===
+      'object'
+      ? expected
+          .incomeTaxHistory
+      : {};
+
+  expected.incomeTaxHistory.rows =
+    Array.isArray(
+      expected.incomeTaxHistory
+        .rows
+    )
+      ? expected.incomeTaxHistory
+          .rows
+      : [];
+
+  expected.incomeTaxHistory.notes =
+    expected.incomeTaxHistory
+      .notes &&
+    typeof expected
+      .incomeTaxHistory
+      .notes === 'object'
+      ? expected.incomeTaxHistory
+          .notes
+      : {};
+
+  const candidateIncomeRows =
+    candidate.incomeTaxHistory &&
+    Array.isArray(
+      candidate.incomeTaxHistory
+        .rows
+    )
+      ? candidate
+          .incomeTaxHistory
+          .rows
+      : [];
+
+  const candidateNextRow =
+    candidateIncomeRows.find(
+      row =>
+        Number(
+          row &&
+          row.year
+        ) ===
+        Number(toYear)
+    );
+
+  const expectedNextIndex =
+    expected.incomeTaxHistory
+      .rows
+      .findIndex(
+        row =>
+          Number(
+            row &&
+            row.year
+          ) ===
+          Number(toYear)
+      );
+
+  if (candidateNextRow) {
+    if (
+      expectedNextIndex >= 0
+    ) {
+      expected.incomeTaxHistory
+        .rows[
+          expectedNextIndex
+        ] =
+          cloneAnnualTransitionV35(
+            candidateNextRow
+          );
+    } else {
+      expected.incomeTaxHistory
+        .rows.push(
+          cloneAnnualTransitionV35(
+            candidateNextRow
+          )
+        );
+    }
+  }
+
+  const candidateNotes =
+    candidate.incomeTaxHistory &&
+    candidate.incomeTaxHistory
+      .notes &&
+    typeof candidate
+      .incomeTaxHistory
+      .notes === 'object'
+      ? candidate
+          .incomeTaxHistory
+          .notes
+      : {};
+
+  expected.incomeTaxHistory
+    .notes[to] =
+      cloneAnnualTransitionV35(
+        candidateNotes[to]
+      );
+
+  //
+  // Annual Transition metadata marker.
+  // meta의 다른 field는 변경 불허.
+  //
+  expected.meta =
+    expected.meta &&
+    typeof expected.meta ===
+      'object'
+      ? expected.meta
+      : {};
+
+  expected.meta
+    .annualTransitionV35 =
+      cloneAnnualTransitionV35(
+        candidate.meta &&
+        candidate.meta
+          .annualTransitionV35
+      );
+
+  const expectedJson =
+    JSON.stringify(
+      expected
+    );
+
+  const candidateJson =
+    JSON.stringify(
+      candidate
+    );
+
+  return {
+    ok:
+      expectedJson ===
+      candidateJson,
+
+    code:
+      expectedJson ===
+        candidateJson
+        ? 'READY'
+        : 'UNEXPECTED_CANDIDATE_DELTA'
+  };
+}
+
   function validateAnnualTransitionCandidateV35(
     built
   ) {
@@ -974,6 +1336,35 @@
         typeof candidate ===
           'object' &&
         candidate !== data
+    );
+
+    const allowedDelta =
+      (
+        candidate &&
+        typeof candidate ===
+          'object' &&
+        from != null &&
+        to != null
+      )
+        ? annualCandidateAllowedDeltaV35(
+            data,
+            candidate,
+            from,
+            to
+          )
+        : {
+            ok: false,
+            code: 'INVALID_STATE'
+          };
+
+    annualCandidateCheckV35(
+      checks,
+      'allowedDelta',
+      allowedDelta.ok === true,
+      {
+        code:
+          allowedDelta.code
+      }
     );
 
     if (
