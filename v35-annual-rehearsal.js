@@ -4,6 +4,9 @@
   let annualRehearsalStateV35 =
     null;
 
+  let annualRehearsalPersistenceGuardV35 =
+    null;
+
   function cloneRehearsalV35(
     value
   ) {
@@ -29,6 +32,97 @@
     )
       ? year
       : null;
+  }
+
+    function installAnnualRehearsalPersistenceGuardV35() {
+    if (
+      annualRehearsalPersistenceGuardV35
+    ) {
+      return true;
+    }
+
+    const originalSave =
+      window.save;
+
+    const originalSchedule =
+      window.scheduleCloudSave;
+
+    const originalFlush =
+      window.flushCloud;
+
+    if (
+      typeof originalSave !==
+        'function' ||
+      typeof originalSchedule !==
+        'function' ||
+      typeof originalFlush !==
+        'function'
+    ) {
+      return false;
+    }
+
+    annualRehearsalPersistenceGuardV35 = {
+      save:
+        originalSave,
+
+      scheduleCloudSave:
+        originalSchedule,
+
+      flushCloud:
+        originalFlush
+    };
+
+    window.save =
+      function () {
+        console.warn(
+          '[v35 rehearsal] Save blocked'
+        );
+
+        return false;
+      };
+
+    window.scheduleCloudSave =
+      function () {
+        console.warn(
+          '[v35 rehearsal] Cloud save scheduling blocked'
+        );
+
+        return false;
+      };
+
+    window.flushCloud =
+      async function () {
+        console.warn(
+          '[v35 rehearsal] Cloud flush blocked'
+        );
+
+        return false;
+      };
+
+    return true;
+  }
+
+  function restoreAnnualRehearsalPersistenceGuardV35() {
+    const guard =
+      annualRehearsalPersistenceGuardV35;
+
+    if (!guard) {
+      return true;
+    }
+
+    window.save =
+      guard.save;
+
+    window.scheduleCloudSave =
+      guard.scheduleCloudSave;
+
+    window.flushCloud =
+      guard.flushCloud;
+
+    annualRehearsalPersistenceGuardV35 =
+      null;
+
+    return true;
   }
 
   function clearAnnualPreviewStatesV35() {
@@ -257,6 +351,14 @@
     try {
       clearAnnualPreviewStatesV35();
 
+      if (
+        !installAnnualRehearsalPersistenceGuardV35()
+      ) {
+        throw new Error(
+          'ANNUAL_REHEARSAL_PERSISTENCE_GUARD_FAILED'
+        );
+      }
+
       const growth =
         data.growthV32;
 
@@ -452,6 +554,8 @@
 
       clearAnnualPreviewStatesV35();
 
+      restoreAnnualRehearsalPersistenceGuardV35();
+
       render();
 
       return {
@@ -492,6 +596,8 @@
     );
 
     clearAnnualPreviewStatesV35();
+
+    restoreAnnualRehearsalPersistenceGuardV35();
 
     if (
       typeof window
