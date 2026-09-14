@@ -359,7 +359,7 @@
         );
       }
 
-      const growth =
+            const growth =
         data.growthV32;
 
       const rows =
@@ -384,16 +384,54 @@
           from
         ).ok
       ) {
-        const sourceMonth =
-          rows.SEP ||
-          rows.AUG ||
-          rows.JUL;
+        const months =
+          Array.isArray(
+            data.months
+          )
+            ? data.months
+            : [
+                'JAN',
+                'FEB',
+                'MAR',
+                'APR',
+                'MAY',
+                'JUN',
+                'JUL',
+                'AUG',
+                'SEP',
+                'OCT',
+                'NOV',
+                'DEC'
+              ];
+
+        const currentIndex =
+          Number(
+            growth.currentMonthIndex
+          );
 
         if (
-          !sourceMonth ||
+          !Number.isInteger(
+            currentIndex
+          ) ||
+          currentIndex < 0 ||
+          currentIndex > 11
+        ) {
+          throw new Error(
+            'ANNUAL_REHEARSAL_GROWTH_MONTH_INVALID'
+          );
+        }
+
+        const currentMonth =
+          months[currentIndex];
+
+        const currentRow =
+          rows[currentMonth];
+
+        if (
+          !currentRow ||
           !Number.isFinite(
             Number(
-              sourceMonth.value
+              currentRow.value
             )
           )
         ) {
@@ -402,31 +440,79 @@
           );
         }
 
-        rows.DEC = {
-          ...rows.DEC,
+        //
+        // 현재 LIVE month의 계산값을
+        // rehearsal year-end history에
+        // 그대로 보존한다.
+        //
+        currentRow.locked =
+          true;
 
-          value:
-            Number(
-              sourceMonth.value
-            ),
+        const yearEndValue =
+          Number(
+            currentRow.value
+          );
 
-          legacy:
-            Number(
-              sourceMonth.legacy
-            ) || 0,
+        //
+        // 현재월 다음 달부터 DEC까지는
+        // "오늘 이후 변화가 없다"는
+        // rehearsal assumption으로 bridge.
+        //
+        for (
+          let index =
+            currentIndex + 1;
+          index <= 11;
+          index += 1
+        ) {
+          const month =
+            months[index];
 
-          locked:
-            false,
+          const row =
+            rows[month];
 
-          cashChange: 0,
-          totalChange: 0,
-          contribution: 0,
-          investmentReturn: 0,
-          growth: 0
-        };
+          if (!row) {
+            throw new Error(
+              'ANNUAL_REHEARSAL_GROWTH_MONTH_MISSING_' +
+              month
+            );
+          }
+
+          row.contribution =
+            0;
+
+          row.cashChange =
+            0;
+
+          row.investmentReturn =
+            0;
+
+          row.legacy =
+            0;
+
+          row.totalChange =
+            0;
+
+          row.value =
+            yearEndValue;
+
+          row.locked =
+            index < 11;
+        }
 
         growth.currentMonthIndex =
           11;
+
+        growth.currentStart =
+          {
+            investmentValue:
+              null,
+
+            legacyValue:
+              null,
+
+            totalValue:
+              yearEndValue
+          };
       }
 
       if (
