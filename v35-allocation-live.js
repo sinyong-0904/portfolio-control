@@ -17,6 +17,62 @@
     );
   }
 
+  function activeAnnualYearV35Safe() {
+    return (
+      typeof window.activeAnnualYearV35 ===
+        'function'
+        ? Number(
+            window.activeAnnualYearV35()
+          )
+        : 2026
+    );
+  }
+
+  function allocationEffectiveYearV35() {
+    const businessYear =
+      businessYearV35Safe();
+
+    if (
+      allocationPreviewV35 &&
+      Number(
+        allocationPreviewV35.toYear
+      ) === businessYear
+    ) {
+      return businessYear;
+    }
+
+    return activeAnnualYearV35Safe();
+  }
+
+  function allocationSnapshotV35() {
+    const businessYear =
+      businessYearV35Safe();
+
+    if (
+      allocationPreviewV35 &&
+      Number(
+        allocationPreviewV35.toYear
+      ) === businessYear
+    ) {
+      return allocationPreviewV35
+        .pensionSnapshot || null;
+    }
+
+    const activeYear =
+      activeAnnualYearV35Safe();
+
+    if (activeYear <= 2026) {
+      return null;
+    }
+
+    return (
+      data &&
+      data.pensionSnapshot
+        ? data.pensionSnapshot
+        : null
+    );
+  }
+
   function cloneV35(value) {
     return JSON.parse(
       JSON.stringify(value)
@@ -103,217 +159,217 @@
     };
 
   window.allocationFutureMetricsV35 =
-    function () {
-      const businessYear =
-        businessYearV35Safe();
+  function () {
+    const effectiveYear =
+      allocationEffectiveYearV35();
+
+    const snapshot =
+      allocationSnapshotV35();
+
+    if (
+      effectiveYear <= 2026 ||
+      !snapshot
+    ) {
+      return null;
+    }
+
+    if (
+      typeof window.pensionMetrics !==
+        'function'
+    ) {
+      throw new Error(
+        '[v35] pensionMetrics is not available'
+      );
+    }
+
+    const current =
+      window.pensionMetrics();
+
+    const result = {
+      businessYear:
+        effectiveYear,
+      groups: {},
+      details: {}
+    };
+
+    Object.entries(
+      current.groups || {}
+    ).forEach(
+      ([key, metric]) => {
+        const base =
+          snapshot
+            .groups?.[key];
+
+        result.groups[key] = {
+          value:
+            Number(
+              metric.value
+            ) || 0,
+
+          pnlMan:
+            pnlFromSnapshotV35(
+              metric.value,
+              base
+            ),
+
+          ytd:
+            ytdFromSnapshotV35(
+              metric.value,
+              base
+            ),
+
+          cumPnl:
+            Number(
+              metric.cumPnl
+            ) || 0
+        };
+      }
+    );
+
+    Object.entries(
+      current.details || {}
+    ).forEach(
+      ([key, metric]) => {
+        const base =
+          snapshot
+            .details?.[key];
+
+        result.details[key] = {
+          value:
+            Number(
+              metric.value
+            ) || 0,
+
+          pnlMan:
+            pnlFromSnapshotV35(
+              metric.value,
+              base
+            ),
+
+          ytd:
+            ytdFromSnapshotV35(
+              metric.value,
+              base
+            ),
+
+          cumPnl:
+            Number(
+              metric.cumPnl
+            ) || 0
+        };
+      }
+    );
+
+    function combinedGroupV35(
+      keys
+    ) {
+      const metrics =
+        keys
+          .map(
+            key =>
+              result.details[
+                key
+              ]
+          )
+          .filter(
+            Boolean
+          );
 
       if (
-        businessYear <= 2026 ||
-        !allocationPreviewV35
+        metrics.length !==
+        keys.length
       ) {
         return null;
       }
 
-      if (
-        typeof window.pensionMetrics !==
-        'function'
-      ) {
-        throw new Error(
-          '[v35] pensionMetrics is not available'
+      const value =
+        metrics.reduce(
+          (sum, metric) =>
+            sum +
+            (
+              Number(
+                metric.value
+              ) || 0
+            ),
+          0
         );
-      }
 
-      const current =
-        window.pensionMetrics();
-
-      const snapshot =
-        allocationPreviewV35
-          .pensionSnapshot;
-
-      const result = {
-        businessYear,
-        groups: {},
-        details: {}
-      };
-
-      Object.entries(
-        current.groups || {}
-      ).forEach(
-        ([key, metric]) => {
-          const base =
-            snapshot
-              .groups?.[key];
-
-          result.groups[key] = {
-            value:
+      const pnlMan =
+        metrics.reduce(
+          (sum, metric) =>
+            sum +
+            (
               Number(
-                metric.value
-              ) || 0,
-
-            pnlMan:
-              pnlFromSnapshotV35(
-                metric.value,
-                base
-              ),
-
-            ytd:
-              ytdFromSnapshotV35(
-                metric.value,
-                base
-              ),
-
-            cumPnl:
-              Number(
-                metric.cumPnl
+                metric.pnlMan
               ) || 0
-          };
-        }
-      );
+            ),
+          0
+        );
 
-      Object.entries(
-        current.details || {}
-      ).forEach(
-        ([key, metric]) => {
-          const base =
-            snapshot
-              .details?.[key];
+      const base =
+        value -
+        pnlMan * 10000;
 
-          result.details[key] = {
-            value:
-              Number(
-                metric.value
-              ) || 0,
-
-            pnlMan:
-              pnlFromSnapshotV35(
-                metric.value,
-                base
-              ),
-
-            ytd:
-              ytdFromSnapshotV35(
-                metric.value,
-                base
-              ),
-
-            cumPnl:
-              Number(
-                metric.cumPnl
-              ) || 0
-          };
-        }
-      );
-
-            function combinedGroupV35(
-        keys
-      ) {
-        const metrics =
-          keys
-            .map(
-              key =>
-                result.details[
-                  key
-                ]
+      const ytd =
+        base
+          ? (
+              pnlMan *
+              10000 /
+              base *
+              100
             )
-            .filter(
-              Boolean
-            );
+          : 0;
 
-        if (
-          metrics.length !==
-          keys.length
-        ) {
-          return null;
-        }
-
-        const value =
-          metrics.reduce(
-            (sum, metric) =>
-              sum +
-              (
-                Number(
-                  metric.value
-                ) || 0
-              ),
-            0
-          );
-
-        const pnlMan =
-          metrics.reduce(
-            (sum, metric) =>
-              sum +
-              (
-                Number(
-                  metric.pnlMan
-                ) || 0
-              ),
-            0
-          );
-
-        const base =
-          value -
-          pnlMan * 10000;
-
-        const ytd =
-          base
-            ? (
-                pnlMan *
-                10000 /
-                base *
-                100
-              )
-            : 0;
-
-        const cumPnl =
-          metrics.reduce(
-            (sum, metric) =>
-              sum +
-              (
-                Number(
-                  metric.cumPnl
-                ) || 0
-              ),
-            0
-          );
-
-        return {
-          value,
-          pnlMan,
-          ytd,
-          cumPnl
-        };
-      }
-
-      const equity =
-        combinedGroupV35(
-          [
-            'NASDAQ',
-            'S&P500',
-            'GLOBAL',
-            'WORLD'
-          ]
+      const cumPnl =
+        metrics.reduce(
+          (sum, metric) =>
+            sum +
+            (
+              Number(
+                metric.cumPnl
+              ) || 0
+            ),
+          0
         );
 
-      if (equity) {
-        result.groups.EQUITY =
-          equity;
-      }
+      return {
+        value,
+        pnlMan,
+        ytd,
+        cumPnl
+      };
+    }
 
-      const income =
-        combinedGroupV35(
-          [
-            'K-DVD',
-            'US-CVD'
-          ]
-        );
+    const equity =
+      combinedGroupV35(
+        [
+          'NASDAQ',
+          'S&P500',
+          'GLOBAL',
+          'WORLD'
+        ]
+      );
 
-      if (income) {
-        result.groups.INCOME =
-          income;
-      }
-      
-      return result;
-    };
+    if (equity) {
+      result.groups.EQUITY =
+        equity;
+    }
+
+    const income =
+      combinedGroupV35(
+        [
+          'K-DVD',
+          'US-CVD'
+        ]
+      );
+
+    if (income) {
+      result.groups.INCOME =
+        income;
+    }
+
+    return result;
+  };
 
   function formatManV35(
     value
@@ -354,242 +410,258 @@
   }
 
   function applyAllocationPresentationV35() {
-    const businessYear =
-      businessYearV35Safe();
+  const effectiveYear =
+    allocationEffectiveYearV35();
 
-    if (
-      businessYear <= 2026 ||
-      !allocationPreviewV35
-    ) {
-      return false;
-    }
+  if (effectiveYear <= 2026) {
+    return false;
+  }
 
-    const metrics =
-      window
-        .allocationFutureMetricsV35();
+  const metrics =
+    window
+      .allocationFutureMetricsV35();
 
-    if (!metrics) {
-      return false;
-    }
+  if (!metrics) {
+    return false;
+  }
 
-    const tables =
-      Array.from(
-        document.querySelectorAll(
-          '#content table'
-        )
-      );
+  const tables =
+    Array.from(
+      document.querySelectorAll(
+        '#content table'
+      )
+    );
 
-    let applied =
-      false;
+  let applied =
+    false;
 
-    tables.forEach(
-      table => {
-        const headerCells =
-          Array.from(
-            table.querySelectorAll(
-              'thead th'
-            )
-          );
+  tables.forEach(
+    table => {
+      const headerCells =
+        Array.from(
+          table.querySelectorAll(
+            'thead th'
+          )
+        );
 
-        const headers =
-          headerCells.map(
-            th =>
-              th.textContent
-                .trim()
-          );
+      const headers =
+        headerCells.map(
+          th =>
+            th.textContent
+              .trim()
+        );
 
-        const pnlIdx =
-          headers.indexOf(
-            '26 손익'
-          );
+      //
+      // Base DOM 또는 이미 future-year로
+      // relabel된 DOM 모두 처리한다.
+      //
+      const pnlIdx =
+        headers.findIndex(
+          text =>
+            /^\d{2}\s*손익$/
+              .test(
+                text
+                  .replace(
+                    /\s+/g,
+                    ' '
+                  )
+              )
+        );
 
-        const ytdIdx =
-          headers.indexOf(
-            'YTD 26'
-          );
+      const ytdIdx =
+        headers.findIndex(
+          text =>
+            /^YTD\s*\d{2}$/
+              .test(
+                text
+                  .replace(
+                    /\s+/g,
+                    ' '
+                  )
+              )
+        );
 
-        if (
-          pnlIdx < 0 ||
-          ytdIdx < 0
-        ) {
-          return;
-        }
+      if (
+        pnlIdx < 0 ||
+        ytdIdx < 0
+      ) {
+        return;
+      }
 
-        const firstHeader =
-          headers[0];
+      const firstHeader =
+        headers[0];
 
-        const source =
-          firstHeader === '구분'
-            ? metrics.groups
-            : firstHeader === '자산'
-              ? metrics.details
+      const source =
+        firstHeader === '구분'
+          ? metrics.groups
+          : firstHeader === '자산'
+            ? metrics.details
+            : null;
+
+      if (!source) {
+        return;
+      }
+
+      headerCells[
+        pnlIdx
+      ].textContent =
+        `${String(
+          effectiveYear
+        ).slice(-2)} 손익`;
+
+      headerCells[
+        ytdIdx
+      ].textContent =
+        `YTD ${String(
+          effectiveYear
+        ).slice(-2)}`;
+
+      table.querySelectorAll(
+        'tbody tr'
+      ).forEach(
+        row => {
+          const firstCellText =
+            row.children[0]
+              ?.textContent
+              ?.trim() || '';
+
+          const key =
+            firstHeader === '구분'
+              ? Object.keys(
+                  source
+                ).find(
+                  candidate =>
+                    firstCellText
+                      .startsWith(
+                        candidate
+                      )
+                )
+              : firstCellText;
+
+          const metric =
+            key
+              ? source[key]
               : null;
 
-        if (!source) {
-          return;
-        }
-
-        headerCells[
-          pnlIdx
-        ].textContent =
-          `${String(
-            businessYear
-          ).slice(-2)} 손익`;
-
-        headerCells[
-          ytdIdx
-        ].textContent =
-          `YTD ${String(
-            businessYear
-          ).slice(-2)}`;
-
-        table.querySelectorAll(
-          'tbody tr'
-        )
-          .forEach(
-            row => {
-              const firstCellText =
-                row.children[0]
-                  ?.textContent
-                  ?.trim() || '';
-
-              const key =
-                firstHeader === '구분'
-                  ? Object.keys(
-                      source
-                    ).find(
-                      candidate =>
-                        firstCellText
-                          .startsWith(
-                            candidate
-                          )
-                    )
-                  : firstCellText;
-
-              const metric =
-                key
-                  ? source[key]
-                  : null;
-
-              if (!metric) {
-                return;
-              }
-
-              const pnlCell =
-                row.children[
-                  pnlIdx
-                ];
-
-              const ytdCell =
-                row.children[
-                  ytdIdx
-                ];
-
-              if (pnlCell) {
-                pnlCell.textContent =
-                  formatManV35(
-                    metric.pnlMan
-                  );
-              }
-
-              if (ytdCell) {
-                ytdCell.textContent =
-                  formatPctV35(
-                    metric.ytd
-                  );
-              }
-            }
-          );
-
-                  const sumRow =
-          Array.from(
-            table.querySelectorAll(
-              'tbody tr'
-            )
-          ).find(
-            row =>
-              row.children[0]
-                ?.textContent
-                ?.trim() ===
-              'Sum'
-          );
-
-        if (sumRow) {
-          const metricsList =
-            Object.values(
-              source
-            );
-
-          const pnlSum =
-            metricsList.reduce(
-              (sum, metric) =>
-                sum +
-                (
-                  Number(
-                    metric.pnlMan
-                  ) || 0
-                ),
-              0
-            );
-
-          const valueSum =
-            metricsList.reduce(
-              (sum, metric) =>
-                sum +
-                (
-                  Number(
-                    metric.value
-                  ) || 0
-                ),
-              0
-            );
-
-          const baseSum =
-            valueSum -
-            pnlSum * 10000;
-
-          const ytdSum =
-            baseSum
-              ? (
-                  pnlSum *
-                  10000 /
-                  baseSum *
-                  100
-                )
-              : 0;
+          if (!metric) {
+            return;
+          }
 
           const pnlCell =
-            sumRow.children[
+            row.children[
               pnlIdx
             ];
 
           const ytdCell =
-            sumRow.children[
+            row.children[
               ytdIdx
             ];
 
           if (pnlCell) {
             pnlCell.textContent =
               formatManV35(
-                pnlSum
+                metric.pnlMan
               );
           }
 
           if (ytdCell) {
             ytdCell.textContent =
               formatPctV35(
-                ytdSum
+                metric.ytd
               );
           }
         }
+      );
 
-        applied =
-          true;
+      const sumRow =
+        Array.from(
+          table.querySelectorAll(
+            'tbody tr'
+          )
+        ).find(
+          row =>
+            row.children[0]
+              ?.textContent
+              ?.trim() ===
+            'Sum'
+        );
+
+      if (sumRow) {
+        const metricsList =
+          Object.values(
+            source
+          );
+
+        const pnlSum =
+          metricsList.reduce(
+            (sum, metric) =>
+              sum +
+              (
+                Number(
+                  metric.pnlMan
+                ) || 0
+              ),
+            0
+          );
+
+        const valueSum =
+          metricsList.reduce(
+            (sum, metric) =>
+              sum +
+              (
+                Number(
+                  metric.value
+                ) || 0
+              ),
+            0
+          );
+
+        const baseSum =
+          valueSum -
+          pnlSum * 10000;
+
+        const ytdSum =
+          baseSum
+            ? (
+                pnlSum *
+                10000 /
+                baseSum *
+                100
+              )
+            : 0;
+
+        const pnlCell =
+          sumRow.children[
+            pnlIdx
+          ];
+
+        const ytdCell =
+          sumRow.children[
+            ytdIdx
+          ];
+
+        if (pnlCell) {
+          pnlCell.textContent =
+            formatManV35(
+              pnlSum
+            );
+        }
+
+        if (ytdCell) {
+          ytdCell.textContent =
+            formatPctV35(
+              ytdSum
+            );
+        }
       }
-    );
 
-    return applied;
-  }
+      applied =
+        true;
+    }
+  );
+
+  return applied;
+}
 
   window.applyAllocationPresentationV35 =
     applyAllocationPresentationV35;
