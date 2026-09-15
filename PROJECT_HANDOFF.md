@@ -2552,7 +2552,6 @@ PROJECT_HANDOFF.md
 ANNUAL_TRANSITION.md
 - 연도 전환 설계
 - Phase 1~7 구현 및 검증 상태
-- Phase 8 Integrated Annual Rollover 요구사항
 
 VERSION_OPERATIONS.md
 - /v35/ Production / Authoritative Writer 정책
@@ -2571,7 +2570,6 @@ Before proposing any code:
 
 Do not rely on remembered or assumed code.
 
-Continue with the next TODO listed in PROJECT_HANDOFF.md.
 ```
 
 If repository retrieval returns stale `main` content or a cache miss:
