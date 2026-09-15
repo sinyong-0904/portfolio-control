@@ -8,6 +8,583 @@
 
 ---
 
+
+## FINAL HANDOFF — 2026-09-15
+
+
+
+### Session Start Rule
+
+
+
+새로운 개발 세션에서는 과거 대화나 모델 memory보다 현재 GitHub `main`의 실제 source를 우선한다.
+
+
+
+작업 시작 순서:
+
+
+
+1. 현재 GitHub `main` HEAD를 확인한다.
+
+2. `PROJECT_HANDOFF.md`를 읽는다.
+
+3. 작업 성격에 따라 관련 specification을 읽는다.
+
+   - Annual rollover: `ANNUAL_TRANSITION.md`
+
+   - Production/version 운영: `VERSION_OPERATIONS.md`
+
+4. 실제 관련 source를 직접 읽는다.
+
+5. authoritative definition / override / load order / persistence path / existing helper를 추적한다.
+
+6. 문서와 source가 충돌하면 source를 따른다.
+
+7. 바로 patch하지 말고 원인과 최소 변경안을 먼저 검증한다.
+
+
+
+기본 workflow:
+
+
+
+`HEAD → READ → VERIFY → PATCH → TEST → DIFF/AUDIT → COMMIT → HANDOFF`
+
+
+
+---
+
+
+
+### Current Remote Checkpoint
+
+
+
+2026-09-15 기준 확인된 remote checkpoint:
+
+
+
+`cf9e0541074b21fc75a43a617ec41c27958ed844`
+
+
+
+Annual Transition final adversarial audit에서 발견된 safety fixes가 이 checkpoint까지 반영되었다.
+
+
+
+주의:
+
+
+
+- 이후 작업 시작 시 위 hash를 최신 HEAD라고 가정하지 말고 반드시 현재 `main` HEAD를 다시 확인한다.
+
+- 회사 PC의 local repository에는 Supabase SDK vendoring 실험용 local-only commit이 존재할 수 있으나 production source of truth로 취급하지 않는다.
+
+
+
+---
+
+
+
+### Current Development State
+
+
+
+**Annual Transition implementation: COMPLETE**
+
+
+
+**2027 Integrated Rollover Rehearsal: VERIFIED**
+
+
+
+**2027 Actual Production Rollover: NOT YET VERIFIED**
+
+
+
+현재 추가 Annual Transition 기능 구현은 계획되어 있지 않다.
+
+
+
+실제 2027 rollover가 발생하기 전까지 남은 것은 implementation이 아니라 actual production operation verification이다.
+
+
+
+---
+
+
+
+### Annual Transition Architecture
+
+
+
+주요 모듈:
+
+
+
+- `v35-annual-state.js`
+
+  - business/test year 관련 annual state
+
+
+
+- `v35-annual-transition.js`
+
+  - annual transition candidate build
+
+  - prerequisite/readiness
+
+  - candidate validation
+
+  - allowed-delta validation
+
+  - transaction core
+
+
+
+- `v35-annual-persistence.js`
+
+  - production Supabase persistence adapter
+
+  - cloud/browser consistency
+
+  - production execution wrapper
+
+  - read-back verification / rollback path
+
+
+
+- `v35-annual-rehearsal.js`
+
+  - 2027 rollover rehearsal
+
+  - production persistence isolation
+
+  - rehearsal-only state preparation/restoration
+
+
+
+- `v35-annual-transition-ui.js`
+
+  - actual Production Annual Transition UI
+
+  - prerequisite / Preview / confirmations / Execute
+
+  - SUCCESS / FAILURE / CRITICAL UX
+
+
+
+- `v35-annual-rehearsal-ui.js`
+
+  - user-facing 2027 rollover rehearsal UI
+
+
+
+Annual Transition engine과 Rehearsal은 분리되어 있으며, Rehearsal 결과를 actual production rollover 성공으로 간주하지 않는다.
+
+
+
+---
+
+
+
+### Final Verified State
+
+
+
+다음 항목은 implementation/runtime test 기준으로 VERIFIED:
+
+
+
+#### Candidate / Validation
+
+
+
+- 2026 → 2027 candidate build
+
+- original state unchanged
+
+- 17-check integrated candidate validation
+
+- holdings quantity unexpected mutation 차단
+
+- target unexpected mutation 차단
+
+- account non-annual mutation 차단
+
+- cash balance unexpected mutation 차단
+
+- Income & Tax historical mutation 차단
+
+- finalized state unexpected mutation 차단
+
+- unexpected candidate delta → `UNEXPECTED_CANDIDATE_DELTA`
+
+
+
+#### Growth
+
+
+
+- December readiness gate
+
+- Growth annual rollover build
+
+- January live initialization
+
+- Rehearsal의 2026 annual row가 실제 2026 YTD와 일치하도록 검증
+
+- SEP LIVE delta 누락 문제는 Rehearsal fixture 문제로 확인 및 수정
+
+- actual Growth authoritative rollover path 자체는 별도 유지
+
+
+
+#### Transaction / Persistence
+
+
+
+- success transaction
+
+- persistence write failure
+
+- read-back mismatch
+
+- rollback success
+
+- rollback verification failure
+
+- ambiguous persistence write
+
+- concurrent execution lock
+
+- browser state mutation safety
+
+- cloud/browser persisted-state comparator
+
+- volatile `meta.lastSavedAt` 처리
+
+
+
+#### Production Safety
+
+
+
+- 실제 2026에서는 Production Execute 미노출
+
+- Test Clock 2027에서는 `TEST_CLOCK_ACTIVE`로 Production action 차단
+
+- 사용자 confirmation으로 Production Clock gate 우회 불가
+
+- Rehearsal ACTIVE 중 Production panel/Preview/Execute 미노출
+
+- Production/Rehearsal mutual exclusion
+
+
+
+#### Production UI
+
+
+
+- system prerequisite → Preview
+
+- integrated Preview validation PASS
+
+- 4 user confirmations
+
+- Execute enable gate
+
+- final warning confirmation
+
+- blocking overlay
+
+- SUCCESS lifecycle
+
+- normal FAILURE lifecycle
+
+- `CRITICAL_ROLLBACK_FAILED` lifecycle
+
+
+
+#### Rehearsal
+
+
+
+- user-facing 2027 Rollover Rehearsal
+
+- 2027 consumer UI integrated verification
+
+- stop → 2026 restore
+
+- Save / scheduleCloudSave / flushCloud 차단
+
+- Table Snapshot write path 차단
+
+- relevant local cache restore
+
+- rehearsal 종료 후 writer restoration
+
+- Supabase `portfolio_state` unchanged 확인
+
+
+
+---
+
+
+
+### Final Adversarial Audit — 2026-09-15
+
+
+
+고강도 final audit에서 실제 blocker 3건을 발견했고 모두 수정 및 runtime regression PASS:
+
+
+
+1. **Production prerequisite property mismatch**
+
+   - 문제: production wrapper가 `prerequisites.ok`를 검사했으나 authoritative prerequisite result는 `ready`를 사용.
+
+   - 수정: `prerequisites.ready` 사용.
+
+   - 검증: `ready=true`, `ok` 없음 fixture에서 transaction boundary까지 정상 도달.
+
+   - 상태: VERIFIED FIXED.
+
+
+
+2. **Rehearsal persistence bypass**
+
+   - 문제: 기존 rehearsal guard가 `save / scheduleCloudSave / flushCloud`는 막았으나 별도 Table Snapshot/direct local persistence path가 존재.
+
+   - 수정: rehearsal write isolation 강화.
+
+   - 검증: Table Snapshot UI 차단, cloud unchanged, local state restore.
+
+   - 상태: VERIFIED FIXED.
+
+
+
+3. **Stale Production Preview**
+
+   - 문제: Preview 이후 portfolio state가 변경되어도 이전 Preview를 근거로 Execute할 가능성.
+
+   - 수정: Preview source-state snapshot 비교 및 stale invalidation.
+
+   - 검증: Preview 후 authoritative test state 변경 시 Execute 즉시 disabled.
+
+   - 상태: VERIFIED FIXED.
+
+
+
+---
+
+
+
+### Actual 2027 Rollover — Remaining Verification
+
+
+
+다음은 2027 actual production rollover가 발생하기 전에는 VERIFIED로 표시하지 않는다.
+
+
+
+Actual rollover 시 반드시 확인:
+
+
+
+1. pre-rollover backup
+
+2. actual business year / active year
+
+3. December Growth finalization
+
+4. Market 새해 `yearStart`
+
+5. Performance final snapshot
+
+6. Growth & Dividend snapshot
+
+7. Cash-like snapshot
+
+8. Production Preview PASS
+
+9. 4 user confirmations
+
+10. Execute Annual Transition
+
+11. Supabase persistence success
+
+12. cloud read-back verification
+
+13. Ctrl+F5
+
+14. active year = new year
+
+15. Performance consumer
+
+16. Allocation consumer
+
+17. Cash consumer
+
+18. Dividend consumer
+
+19. Income & Tax consumer
+
+20. Growth January live
+
+21. Market YTD new-year baseline
+
+22. History previous-year preservation
+
+23. root `/` and `/v35/` coexistence
+
+
+
+Actual integrated rollover 성공 전에는:
+
+
+
+`2027 Actual Production Rollover = NOT YET VERIFIED`
+
+
+
+를 유지한다.
+
+
+
+---
+
+
+
+### Supabase SDK / CDN Note
+
+
+
+2026-09-15 회사 네트워크에서 `cdn.jsdelivr.net`에 대한 TLS inspection 문제가 발생하여 Supabase JS CDN load가 실패했다.
+
+
+
+확인된 증상:
+
+
+
+- Chrome/Edge: `ERR_CERT_AUTHORITY_INVALID`
+
+- Windows Schannel: `SEC_E_UNTRUSTED_ROOT`
+
+- certificate issuer: `McAfee Web Gateway (Untrusted)`
+
+- 복수 회사 PC에서 재현
+
+- Supabase backend 자체는 정상 확인
+
+
+
+Supabase JS `2.116.0` UMD bundle을 repository-local 방식으로 사용하는 vendoring을 localhost에서 시험했고 다음은 PASS:
+
+
+
+- SDK local load
+
+- Auth
+
+- portfolio_state load
+
+- Market load
+
+- Korea Price load
+
+- root
+
+- `/v35/`
+
+
+
+그러나 **vendoring은 production GitHub repository에는 반영하지 않기로 결정**했다.
+
+
+
+현재 production dependency architecture를 임의로 vendored/pinned 상태라고 가정하지 않는다.
+
+
+
+향후 CDN reliability 또는 dependency-control 필요성이 실제로 생길 경우 별도 작업으로 재검토한다.
+
+
+
+---
+
+
+
+### Development Environment Policy
+
+
+
+향후 Portfolio Control 신규 개발/수정은 회사 PC가 아닌 개인 환경(집 PC 등)에서 진행한다.
+
+
+
+회사 PC의 localhost는 필요 시 reference/view 용도로만 사용한다.
+
+
+
+권장 local reference server:
+
+
+
+`python -m http.server 8000 --bind 127.0.0.1 --directory "D:\GIT\portfolio-control"`
+
+
+
+주의:
+
+
+
+- localhost frontend도 실제 Supabase backend를 사용할 수 있다.
+
+- localhost라고 해서 test database라고 가정하지 않는다.
+
+- 실제 Save/persistence 동작은 production data에 영향을 줄 수 있다.
+
+- Market scheduler가 Supabase의 `market_prices`를 업데이트하면 localhost도 새로 fetch할 때 최신 가격을 사용한다.
+
+
+
+---
+
+
+
+### Next Work
+
+
+
+현재 Annual Transition 관련 신규 implementation task 없음.
+
+
+
+향후 우선순위:
+
+
+
+1. 실제 2027 rollover 시 production operational verification
+
+2. 필요 시 소규모 Portfolio Control 유지보수/신규 기능
+
+3. 필요 시 Supabase SDK CDN dependency/vendoring 재검토
+
+4. dependency security/deprecation/compatibility monitoring
+
+
+
+새 세션에서는 이 문서만 믿고 코드를 수정하지 말고 반드시 현재 GitHub HEAD와 실제 source를 다시 읽는다.
+
+
+
+---
+
+ 
+
 # 1. AI / Developer Compatibility
 
 This document is intentionally **model-agnostic**.
