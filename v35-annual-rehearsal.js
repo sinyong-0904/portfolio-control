@@ -61,6 +61,78 @@
       return false;
     }
 
+    const originalSnapshotSave =
+      window.saveTableSnapshotV34;
+
+    const originalHistorySelect =
+      window.historySelectYearV34;
+
+    const originalSignOut =
+      window.signOut;
+
+    const originalImportData =
+      window.importData;
+
+    const portfolioLocalRaw =
+      localStorage.getItem(
+        'portfolioControlV2'
+      );
+
+    const manualMarketLocalRaw =
+      localStorage.getItem(
+        'v33ManualMarket'
+      );
+
+    const blockedClick =
+      function (event) {
+        const target =
+          event &&
+          event.target &&
+          typeof event.target.closest ===
+            'function'
+            ? event.target.closest(
+                '.v34-snapshot-btn, #v33ManualMarketSave'
+              )
+            : null;
+
+        if (!target) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        window.alert(
+          'Rollover Rehearsal 중에는 실제 저장 기능을 사용할 수 없습니다.'
+        );
+      };
+
+    const style =
+      document.createElement(
+        'style'
+      );
+
+    style.id =
+      'annual-rehearsal-write-guard-v35';
+
+    style.textContent = `
+      .v34-snapshot-btn,
+      #v33ManualMarketSave {
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+      }
+    `;
+
+    document.head.appendChild(
+      style
+    );
+
+    document.addEventListener(
+      'click',
+      blockedClick,
+      true
+    );
+
     annualRehearsalPersistenceGuardV35 = {
       save:
         originalSave,
@@ -69,7 +141,23 @@
         originalSchedule,
 
       flushCloud:
-        originalFlush
+        originalFlush,
+
+      saveTableSnapshotV34:
+        originalSnapshotSave,
+
+      historySelectYearV34:
+        originalHistorySelect,
+
+      signOut:
+        originalSignOut,
+
+      importData:
+        originalImportData,
+
+      portfolioLocalRaw,
+      manualMarketLocalRaw,
+      blockedClick
     };
 
     window.save =
@@ -99,6 +187,78 @@
         return false;
       };
 
+    if (
+      typeof originalSnapshotSave ===
+        'function'
+    ) {
+      window.saveTableSnapshotV34 =
+        async function () {
+          console.warn(
+            '[v35 rehearsal] Table Snapshot save blocked'
+          );
+
+          return false;
+        };
+    }
+
+    if (
+      typeof originalHistorySelect ===
+        'function'
+    ) {
+      window.historySelectYearV34 =
+        function (value) {
+          const year =
+            Number(value);
+
+          if (
+            Number.isInteger(year) &&
+            data &&
+            data.history
+          ) {
+            data.history
+              .selectedYear =
+                year;
+
+            if (
+              typeof render ===
+                'function'
+            ) {
+              render();
+            }
+          }
+
+          return false;
+        };
+    }
+
+    if (
+      typeof originalSignOut ===
+        'function'
+    ) {
+      window.signOut =
+        async function () {
+          window.alert(
+            'Rollover Rehearsal을 종료한 뒤 로그아웃하십시오.'
+          );
+
+          return false;
+        };
+    }
+
+    if (
+      typeof originalImportData ===
+        'function'
+    ) {
+      window.importData =
+        function () {
+          window.alert(
+            'Rollover Rehearsal 중에는 Backup 복원을 사용할 수 없습니다.'
+          );
+
+          return false;
+        };
+    }
+
     return true;
   }
 
@@ -110,6 +270,21 @@
       return true;
     }
 
+    document.removeEventListener(
+      'click',
+      guard.blockedClick,
+      true
+    );
+
+    const style =
+      document.getElementById(
+        'annual-rehearsal-write-guard-v35'
+      );
+
+    if (style) {
+      style.remove();
+    }
+
     window.save =
       guard.save;
 
@@ -118,6 +293,68 @@
 
     window.flushCloud =
       guard.flushCloud;
+
+    if (
+      typeof guard
+        .saveTableSnapshotV34 ===
+        'function'
+    ) {
+      window.saveTableSnapshotV34 =
+        guard.saveTableSnapshotV34;
+    }
+
+    if (
+      typeof guard
+        .historySelectYearV34 ===
+        'function'
+    ) {
+      window.historySelectYearV34 =
+        guard.historySelectYearV34;
+    }
+
+    if (
+      typeof guard.signOut ===
+        'function'
+    ) {
+      window.signOut =
+        guard.signOut;
+    }
+
+    if (
+      typeof guard.importData ===
+        'function'
+    ) {
+      window.importData =
+        guard.importData;
+    }
+
+    if (
+      guard.portfolioLocalRaw ==
+        null
+    ) {
+      localStorage.removeItem(
+        'portfolioControlV2'
+      );
+    } else {
+      localStorage.setItem(
+        'portfolioControlV2',
+        guard.portfolioLocalRaw
+      );
+    }
+
+    if (
+      guard.manualMarketLocalRaw ==
+        null
+    ) {
+      localStorage.removeItem(
+        'v33ManualMarket'
+      );
+    } else {
+      localStorage.setItem(
+        'v33ManualMarket',
+        guard.manualMarketLocalRaw
+      );
+    }
 
     annualRehearsalPersistenceGuardV35 =
       null;

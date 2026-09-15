@@ -290,7 +290,7 @@
 
     if (
       !prerequisites ||
-      prerequisites.ok !== true
+      prerequisites.ready !== true
     ) {
       return {
         ok: false,

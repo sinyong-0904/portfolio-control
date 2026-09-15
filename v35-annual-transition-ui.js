@@ -401,11 +401,73 @@
       });
   }
 
+    function previewComparableStateV35(
+    value
+  ) {
+    const copy =
+      value == null
+        ? value
+        : JSON.parse(
+            JSON.stringify(value)
+          );
+
+    if (
+      copy &&
+      copy.meta &&
+      typeof copy.meta ===
+        'object'
+    ) {
+      delete copy.meta
+        .lastSavedAt;
+    }
+
+    if (
+      copy &&
+      copy.history &&
+      typeof copy.history ===
+        'object'
+    ) {
+      delete copy.history
+        .selectedYear;
+    }
+
+    return copy;
+  }
+
+  function previewMatchesCurrentStateV35() {
+    if (
+      !previewStateV35 ||
+      !previewStateV35
+        .sourceState ||
+      typeof window
+        .annualStatesEqualV35 !==
+        'function'
+    ) {
+      return false;
+    }
+
+    return window
+      .annualStatesEqualV35(
+        previewComparableStateV35(
+          previewStateV35
+            .sourceState
+        ),
+        previewComparableStateV35(
+          data
+        )
+      );
+  }
+
   function buildProductionPreviewV35(
     fromYear,
     toYear
   ) {
     try {
+      const sourceState =
+        JSON.parse(
+          JSON.stringify(data)
+        );
+
       const built =
         window
           .buildAnnualTransitionCandidateV35(
@@ -432,6 +494,7 @@
 
         fromYear,
         toYear,
+        sourceState,
 
         checkCount:
           validation &&
@@ -645,7 +708,8 @@
       ) === Number(fromYear) &&
       Number(
         previewStateV35.toYear
-      ) === Number(toYear);
+      ) === Number(toYear) &&
+      previewMatchesCurrentStateV35();
 
     const executeReady =
       result.ready === true &&
@@ -950,6 +1014,50 @@
             !executeReady ||
             executionBusyV35
           ) {
+            return;
+          }
+
+                    if (
+            !previewMatchesCurrentStateV35()
+          ) {
+            previewStateV35 =
+              null;
+
+            confirmationState
+              .performanceSnapshot =
+                false;
+
+            confirmationState
+              .growthDividendSnapshot =
+                false;
+
+            confirmationState
+              .cashLikeSnapshot =
+                false;
+
+            confirmationState
+              .backup =
+                false;
+
+            executionStateV35 = {
+              ok: false,
+              code:
+                'PREVIEW_STALE'
+            };
+
+            renderPanelV35(
+              page,
+              status
+            );
+
+            window.alert(
+              [
+                'Preview 이후 portfolio state가 변경되었습니다.',
+                '',
+                'Transition Preview와 4개 확인을 다시 수행하십시오.'
+              ].join('\n')
+            );
+
             return;
           }
 
