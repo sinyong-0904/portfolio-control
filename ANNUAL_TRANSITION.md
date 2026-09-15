@@ -10,6 +10,695 @@
 
 ---
 
+
+## FINAL IMPLEMENTATION STATUS — 2026-09-15
+
+
+
+### Status
+
+
+
+Annual Transition implementation is complete.
+
+
+
+- Implementation: **COMPLETE**
+
+- Integrated 2027 Rehearsal: **VERIFIED**
+
+- Production UI lifecycle: **VERIFIED**
+
+- Transaction / rollback safety: **VERIFIED**
+
+- Final adversarial audit fixes: **VERIFIED**
+
+- Actual 2027 Production Rollover: **NOT YET VERIFIED**
+
+
+
+Rehearsal/simulation success must never be reported as actual rollover success.
+
+
+
+---
+
+
+
+### Source-of-Truth Rule
+
+
+
+Annual Transition 작업 시 우선순위:
+
+
+
+1. current GitHub `main` actual source
+
+2. this `ANNUAL_TRANSITION.md`
+
+3. `PROJECT_HANDOFF.md`
+
+4. current conversation context
+
+5. model memory
+
+
+
+문서와 actual source가 충돌하면 source를 따른다.
+
+
+
+작업 시작 시 반드시 current HEAD를 다시 확인한다.
+
+
+
+2026-09-15 final safety checkpoint:
+
+
+
+`cf9e0541074b21fc75a43a617ec41c27958ed844`
+
+
+
+이 hash는 historical checkpoint이며 향후 최신 HEAD라고 가정하지 않는다.
+
+
+
+---
+
+
+
+### Core Safety Invariants
+
+
+
+Annual Transition은 다음 invariant를 유지해야 한다.
+
+
+
+1. Original authoritative state는 candidate validation 완료 전에 변경하지 않는다.
+
+2. Candidate는 original state와 별도 clone/object여야 한다.
+
+3. 예상하지 않은 candidate delta는 validation에서 차단한다.
+
+4. Production transition은 actual production clock 조건을 만족해야 한다.
+
+5. Test Clock은 Production Execute gate를 우회할 수 없다.
+
+6. Rehearsal은 production persistence를 수행하지 않는다.
+
+7. Production과 Rehearsal은 동시에 active할 수 없다.
+
+8. Persistence write 후 authoritative success 판정 전에 cloud read-back을 검증한다.
+
+9. Failure 시 rollback 결과도 검증한다.
+
+10. Rollback 검증 실패는 일반 failure가 아니라 CRITICAL 상태다.
+
+11. Preview 이후 authoritative portfolio state가 변경되면 Preview는 stale이다.
+
+12. Stale Preview로 Production Execute할 수 없다.
+
+13. Actual rollover는 reload 후 consumer verification까지 완료해야 한다.
+
+
+
+---
+
+
+
+### Candidate Validation
+
+
+
+Integrated candidate validator는 정상 2026 → 2027 candidate에 대해 17 checks PASS를 확인했다.
+
+
+
+검증 범위에는 다음이 포함된다.
+
+
+
+- years
+
+- candidate object separation
+
+- allowed delta
+
+- annual marker
+
+- holdings unchanged
+
+- account baselines
+
+- performance carry
+
+- pension bucket snapshot
+
+- pension snapshot
+
+- Growth period
+
+- Growth December finalized
+
+- Growth annual built
+
+- Growth January live
+
+- cash baselines
+
+- cash flows zero
+
+- dividends zero
+
+- Income & Tax next-year row
+
+
+
+Adversarial mutation tests에서 다음 unexpected changes가 차단됨:
+
+
+
+- holding quantity
+
+- core target
+
+- account non-annual state
+
+- cash balance
+
+- Income & Tax historical state
+
+- finalized state
+
+
+
+Unexpected mutation은 `UNEXPECTED_CANDIDATE_DELTA`로 차단한다.
+
+
+
+---
+
+
+
+### Transaction / Persistence Verification
+
+
+
+검증된 transaction/persistence cases:
+
+
+
+- normal transaction success
+
+- write false/failure
+
+- read-back mismatch
+
+- successful rollback
+
+- rollback verification failure
+
+- ambiguous persistence write
+
+- concurrent execution lock
+
+- original browser state unchanged during failed fixture
+
+- cloud/browser canonical persisted-state comparison
+
+
+
+Production success는 단순 write return만으로 판정하지 않는다.
+
+
+
+Required success chain:
+
+
+
+`candidate build`
+
+→ `validation`
+
+→ `persistence write`
+
+→ `cloud read-back`
+
+→ `persisted-state equality`
+
+→ `authoritative success`
+
+
+
+Rollback failure:
+
+
+
+`CRITICAL_ROLLBACK_FAILED`
+
+
+
+로 취급한다.
+
+
+
+---
+
+
+
+### Final Adversarial Audit Findings
+
+
+
+#### 1. Production prerequisite property mismatch
+
+
+
+발견:
+
+
+
+Production wrapper가 prerequisite result의 `ok`를 검사했으나 authoritative result는 `ready`를 사용.
+
+
+
+영향:
+
+
+
+실제 Production rollover가 모든 prerequisite를 만족해도 transaction으로 진행되지 않을 수 있었음.
+
+
+
+수정:
+
+
+
+Production wrapper는 `prerequisites.ready === true`를 사용.
+
+
+
+Regression:
+
+
+
+`ready=true`, `ok` property 없음 fixture에서 transaction boundary 도달 확인.
+
+
+
+Status:
+
+
+
+**VERIFIED FIXED**
+
+
+
+---
+
+
+
+#### 2. Rehearsal direct persistence bypass
+
+
+
+발견:
+
+
+
+기존 Rehearsal persistence guard는:
+
+
+
+- `save`
+
+- `scheduleCloudSave`
+
+- `flushCloud`
+
+
+
+를 차단했지만 Table Snapshot 등 별도 persistence path가 존재했다.
+
+
+
+영향:
+
+
+
+Rehearsal의 “실제 데이터는 저장되지 않는다” invariant가 완전하지 않았음.
+
+
+
+수정:
+
+
+
+Rehearsal persistence isolation을 확대하여 별도 write UI/path와 관련 local persistence를 차단/복구.
+
+
+
+Regression:
+
+
+
+- Rehearsal ACTIVE
+
+- Table Snapshot UI disabled/blocked
+
+- Save/schedule/flush blocked
+
+- relevant local cache restored
+
+- guard removed on stop
+
+- cloud `portfolio_state` unchanged
+
+
+
+Status:
+
+
+
+**VERIFIED FIXED**
+
+
+
+---
+
+
+
+#### 3. Stale Production Preview
+
+
+
+발견:
+
+
+
+Production Preview PASS 후 portfolio state가 변경되어도 기존 Preview state가 유지될 수 있었음.
+
+
+
+영향:
+
+
+
+사용자가 A state를 Preview하고 B state를 실제 Execute하는 workflow inconsistency 가능.
+
+
+
+수정:
+
+
+
+Preview 시 source state snapshot을 보관하고 Execute readiness에서 current state와 비교.
+
+
+
+Volatile/non-authoritative UI state는 비교에서 제외할 수 있으나 authoritative portfolio mutation은 Preview를 invalidate해야 한다.
+
+
+
+Regression:
+
+
+
+Preview PASS + confirmations 완료 후 authoritative test state를 변경하자 Execute가 disabled로 전환됨.
+
+
+
+Status:
+
+
+
+**VERIFIED FIXED**
+
+
+
+---
+
+
+
+### Rehearsal Verification
+
+
+
+2027 Rollover Rehearsal은 actual persistence 없이 integrated consumer behavior를 검증하기 위한 도구다.
+
+
+
+Verified:
+
+
+
+- 2026 → 2027 rehearsal start
+
+- test business year
+
+- Performance carry / new-year YTD reset
+
+- Allocation rollover preview
+
+- Cash-like new-year baseline / flow reset
+
+- Dividend new-year zero state
+
+- Income & Tax next-year row
+
+- Growth rollover
+
+- Growth January LIVE
+
+- user-facing rehearsal UI
+
+- stop → 2026 restore
+
+- Production UI mutual exclusion
+
+- production persistence blocking
+
+
+
+Growth Rehearsal에서 발견된 2026 annual-row discrepancy는 actual Growth rollover engine 문제가 아니라 rehearsal bridge fixture의 SEP LIVE delta 누락 문제였다.
+
+
+
+수정 후 2026 annual row는 실제 2026 YTD와 일치함.
+
+
+
+Verified values at that test point:
+
+
+
+- 추가투입: 4,017
+
+- 현금증감: 1,750
+
+- 투자수익: 2,391
+
+- 삼성전자우: 18,880
+
+- 총증감: 27,038
+
+- 평가액: 98,778
+
+- Growth: 37.69%
+
+
+
+이 값은 특정 2026 test-data checkpoint의 검증값이며 future authoritative portfolio value로 사용하지 않는다.
+
+
+
+---
+
+
+
+### Production UI Safety
+
+
+
+Production UI verified behavior:
+
+
+
+- actual 2026: Production panel/Execute not exposed
+
+- Test Clock 2027: `TEST_CLOCK_ACTIVE`
+
+- Preview disabled when system prerequisite is not ready
+
+- confirmation cannot bypass production clock
+
+- Rehearsal ACTIVE: Production UI removed
+
+- integrated Preview validation
+
+- 4 confirmations
+
+- Execute gate
+
+- final confirmation
+
+- blocking overlay
+
+- SUCCESS UX
+
+- normal FAILURE UX
+
+- CRITICAL rollback-failure UX
+
+
+
+Preview is non-authoritative until Execute.
+
+
+
+Preview PASS does not itself mutate authoritative annual state.
+
+
+
+---
+
+
+
+### Actual 2027 Production Procedure
+
+
+
+Actual rollover 시 다음 순서를 따른다.
+
+
+
+1. current GitHub HEAD/source 확인
+
+2. `/v35/` 정상 load 및 Supabase 상태 확인
+
+3. final previous-year data 확인
+
+4. History/snapshot 확인
+
+5. backup 다운로드
+
+6. Growth December finalization 확인
+
+7. Market new-year `yearStart` readiness 확인
+
+8. Performance final snapshot 확인
+
+9. Growth & Dividend snapshot 확인
+
+10. Cash-like snapshot 확인
+
+11. Production Preview 실행
+
+12. integrated validator PASS 확인
+
+13. 4 confirmations
+
+14. Execute Annual Transition
+
+15. execution blocking overlay 동안 다른 조작 금지
+
+16. success/read-back verification 확인
+
+17. Ctrl+F5
+
+18. active year 확인
+
+19. Performance 확인
+
+20. Allocation 확인
+
+21. Cash 확인
+
+22. Dividend 확인
+
+23. Income & Tax 확인
+
+24. Growth January LIVE 확인
+
+25. Market YTD/new-year baseline 확인
+
+26. History previous-year preservation 확인
+
+27. root `/` read-only/reference coexistence 확인
+
+
+
+Failure 발생 시 success로 간주하지 않는다.
+
+
+
+`CRITICAL_ROLLBACK_FAILED` 발생 시 추가 Save를 하지 않고 backup/cloud state를 우선 확인한다.
+
+
+
+---
+
+
+
+### Actual Verification Gap
+
+
+
+다음은 simulation/rehearsal로 대체할 수 없다.
+
+
+
+- 실제 2027 calendar/business-year transition
+
+- 실제 새해 Market first-trading-day `yearStart`
+
+- 실제 production candidate commit
+
+- 실제 production Supabase authoritative replacement
+
+- actual post-commit reload
+
+- actual root/v35 new-year coexistence
+
+
+
+따라서 actual integrated operation 전까지:
+
+
+
+**2027 Actual Production Rollover = NOT YET VERIFIED**
+
+
+
+상태를 유지한다.
+
+
+
+---
+
+
+
+### Completion Rule
+
+
+
+새로운 source evidence, regression 또는 requirement change가 없는 한 Annual Transition architecture를 다시 설계하지 않는다.
+
+
+
+현재 implementation을 안정 상태로 취급하고, 향후 작업은 actual 2027 operational verification을 우선한다.
+
+
+
+새 기능을 추가하기 위해 Annual Transition core를 불필요하게 수정하지 않는다.
+
+
+
+---
+
 # 2. Core Principle
 
 Annual Transition의 기본 원칙은 다음과 같다.
