@@ -1492,30 +1492,6 @@ finalTax     → SUM
 
 ---
 
-# 14. Actual Integrated Rollover — NOT YET IMPLEMENTED
-
-중요:
-
-2026→2027 개발 과정에서 위 각 기능의 future behavior는 검증되었지만, 현재까지 대부분은 **memory-only simulation**이다.
-
-다음 항목을 하나의 실제 persistent transaction/workflow로 묶는 작업은 Integrated Annual Rollover 단계에서 구현한다.
-
-```text
-Growth
-Annual Input
-Performance carry/rebase
-Allocation rebase
-Market yearStart rollover
-Cash-like annual fields
-Dividend reset
-Income & Tax new row
-Income & Tax finalized persistence
-```
-
-이 문서에서 simulation PASS와 actual persistent rollover를 혼동하지 않는다.
-
----
-
 # 15. Integrated Annual Rollover Requirements
 
 Actual rollover 구현은 다음 조건을 만족해야 한다.
@@ -2022,31 +1998,6 @@ Annual Transition 구현을 수정할 때 우선순위:
 문서와 실제 코드가 달라졌다면 문서를 업데이트한다.
 
 기억만으로 rollover logic을 수정하지 않는다.
-
----
-
-# 24. Current Status
-
-2026 → 2027 기준:
-
-```text
-Individual feature simulation:
-PASS
-
-History/Snapshot audit:
-PASS
-
-Actual integrated persistent Annual Rollover:
-NOT YET IMPLEMENTED
-
-Production writer:
-planned /v35/
-
-Stable reference:
-root /
-```
-
-Integrated Annual Rollover가 완료되면 이 section을 반드시 업데이트한다.
 
 ---
 
