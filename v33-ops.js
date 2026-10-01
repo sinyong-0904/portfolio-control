@@ -890,6 +890,11 @@
     const pending =
       growthClosePendingV33();
 
+    if (bar.dataset.pending === String(pending)) {
+      return;
+    }
+    bar.dataset.pending = String(pending);
+
     bar.classList.toggle(
       'pending',
       pending
