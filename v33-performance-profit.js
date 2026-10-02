@@ -862,6 +862,55 @@
     scope,
     currentEvaluation
   ) {
+        const authoritativeKey =
+      normalized(scope);
+
+    if (
+      [
+        'EQUITY',
+        'INCOME',
+        'HEDGE',
+        'PARKING'
+      ].includes(
+        authoritativeKey
+      ) &&
+      typeof window
+        .pensionBucketCurrentCumPnlV33 ===
+        'function' &&
+      typeof window
+        .pensionBucketMetricsV33 ===
+        'function'
+    ) {
+      const metric =
+        window
+          .pensionBucketMetricsV33()
+          .buckets[
+            authoritativeKey
+          ];
+
+      if (metric) {
+        return {
+          ytd:
+            (
+              Number(
+                metric.ytdPnl
+              ) || 0
+            ) /
+            10000,
+
+          cumulative:
+            (
+              Number(
+                metric.cumPnl
+              ) || 0
+            ) /
+            10000,
+
+          source:
+            'pensionBucketMetricsV33'
+        };
+      }
+    }
     const found =
       findBucketObject(
         scope

@@ -131,6 +131,42 @@
       return;
     }
 
+    if (
+      ['DC','P1','P2'].includes(h.account) &&
+      String(
+        window.location.pathname || ''
+      ).includes('/v35/')
+    ) {
+      if (
+        typeof window
+          .archiveClosedPensionHoldingPnlV33 !==
+          'function'
+      ) {
+        alert(
+          '연금 손익 이력 보존 기능을 찾지 못해 삭제를 중단합니다.'
+        );
+
+        return;
+      }
+
+      const archived =
+        window
+          .archiveClosedPensionHoldingPnlV33(
+            h
+          );
+
+      if (
+        !archived ||
+        archived.ok !== true
+      ) {
+        alert(
+          '연금 손익 이력을 안전하게 보존하지 못해 삭제를 중단합니다.'
+        );
+
+        return;
+      }
+    }
+
 
     //
     // Remove exactly this Closed object.

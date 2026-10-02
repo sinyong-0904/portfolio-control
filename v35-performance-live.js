@@ -427,12 +427,12 @@
       return (
         (
           Number(
-            metric.value
+            metric.cumPnl
           ) || 0
         ) / 10000 -
         (
           Number(
-            base.snapshotEvalMan
+            base.snapshotCumPnlMan
           ) || 0
         )
       );
@@ -614,22 +614,33 @@
             metric &&
             base
           ) {
-            const valueMan =
+            const pnlMan =
               (
                 Number(
-                  metric.value
+                  metric.cumPnl
                 ) || 0
-              ) / 10000;
-
-            currentYtd =
-              liveYtdFromBaseV35(
-                valueMan,
+              ) /
+              10000 -
+              (
                 Number(
                   base
-                    .snapshotEvalMan
-                ) || 0,
-                0
+                    .snapshotCumPnlMan
+                ) || 0
               );
+
+            const denominator =
+              Number(
+                base.snapshotEvalMan
+              ) || 0;
+
+            currentYtd =
+              denominator
+                ? (
+                    pnlMan /
+                    denominator *
+                    100
+                  )
+                : 0;
           }
         }
 
