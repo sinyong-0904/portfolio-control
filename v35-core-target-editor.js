@@ -996,9 +996,14 @@
   }
 
   function overviewViewV35() {
-    return patchOverviewHtmlV35(
+    const html = patchOverviewHtmlV35(
       baseOverviewViewV35()
     );
+
+    return typeof window.transformSamsungOverviewV35 ===
+      'function'
+      ? window.transformSamsungOverviewV35(html)
+      : html;
   }
 
   function installCoreTargetViewsV35() {

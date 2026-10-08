@@ -779,12 +779,19 @@
 
   function applyFinancialFixV33() {
 
-    const snapshot =
+    let snapshot =
       snapshotFixV33();
-
 
     if (!snapshot) {
       return false;
+    }
+
+    if (
+      typeof window.adjustSamsungFinancialSnapshotV35 ===
+      'function'
+    ) {
+      snapshot =
+        window.adjustSamsungFinancialSnapshotV35(snapshot);
     }
 
 
