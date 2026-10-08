@@ -21,6 +21,19 @@
     return JSON.parse(JSON.stringify(x));
   }
 
+  function stockCompUiV32() {
+    return String(
+      window.location.pathname || ''
+    ).includes('/v35/');
+  }
+
+  function stockCompEnabledV32(year) {
+    return (
+      stockCompUiV32() &&
+      Number(year) >= 2027
+    );
+  }
+
   function yearRows(year) {
     const y = String(year);
 
@@ -31,6 +44,15 @@
         data.growthV32.years[y][m] = {
           contribution: 0,
           cashChange: 0,
+
+          ...(
+            stockCompEnabledV32(year)
+              ? {
+                  stockCompensation: 0
+                }
+              : {}
+          ),
+
           investmentReturn: null,
           legacy: null,
           totalChange: null,
@@ -276,7 +298,16 @@
         r.totalChange -
         (Number(r.contribution) || 0) -
         (Number(r.cashChange) || 0) -
-        (Number(r.legacy) || 0);
+        (Number(r.legacy) || 0) -
+        (
+          stockCompEnabledV32(year)
+            ? (
+                Number(
+                  r.stockCompensation
+                ) || 0
+              )
+            : 0
+        );
     }
 
     r.locked = false;
@@ -346,6 +377,20 @@
         0
       );
 
+    const stockCompensation =
+      stockCompEnabledV32(year)
+        ? used.reduce(
+            (s, r) =>
+              s +
+              (
+                Number(
+                  r.stockCompensation
+                ) || 0
+              ),
+            0
+          )
+        : null;
+
     const totalChange =
       used.reduce(
         (s, r) =>
@@ -393,6 +438,15 @@
       cashChange,
       investmentReturn,
       legacy,
+
+      ...(
+        stockCompEnabledV32(year)
+          ? {
+              stockCompensation
+            }
+          : {}
+      ),
+
       totalChange,
       value,
       growth
@@ -618,6 +672,22 @@
           0
         ),
 
+      stockCompensation:
+        stockCompEnabledV32(
+          g.currentYear
+        )
+          ? used.reduce(
+              (s, r) =>
+                s +
+                (
+                  Number(
+                    r.stockCompensation
+                  ) || 0
+                ),
+              0
+            )
+          : null,
+
       totalChange:
         used.reduce(
           (s, r) =>
@@ -677,6 +747,14 @@
     field,
     value
   ) {
+    if (
+      field ===
+        'stockCompensation' &&
+      !stockCompEnabledV32(year)
+    ) {
+      return;
+    }
+
     const rows =
       yearRows(year);
 
@@ -697,14 +775,20 @@
     r[field] =
       Number(value) || 0;
 
-    calculateLiveRow(
+  calculateLiveRow(
       year,
       monthIndex
     );
 
     save();
-  }
 
+    if (
+      field === 'stockCompensation' &&
+      stockCompEnabledV32(year)
+    ) {
+      render();
+    }
+  }
   window.growthV32Input =
     growthInput;
 
@@ -718,6 +802,14 @@
 
       const cur =
         g.currentMonthIndex;
+
+      const showStockComp =
+        stockCompUiV32();
+
+      const stockCompActive =
+        stockCompEnabledV32(
+          g.year
+        );
 
       const rowHTML =
         g.rows
@@ -740,6 +832,19 @@
                   : won(
                       r.cashChange ||
                       0
+                    );
+
+              const stockCompensation =
+                !showStockComp ||
+                !stockCompActive
+                  ? ''
+                  : (
+                      isCurrent
+                        ? `<input class="numInput" type="number" step=".1" value="${Number(r.stockCompensation) || 0}" onchange="growthV32Input(${g.year},${i},'stockCompensation',this.value)">`
+                        : won(
+                            r.stockCompensation ||
+                            0
+                          )
                     );
 
               return `
@@ -786,6 +891,16 @@
                           )
                     }
                   </td>
+
+                  ${
+                    showStockComp
+                      ? `
+                        <td>
+                          ${stockCompensation}
+                        </td>
+                      `
+                      : ''
+                  }
 
                   <td>
                     ${
@@ -859,6 +974,26 @@
               <td>${won(a.cashChange)}</td>
               <td>${won(a.investmentReturn)}</td>
               <td>${won(a.legacy)}</td>
+
+              ${
+                showStockComp
+                  ? `
+                    <td>
+                      ${
+                        stockCompEnabledV32(
+                          year
+                        )
+                          ? won(
+                              a.stockCompensation ||
+                              0
+                            )
+                          : ''
+                      }
+                    </td>
+                  `
+                  : ''
+              }
+
               <td>${won(a.totalChange)}</td>
               <td>${won(a.value)}</td>
               <td>${pct(a.growth)}</td>
@@ -896,6 +1031,11 @@
                 <th>현금증감</th>
                 <th>투자수익</th>
                 <th>삼전우</th>
+                ${
+                  showStockComp
+                    ? '<th>주식보상</th>'
+                    : ''
+                }
                 <th>총증감</th>
                 <th>평가액</th>
                 <th>Growth</th>
@@ -911,6 +1051,24 @@
                 <td>${won(y.cashChange)}</td>
                 <td>${won(y.investmentReturn)}</td>
                 <td>${won(y.legacy)}</td>
+
+                ${
+                  showStockComp
+                    ? `
+                      <td>
+                        ${
+                          stockCompActive
+                            ? won(
+                                y.stockCompensation ||
+                                0
+                              )
+                            : ''
+                        }
+                      </td>
+                    `
+                    : ''
+                }
+
                 <td>${won(y.totalChange)}</td>
                 <td>
                   ${
@@ -958,6 +1116,12 @@
                   )}
                 </td>
 
+                ${
+                  showStockComp
+                    ? '<td></td>'
+                    : ''
+                }
+
                 <td>
                   ${won(
                     n.total -
@@ -998,6 +1162,12 @@
                   )}
                 </td>
 
+                ${
+                  showStockComp
+                    ? '<td></td>'
+                    : ''
+                }
+
                 <td>0</td>
 
                 <td>
@@ -1018,6 +1188,11 @@
           <b>추가투입</b>과
           <b>현금증감</b>은
           현재월만 수동 입력합니다.
+          ${
+            showStockComp
+              ? ' <b>주식보상</b>은 2027년부터 현재월에 수동 입력합니다.'
+              : ''
+          }
 
           투자수익은 전체 투자계좌
           평가액 기준으로 계산되므로
