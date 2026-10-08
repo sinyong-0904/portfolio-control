@@ -148,6 +148,29 @@
 .v34-growth-legend .pos i { background: var(--v33-blue, #2563eb); }
 .v34-growth-legend .neg i { background: var(--v33-red, #dc2626); }
 .v34-growth-legend .value i { background: var(--v33-teal, #0d9488); }
+
+.v34-growth-segment.contribution { fill: #2563eb; }
+.v34-growth-segment.cashChange { fill: #0d9488; }
+.v34-growth-segment.investmentReturn { fill: #8b5cf6; }
+.v34-growth-segment.legacy { fill: #e59a32; }
+.v34-growth-segment.stockCompensation { fill: #dc648d; }
+
+.v34-growth-segment:hover {
+  opacity: .75;
+}
+
+.v34-growth-net-marker {
+  fill: currentColor;
+  stroke: var(--card-bg, #fff);
+  stroke-width: 1.5;
+}
+
+.v34-growth-legend .contribution i { background: #2563eb; }
+.v34-growth-legend .cashChange i { background: #0d9488; }
+.v34-growth-legend .investmentReturn i { background: #8b5cf6; }
+.v34-growth-legend .legacy i { background: #e59a32; }
+.v34-growth-legend .stockCompensation i { background: #dc648d; }
+.v34-growth-legend .net i { background: currentColor; }
 `;
 
     document.head.appendChild(style);
@@ -216,6 +239,27 @@
     const rows = g.rows;
     const actualRows = rows.filter(r => r.value != null);
 
+    const contributionChart =
+      /(^|\/)v35(\/|$)/.test(
+        window.location.pathname || ''
+      );
+
+    const components = [
+      ['contribution', '추가투입'],
+      ['cashChange', '현금증감'],
+      ['investmentReturn', '투자수익'],
+      ['legacy', '삼전우'],
+      ['stockCompensation', '주식보상']
+    ];
+
+    const componentValue = (row, field) => {
+      if (field === 'stockCompensation' &&
+          Number(g.year) < 2027) {
+        return 0;
+      }
+      return Number(row[field]) || 0;
+    };
+
     if (!actualRows.length) {
       return '';
     }
@@ -251,7 +295,31 @@
     const maxAbsChangeManwon = niceCeil(
       Math.max(
         1,
-        ...changesManwon.filter(v => v != null).map(v => Math.abs(v))
+        ...rows
+          .filter(r => r.value != null && r.totalChange != null)
+          .map(r => {
+            if (!contributionChart) {
+              return Math.abs(Number(r.totalChange) || 0);
+            }
+
+            const values = components.map(
+              ([field]) => componentValue(r, field)
+            );
+
+            const positive = values.reduce(
+              (sum, v) => sum + Math.max(0, v), 0
+            );
+
+            const negative = values.reduce(
+              (sum, v) => sum + Math.min(0, v), 0
+            );
+
+            return Math.max(
+              positive,
+              Math.abs(negative),
+              Math.abs(Number(r.totalChange) || 0)
+            );
+          })
       )
     );
 
@@ -290,36 +358,101 @@
       rightTicks.push(rMinManwon + rRangeManwon * k / rightTickCount);
     }
 
-    // Bars + always-visible value labels. Months with no data yet
-    // (future months) get their x-slot/label below but no bar.
+    // Bars: original net bars on root; diverging contributions on v35.
     const bars = rows.map((r, i) => {
-
       if (r.value == null || r.totalChange == null) {
         return '';
       }
 
-      const vManwon = changesManwon[i];
-      const yTop = Math.min(yChange(vManwon), barCenterY);
-      const h = Math.max(Math.abs(yChange(vManwon) - barCenterY), 0.5);
-      const cls = vManwon >= 0 ? 'pos' : 'neg';
+      const net = Number(r.totalChange) || 0;
 
-      const labelY = vManwon >= 0
-        ? yTop - 6
-        : yTop + h + 12;
+      if (!contributionChart) {
+        const yTop = Math.min(yChange(net), barCenterY);
+        const h = Math.max(
+          Math.abs(yChange(net) - barCenterY), 0.5
+        );
+        const cls = net >= 0 ? 'pos' : 'neg';
+        const labelY = net >= 0
+          ? yTop - 6
+          : yTop + h + 12;
+
+        return `
+          <rect class="v34-growth-bar ${cls}"
+            x="${(x(i) - barWidth / 2).toFixed(1)}"
+            y="${yTop.toFixed(1)}"
+            width="${barWidth.toFixed(1)}"
+            height="${h.toFixed(1)}">
+            <title>${r.month}: ${fmtManwon(net, true)}</title>
+          </rect>
+          <text class="v34-bar-value-label ${cls}"
+            x="${x(i).toFixed(1)}" y="${labelY.toFixed(1)}"
+            text-anchor="middle">${fmtManwon(net, true)}</text>
+        `;
+      }
+
+      const breakdown = components.map(([field, label]) => ({
+        field,
+        label,
+        value: componentValue(r, field)
+      }));
+
+      const tooltip = [
+        `${r.month} ${g.year}`,
+        ...breakdown.map(item =>
+          `${item.label}: ${fmtManwon(item.value, true)}`
+        ),
+        `총증감: ${fmtManwon(net, true)}`,
+        `평가액: ${fmtManwon(r.value)}`
+      ].join('\n');
+
+      let positive = 0;
+      let negative = 0;
+
+      const segments = breakdown.map(item => {
+        const v = item.value;
+        if (!v) return '';
+
+        const start = v > 0 ? positive : negative;
+        const end = start + v;
+
+        if (v > 0) positive = end;
+        else negative = end;
+
+        const top = Math.min(yChange(start), yChange(end));
+        const height = Math.abs(yChange(end) - yChange(start));
+
+        return `
+          <rect class="v34-growth-segment ${item.field}"
+            x="${(x(i) - barWidth / 2).toFixed(1)}"
+            y="${top.toFixed(1)}"
+            width="${barWidth.toFixed(1)}"
+            height="${Math.max(height, 0.5).toFixed(1)}">
+            <title>${tooltip}</title>
+          </rect>
+        `;
+      }).join('');
+
+      const netY = yChange(net);
+      const labelY = net >= 0 ? netY - 9 : netY + 17;
 
       return `
-        <rect class="v34-growth-bar ${cls}"
-          x="${(x(i) - barWidth / 2).toFixed(1)}"
-          y="${yTop.toFixed(1)}"
-          width="${barWidth.toFixed(1)}"
-          height="${h.toFixed(1)}">
-          <title>${r.month}: ${fmtManwon(r.totalChange, true)}</title>
-        </rect>
-        <text class="v34-bar-value-label ${cls}"
-          x="${x(i).toFixed(1)}" y="${labelY.toFixed(1)}"
-          text-anchor="middle">${fmtManwon(r.totalChange, true)}</text>
+        ${segments}
+        <circle class="v34-growth-net-marker"
+          cx="${x(i).toFixed(1)}"
+          cy="${netY.toFixed(1)}"
+          r="3.5">
+          <title>${tooltip}</title>
+        </circle>
+        <text class="v34-bar-value-label ${net >= 0 ? 'pos' : 'neg'}"
+          x="${x(i).toFixed(1)}"
+          y="${labelY.toFixed(1)}"
+          text-anchor="middle">
+          ${fmtManwon(net, true)}
+        </text>
       `;
     }).join('');
+
+    // Valuation line/points — only through the last actual month.
 
     // Valuation line/points — only through the last actual month.
     const linePath = actualRows.map((r, idx) => {
@@ -413,8 +546,21 @@
         </svg>
       </div>
       <div class="v34-growth-legend">
-        <span class="pos"><i></i>총증감(+)</span>
-        <span class="neg"><i></i>총증감(-)</span>
+        ${
+          contributionChart
+            ? `
+              <span class="contribution"><i></i>추가투입</span>
+              <span class="cashChange"><i></i>현금증감</span>
+              <span class="investmentReturn"><i></i>투자수익</span>
+              <span class="legacy"><i></i>삼전우</span>
+              <span class="stockCompensation"><i></i>주식보상</span>
+              <span class="net"><i></i>총증감(점)</span>
+            `
+            : `
+              <span class="pos"><i></i>총증감(+)</span>
+              <span class="neg"><i></i>총증감(-)</span>
+            `
+        }
         <span class="value"><i></i>평가액</span>
       </div>
     `;
@@ -467,7 +613,9 @@
         tableWrap.insertAdjacentElement('afterend', card);
       }
 
-      card.innerHTML = markup;
+      if (card.innerHTML !== markup) {
+        card.innerHTML = markup;
+      }
 
       return true;
 
