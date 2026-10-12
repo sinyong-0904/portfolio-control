@@ -79,14 +79,24 @@ function formatMan(value, signed = true) {
       commonValue += value / 10000;
       commonCumPnl += cum / 10000;
 
-      // Existing 30 shares held since 2025.
-      // Historical 2026 price-only attribution.
+      // Existing 2026 holding: use the authoritative
+      // Market year-start price, not a historical estimate.
       if (qty !== 30 || number(h.avg) !== 54700) {
         return null;
       }
 
+      const yearStartPrice =
+        number(metric?.m?.yearStart);
+
+      if (
+        yearStartPrice === null ||
+        yearStartPrice <= 0
+      ) {
+        return null;
+      }
+
       commonYearPnl +=
-        (value - qty * 119900) / 10000;
+        (value - qty * yearStartPrice) / 10000;
     }
 
     const totalValue = number(general.value);

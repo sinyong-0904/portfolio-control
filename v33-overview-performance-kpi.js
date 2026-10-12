@@ -338,6 +338,157 @@
     }
   }
 
+  function combinedSamsungMetricV35(year) {
+    if (
+      !/(^|\/)v35(\/|$)/.test(location.pathname) ||
+      Number(year) !== 2026
+    ) {
+      return null;
+    }
+
+    try {
+      const preferred = (data.holdings || []).find(h =>
+        h.account === 'SAMSUNG_PREF' &&
+        (!h.status || h.status === 'Active')
+      );
+
+      const common = (data.holdings || []).filter(h =>
+        h.account === 'GENERAL' &&
+        String(h.code) === '005930' &&
+        (!h.status || h.status === 'Active')
+      );
+
+      if (!preferred || common.length !== 1) return null;
+
+      const pm = holdingMetric(preferred);
+      const cm = holdingMetric(common[0]);
+
+      const preferredQty = finite(preferred.qty);
+      const commonQty = finite(common[0].qty);
+      const preferredStartPrice = finite(pm?.m?.yearStart);
+      const commonStartPrice = finite(cm?.m?.yearStart);
+
+      const preferredValue = finite(pm?.value);
+      const commonValue = finite(cm?.value);
+      const preferredTotalPnl = finite(pm?.totalPnl);
+      const commonTotalPnl = finite(cm?.totalPnl);
+
+      if (
+        [
+          preferredQty,
+          commonQty,
+          preferredStartPrice,
+          commonStartPrice,
+          preferredValue,
+          commonValue,
+          preferredTotalPnl,
+          commonTotalPnl
+        ].some(v => v == null) ||
+        preferredQty <= 0 ||
+        commonQty !== 30 ||
+        preferredStartPrice <= 0 ||
+        commonStartPrice <= 0
+      ) {
+        return null;
+      }
+
+      const startKRW =
+        preferredQty * preferredStartPrice +
+        commonQty * commonStartPrice;
+
+      const currentKRW =
+        preferredValue + commonValue;
+
+      const pnlKRW = currentKRW - startKRW;
+
+      const preferredStartKRW =
+        preferredQty * preferredStartPrice;
+
+      const commonStartKRW =
+        commonQty * commonStartPrice;
+
+      return {
+        ytd: pnlKRW / startKRW * 100,
+        pnlMan: pnlKRW / 10000,
+        totalPnlMan:
+          (preferredTotalPnl + commonTotalPnl) / 10000,
+
+        preferred: {
+          ytd:
+            (preferredValue - preferredStartKRW) /
+            preferredStartKRW * 100,
+          pnlMan:
+            (preferredValue - preferredStartKRW) / 10000,
+          totalPnlMan: preferredTotalPnl / 10000
+        },
+
+        common: {
+          ytd:
+            (commonValue - commonStartKRW) /
+            commonStartKRW * 100,
+          pnlMan:
+            (commonValue - commonStartKRW) / 10000,
+          totalPnlMan: commonTotalPnl / 10000
+        }
+      };
+    } catch (error) {
+      console.warn(
+        '[v35 Samsung combined KPI]',
+        error
+      );
+      return null;
+    }
+  }
+
+  function addSamsungBreakdownV35(card, items) {
+    const old = card.querySelector(
+      '.v35-samsung-kpi-breakdown'
+    );
+
+    if (old) old.remove();
+
+    const box = document.createElement('div');
+    box.className = 'v35-samsung-kpi-breakdown';
+
+    box.style.cssText = [
+      'position:relative',
+      'z-index:1',
+      'margin-top:10px',
+      'padding-top:8px',
+      'border-top:1px solid var(--border,#ddd)',
+      'font-size:12px',
+      'line-height:1.8'
+    ].join(';');
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+
+      row.style.cssText = [
+        'display:flex',
+        'justify-content:space-between',
+        'align-items:baseline',
+        'gap:8px',
+        'flex-wrap:wrap'
+      ].join(';');
+
+      const label = document.createElement('span');
+      label.textContent = item.label;
+
+      const value = document.createElement('span');
+      value.textContent = item.value;
+
+      value.style.cssText = [
+        'font-weight:600',
+        'font-variant-numeric:tabular-nums'
+      ].join(';');
+
+      row.append(label, value);
+      box.appendChild(row);
+    });
+
+    card.appendChild(box);
+  }
+
 
   function householdMetric() {
     try {
@@ -721,6 +872,62 @@
       household.totalPnlMan,
       'green'
     );
+
+    const combined = combinedSamsungMetricV35(
+      Number(info.yy) + 2000
+    );
+
+    if (combined) {
+      setYtdCard(
+        samsungYtdCard,
+        `삼성전자 주식 ${info.yy} YTD`,
+        combined.ytd,
+        combined.pnlMan
+      );
+
+      setTrCard(
+        samsungTrCard,
+        '삼성전자 주식 TR',
+        combined.totalPnlMan,
+        'purple'
+      );
+
+      addSamsungBreakdownV35(
+        samsungYtdCard,
+        [
+          {
+            label: '삼성전자우',
+            value:
+              `${formatPercent(combined.preferred.ytd)} ` +
+              `(${formatMan(combined.preferred.pnlMan)})`
+          },
+          {
+            label: '삼성전자(자사주)',
+            value:
+              `${formatPercent(combined.common.ytd)} ` +
+              `(${formatMan(combined.common.pnlMan)})`
+          }
+        ]
+      );
+
+      addSamsungBreakdownV35(
+        samsungTrCard,
+        [
+          {
+            label: '삼성전자우',
+            value: formatMan(
+              combined.preferred.totalPnlMan
+            )
+          },
+          {
+            label: '삼성전자(자사주)',
+            value: formatMan(
+              combined.common.totalPnlMan
+            )
+          }
+        ]
+      );
+    }
 
     grid.append(
       samsungYtdCard,
