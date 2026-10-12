@@ -112,7 +112,11 @@
 
         const value = numberFromCellV33(cell);
 
-        if (value != null && value < 0) {
+        if (
+          value != null &&
+          value < 0 &&
+          !cell.classList.contains('v33-negative')
+        ) {
           cell.classList.add('v33-negative');
         }
       });

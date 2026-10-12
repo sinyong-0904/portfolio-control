@@ -1353,6 +1353,10 @@
       .forEach(
         row => {
 
+          if (row.hasAttribute('data-v35-general-split')) {
+            return;
+          }
+
           //
           // Group rows:
           // 연금 계좌 / 연금 자산구성 /
