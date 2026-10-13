@@ -609,9 +609,9 @@
   function pensionCagrRateV33() {
     try {
       const rows =
-        typeof window.performanceRowsV33 ===
+        typeof window.performanceRows ===
           'function'
-          ? window.performanceRowsV33()
+          ? window.performanceRows()
           : [];
 
       const row =
