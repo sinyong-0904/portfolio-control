@@ -218,9 +218,55 @@ Do not modify Production/shared-state architecture without explicit user approva
 
 Localhost may connect to Production Supabase. Never assume localhost testing is isolated.
 
-The user commonly uploads modified files through GitHub Web UI because push may be restricted on the company network.
+### GitHub Commit / Production / Local Sync Policy
 
-Final completion condition:
+Company network policy prevents terminal-based `git push`.
+
+The established Portfolio Control deployment workflow is:
+
+1. Complete source verification, minimal code modification, and local testing.
+2. Run PowerShell verification and meaningful diff audits.
+3. Use GitHub Web UI → **Add file → Upload files**.
+4. Upload **only the modified files**, preserving their repository paths.
+5. Use the exact commit message provided by the assistant.
+6. After committing, the user provides the GitHub commit URL.
+7. The assistant independently inspects the remote commit, changed files, and actual diff.
+8. Verify Production behavior after GitHub Pages deployment.
+9. Synchronize the local repository with the confirmed remote HEAD.
+10. Verify local HEAD, origin/main, and working tree cleanliness.
+
+**Do not instruct the user to run terminal `git push`.**
+
+**Do not mark a task complete before remote commit audit, Production verification, and local synchronization have passed.**
+
+### PowerShell Verification Output Policy
+
+All PowerShell commands provided for user-side verification must follow these conventions:
+
+- Provide a single copy-paste-ready code block.
+- Print concise `PASS |`, `FAIL |`, or `CHECK |` results instead of raw command output.
+- State the expected number of PASS results before the command.
+- Suppress unnecessary Git output, verbose logs, and intermediate values.
+- Stop potentially destructive or dependent operations when prerequisite checks fail.
+- Clearly distinguish actual verification from assumptions.
+- When a check fails, provide a focused follow-up diagnostic command using the same output convention.
+
+Example expected output:
+
+```text
+PASS | Local HEAD matches origin/main
+PASS | Expected files changed
+PASS | CAGR reference verified
+PASS | No unexpected changes
+```
+
+### Final Completion Gate
+
+A development task is complete only when:
+
+**GitHub Web UI commit PASS → Remote commit/diff audit PASS → Production verification PASS → Local synchronization PASS**
+
+The assistant must not declare completion based solely on local browser testing, successful upload, or a clean local working tree.
 
 **GitHub reflected → Production verified → local sync PASS**
 
