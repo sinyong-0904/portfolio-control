@@ -218,6 +218,114 @@
       100
     );
   }
+  
+  function opi2StockCompManV35(year) {
+    const y = Number(year);
+    if (!Number.isInteger(y) || y < 2027) return 0;
+
+    const rows = data?.growthV32?.years?.[String(y)];
+    if (!rows) return 0;
+
+    const months = [
+      'JAN', 'FEB', 'MAR', 'APR',
+      'MAY', 'JUN', 'JUL', 'AUG',
+      'SEP', 'OCT', 'NOV', 'DEC'
+    ];
+
+    return months.reduce((sum, month) => {
+      const value = Number(rows[month]?.stockCompensation);
+      return sum + (Number.isFinite(value) ? value : 0);
+    }, 0);
+  }
+
+  function opi2PerformanceFlowV35(id, year) {
+    const original = Number(
+      annualFlow(acct(id), String(year))
+    ) || 0;
+
+    return original + (
+      id === 'GENERAL'
+        ? opi2StockCompManV35(year)
+        : 0
+    );
+  }
+
+  function opi2CumulativeCompManV35(year) {
+    const target = Number(year);
+    if (!Number.isInteger(target) || target < 2027) {
+      return 0;
+    }
+
+    return Object.keys(data?.growthV32?.years || {})
+      .reduce((sum, key) => {
+        const y = Number(key);
+        return sum + (
+          Number.isInteger(y) &&
+          y >= 2027 &&
+          y <= target
+            ? opi2StockCompManV35(y)
+            : 0
+        );
+      }, 0);
+  }
+
+  
+  function opi2CumulativePerformanceV35(
+    scope,
+    year
+  ) {
+    if (
+      scope !== '일반계좌' &&
+      scope !== 'Total'
+    ) {
+      return null;
+    }
+
+    const compensation =
+      opi2CumulativeCompManV35(year);
+
+    if (!compensation) return null;
+
+    const ids =
+      scope === '일반계좌'
+        ? ['GENERAL']
+        : [
+            'DC', 'P1', 'P2',
+            'ISA', 'GENERAL', 'CHILD'
+          ];
+
+    const summaries =
+      ids.map(id => accountSummary(id));
+
+    const originalPnl =
+      summaries.reduce(
+        (sum, s) =>
+          sum + (Number(s.cumPnl) || 0),
+        0
+      );
+
+    const originalContribution =
+      summaries.reduce(
+        (sum, s) =>
+          sum + (Number(s.contrib) || 0),
+        0
+      );
+
+    const adjustedPnl =
+      originalPnl - compensation;
+
+    const adjustedContribution =
+      originalContribution + compensation;
+
+    return {
+      cumPnl: adjustedPnl,
+      tr: adjustedContribution
+        ? adjustedPnl /
+          adjustedContribution * 100
+        : 0
+    };
+  }
+
 
   function liveYtdFromBaseV35(
     value,
@@ -299,14 +407,10 @@
         ) || 0;
 
       const flow =
-        Number(
-          annualFlow(
-            acct(id),
-            String(
-              effectiveYear
-            )
-          )
-        ) || 0;
+        opi2PerformanceFlowV35(
+          id,
+          effectiveYear
+        );
 
       return (
         value -
@@ -380,16 +484,12 @@
               accountBase[id]
             ) || 0
           ) -
-          (
-            Number(
-              annualFlow(
-                acct(id),
-                String(
-                  effectiveYear
-                )
-              )
-            ) || 0
-          ),
+           (
+             opi2PerformanceFlowV35(
+               id,
+               effectiveYear
+             )
+           ),
         0
       );
     }
@@ -571,11 +671,9 @@
             ) || 0;
 
           const flow =
-            annualFlow(
-              acct(id),
-              String(
-                effectiveYear
-              )
+            opi2PerformanceFlowV35(
+              id,
+              effectiveYear
             );
 
           currentYtd =
@@ -752,16 +850,12 @@
             ids.reduce(
               (sum, id) =>
                 sum +
-                (
-                  Number(
-                    annualFlow(
-                      acct(id),
-                      String(
-                        effectiveYear
-                      )
-                    )
-                  ) || 0
-                ),
+                 (
+                   opi2PerformanceFlowV35(
+                     id,
+                     effectiveYear
+                   )
+                 ),
               0
             );
 
@@ -772,6 +866,12 @@
               flow
             );
         }
+
+        const opi2Cumulative =
+          opi2CumulativePerformanceV35(
+            row.scope,
+            effectiveYear
+          );
 
         const priorTwr =
           Number(
@@ -794,6 +894,10 @@
 
         return {
           ...row,
+
+          ...(opi2Cumulative
+            ? { tr: opi2Cumulative.tr }
+            : {}),
 
           y25:
             Number(
@@ -906,6 +1010,15 @@
           .trim()
     );
 
+  
+  const cumulativePnlIdx =
+    headers.findIndex(text =>
+      /^(누적손익|누적\s*손익)$/.test(
+        text.replace(/\s+/g, '')
+      )
+    );
+  
+
   const pnlIdx =
     headers.findIndex(
       text =>
@@ -1010,6 +1123,34 @@
         if (!performanceRow) {
           return;
         }
+
+        
+        const opi2Cumulative =
+          opi2CumulativePerformanceV35(
+            scope,
+            effectiveYear
+          );
+
+        if (
+          opi2Cumulative &&
+          cumulativePnlIdx >= 0
+        ) {
+          const cumulativeCell =
+            row.children[cumulativePnlIdx];
+
+          if (cumulativeCell) {
+            cumulativeCell.textContent =
+              formatManV35(
+                opi2Cumulative.cumPnl
+              );
+
+            cumulativeCell.classList.toggle(
+              'v33-performance-negative',
+              opi2Cumulative.cumPnl < 0
+            );
+          }
+        }
+
 
         const pnl =
           currentYearPnlManV35(
