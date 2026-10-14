@@ -270,16 +270,155 @@ The assistant must not declare completion based solely on local browser testing,
 
 **GitHub reflected → Production verified → local sync PASS**
 
-## 7. Next Session Execution Instruction
+## 7. Development Execution / Next Action Policy
 
-Start with the Simulation CAGR mismatch.
+#### 1. Definition of "Proceed"
 
-Do not begin by asking the user to repeat the handoff or prior investigation.
+When the user says "진행", "계속", "다음 진행", "keep going", or similar, it is an explicit instruction to continue development autonomously until reaching the next actionable execution step.
 
-Verify HEAD, read relevant source, trace both CAGR calculations, and continue through root-cause analysis, minimal patch planning, and verification design without unnecessary approval pauses.
+The assistant must independently perform all work it can reasonably complete, including:
 
-Stop only when user action is required for editing, local testing, GitHub upload, or a significant architectural decision.
+- Reading actual GitHub source through Raw/API or available alternative access paths.
+- Tracing authoritative definitions, overrides, load order, dependencies, and persistence paths.
+- Investigating root causes and comparing minimal-change solutions.
+- Completing implementation design and preparing exact modification code.
+- Performing available static analysis and independent tests.
 
-After completing the CAGR task, resume OPI2 B2-3.
+**Research summaries, intermediate findings, investigation plans, and statements such as "additional verification is needed" do not constitute completion of a "Proceed" instruction.**
 
-Update this file after important checkpoints. Keep it concise and current rather than accumulating a full chronological history.
+Do not stop merely because another source file, function, or dependency needs investigation.
+
+#### 2. Definition of "Next Action"
+
+A Next Action must be a concrete, executable development step, not a description of remaining work.
+
+Valid Next Actions include:
+
+1. **Implementation Decision:** Present a specific architectural or state-ownership choice that genuinely requires user authorization.
+2. **Code Modification:** Provide the exact file, insertion/replacement location, verified existing code, and complete replacement code.
+3. **Localhost Verification:** Provide specific browser test steps and expected results.
+4. **Pre-Commit Static Test:** Perform source, dependency, regression, and meaningful diff audits; provide executable PASS/FAIL/CHECK tests only where local execution is necessary.
+5. **GitHub Web UI Commit:** Identify only the modified files and provide the exact commit message.
+6. **Remote Commit Audit:** Inspect the user-provided commit URL, changed files, actual diff, and source integrity.
+7. **Production Verification:** Specify concrete checks against the deployed application.
+8. **Local Synchronization:** Verify remote/local HEAD alignment and clean working tree.
+
+A Next Action must clearly identify:
+
+- What the user must do.
+- Exactly where or how to do it.
+- Expected outcome or PASS criteria.
+- What happens next after the result is provided.
+
+**"Do not modify anything", "wait", "no user action is required", or "further investigation is needed" are not valid Next Actions when the assistant can continue working independently.**
+
+#### 3. Stop / Handoff Conditions
+
+The assistant should stop and hand work to the user only when one of the following conditions is met:
+
+- The user must apply a verified code modification locally.
+- A local browser, Node.js, or other environment-specific test must be executed by the user.
+- The user must upload modified files through GitHub Web UI.
+- A significant architecture, state ownership, persistence, Production, or shared-state decision requires explicit user authorization.
+- All reasonable GitHub Raw/API and alternative access attempts have failed, and further progress genuinely requires user intervention.
+
+The assistant must **not** stop for:
+
+- Additional source tracing that the assistant can perform.
+- Duplicate-definition, override, or script-load-order investigation.
+- Dependency or persistence analysis.
+- Comparison of implementation alternatives.
+- Static audits or isolated tests executable in the assistant's environment.
+- Intermediate findings without a concrete user action.
+
+#### 4. User Workload Minimization
+
+GitHub source inspection is the assistant's responsibility.
+
+Do not repeatedly ask the user to run PowerShell commands to search for functions, check string existence, extract code, or inspect source files that can be read directly from GitHub.
+
+Reserve user-side PowerShell commands for necessary local modification verification, isolated execution tests, Git synchronization, and other operations unavailable to the assistant.
+
+When PowerShell is required:
+
+- Provide a single copy-paste-ready block.
+- Use concise `PASS |`, `FAIL |`, or `CHECK |` output.
+- State the expected number of PASS results.
+- Avoid repeating previously passed checks without new evidence.
+
+#### 5. Execution Completion Rule
+
+The assistant should continue independently until a genuine Next Action is reached.
+
+**Analysis progress is not an execution milestone.**
+
+Do not represent a research summary, incomplete patch proposal, or deferred investigation as a completed development step.
+
+A development task is fully complete only after:
+
+**GitHub Web UI commit PASS → Remote commit audit PASS → Production verification PASS → Local synchronization PASS**
+
+## 8. Next Session Execution Instruction
+
+### Current Completed Work
+
+**Simulation CAGR mismatch — COMPLETED**
+
+- Fix commit: `6126be64096939405b10259a3b967ee78f87059a`
+- Simulation now references the live Performance pension combined CAGR.
+- Local browser verification: PASS
+- GitHub remote commit audit: PASS
+- Production verification: PASS
+- Local synchronization and clean working tree: PASS
+
+Do not reopen this completed issue without new source evidence, a regression, or a requirement change.
+
+### Current Active Work — OPI2 Phase B2-3
+
+Resume OPI2 B2-3 implementation as the highest-priority development task.
+
+The following implementation decisions have already been approved:
+
+1. The user manually enters the OPI2 payment amount in Growth `stockCompensation` for the actual payment month.
+2. The user manually updates the Samsung common-stock quantity and average cost in GENERAL holdings.
+3. Temporary Performance distortion between these two independent inputs is acceptable.
+4. Performance should normalize after both inputs are completed.
+5. Reuse Growth `stockCompensation` as the authoritative OPI2 external-inflow amount.
+6. Do not introduce a separate payment-confirmation UI or persistence state.
+7. Preserve existing GENERAL holdings as the authoritative source for actual quantity, average cost, and market value.
+8. Do not globally modify `annualFlow()`, `cumContribution()`, or Growth calculations without verified necessity.
+9. Ensure consistency across GENERAL and Total annual profit, YTD, cumulative profit, TR, TWR, CAGR, and annual rollover.
+10. Never write fictitious OPI2 payment data into Production Supabase.
+
+Example scenario for isolated testing:
+
+- Expected payment: March/April 2027
+- Samsung common-stock quantity: 30 → 630 shares
+- Average cost: 54,700 → approximately 193,081 KRW
+- OPI2 payment: 600 shares × 200,000 KRW = 120,000,000 KRW
+- Growth `stockCompensation`: 12,000 (unit: 10,000 KRW)
+
+This is a hypothetical test case, not actual portfolio data.
+
+### Immediate Execution Requirements
+
+1. Verify the latest GitHub main HEAD and read the actual relevant source.
+2. Recheck the final authoritative Performance calculation paths, including cumulative profit/TR and annual rollover.
+3. Audit previous B2-3 patch proposals against current source. Do not assume earlier unverified code is safe.
+4. Finalize the smallest correct implementation.
+5. Provide exact modification locations and complete verified replacement code.
+6. Proceed to isolated tests, local verification, GitHub Web UI commit, remote audit, Production verification, and local synchronization.
+
+**Do not stop after reporting intermediate findings or saying that additional investigation is needed.**
+
+Continue autonomously until reaching a concrete Next Action as defined in Section 7.
+
+### Session Handoff Maintenance
+
+After an important verified checkpoint:
+
+- Update the completed and pending work.
+- Record the latest verified commit.
+- Record verification status and outstanding risks.
+- Remove or revise obsolete execution instructions.
+- Keep this file concise rather than accumulating chronological debugging history.
