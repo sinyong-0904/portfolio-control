@@ -2010,3 +2010,85 @@ VERSION_OPERATIONS.md
 ```
 
 Annual Transition 구현과 version/reference 운영 정책은 서로 연관되지만 별도의 책임을 가진 문서로 유지한다.
+
+## OPI2 Stock Compensation — 2027→2028 Isolated Verification (2026-10-14)
+
+### Purpose
+
+Verify that OPI2 stock compensation recorded in Growth is preserved through annual rollover, excluded from subsequent-year new external inflows, and retained in cumulative Performance calculations.
+
+### Implementation Reference
+
+OPI2 B2-3 implementation commit:
+
+`9f4e61b3614546626f5989f26d20d91b00c2caf1`
+
+Relevant source:
+
+- `patch-v32.js`
+- `v35-performance-live.js`
+- `v35-performance-rollover.js`
+- `v35-annual-transition.js`
+- `v35-annual-persistence.js`
+
+### Hypothetical Scenario
+
+- Payment year: 2027
+- Payment month: March
+- Payment quantity: 600 Samsung common shares
+- Payment valuation: KRW 200,000 per share
+- Total external inflow: KRW 120,000,000
+- Growth `stockCompensation`: 12,000 (10,000 KRW units)
+- 2028 GENERAL opening baseline: 12,600 (10,000 KRW units)
+- 2028 GENERAL valuation after price appreciation: 13,230 (10,000 KRW units)
+
+All values are hypothetical and were used only in isolated tests.
+
+### Verification Results
+
+| Test | Result |
+|---|---|
+| Annual Transition source initialization | PASS |
+| Actual candidate builder execution | PASS |
+| Candidate validation with complete isolated fixtures | PASS |
+| Growth OPI2 payment history retention | PASS |
+| Actual Growth rollover function execution | PASS |
+| Actual Performance rollover preview execution | PASS |
+| 2028 opening baseline generation | PASS |
+| 2028 new OPI2 external inflow equals zero | PASS |
+| Cumulative OPI2 amount retained for TR calculation | PASS |
+| Actual 2028 Performance function execution | PASS |
+| GENERAL and Total YTD/TR/TWR isolated calculations | PASS |
+| Memory transaction write/readback | PASS |
+| Memory transaction failure detection and rollback | PASS |
+| Original state preservation | PASS |
+
+### Limitations
+
+The verified tests were conducted as separate isolated component and integration checks.
+
+**A single end-to-end Annual Transition execution using all actual components together has not been verified.**
+
+The following remain unverified:
+
+- Actual 2027 OPI2 payment entry and save/reload.
+- Production Supabase persistence of actual OPI2 payment data.
+- Complete integrated 2027→2028 Annual Transition with all actual components.
+- Production Annual Transition and subsequent reload verification.
+- Real-world duplicate-payment prevention and rollback behavior.
+
+No hypothetical OPI2 data was written to Production Supabase.
+
+### Current Assessment
+
+**OPI2 isolated rollover pre-verification: PASS within tested scope.**
+
+**Actual integrated rollover: NOT VERIFIED.**
+
+**Production rollover and persistence: NOT VERIFIED.**
+
+No additional Production code modification is required based on the isolated results alone.
+
+Retain the existing Annual Transition safeguards, validation gates, persistence checks, and rollback policy.
+
+Do not promote isolated test success to actual rollover verification.
