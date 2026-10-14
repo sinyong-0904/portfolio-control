@@ -442,45 +442,82 @@ A development task is fully complete only after:
 
 Do not reopen this completed issue without new source evidence, a regression, or a requirement change.
 
-### Current Active Work — OPI2 Phase B2-3
+### Completed Work — OPI2 Phase B2-3 Code Implementation
 
-Resume OPI2 B2-3 implementation as the highest-priority development task.
+**Status: CODE IMPLEMENTATION / PRODUCTION DEPLOYMENT COMPLETED**
 
-The following implementation decisions have already been approved:
+Verified checkpoint:
 
-1. The user manually enters the OPI2 payment amount in Growth `stockCompensation` for the actual payment month.
-2. The user manually updates the Samsung common-stock quantity and average cost in GENERAL holdings.
-3. Temporary Performance distortion between these two independent inputs is acceptable.
-4. Performance should normalize after both inputs are completed.
-5. Reuse Growth `stockCompensation` as the authoritative OPI2 external-inflow amount.
-6. Do not introduce a separate payment-confirmation UI or persistence state.
-7. Preserve existing GENERAL holdings as the authoritative source for actual quantity, average cost, and market value.
-8. Do not globally modify `annualFlow()`, `cumContribution()`, or Growth calculations without verified necessity.
-9. Ensure consistency across GENERAL and Total annual profit, YTD, cumulative profit, TR, TWR, CAGR, and annual rollover.
-10. Never write fictitious OPI2 payment data into Production Supabase.
+`9f4e61b3614546626f5989f26d20d91b00c2caf1`
 
-Example scenario for isolated testing:
+Commit message:
 
-- Expected payment: March/April 2027
-- Samsung common-stock quantity: 30 → 630 shares
-- Average cost: 54,700 → approximately 193,081 KRW
-- OPI2 payment: 600 shares × 200,000 KRW = 120,000,000 KRW
-- Growth `stockCompensation`: 12,000 (unit: 10,000 KRW)
+`Handle OPI2 stock compensation in Performance metrics`
 
-This is a hypothetical test case, not actual portfolio data.
+Modified file:
 
-### Immediate Execution Requirements
+- `v35-performance-live.js`
 
-1. Verify the latest GitHub main HEAD and read the actual relevant source.
-2. Recheck the final authoritative Performance calculation paths, including cumulative profit/TR and annual rollover.
-3. Audit previous B2-3 patch proposals against current source. Do not assume earlier unverified code is safe.
-4. Finalize the smallest correct implementation.
-5. Provide exact modification locations and complete verified replacement code.
-6. Proceed to isolated tests, local verification, GitHub Web UI commit, remote audit, Production verification, and local synchronization.
+Implementation:
 
-**Do not stop after reporting intermediate findings or saying that additional investigation is needed.**
+- Reuses existing Growth `stockCompensation` as the OPI2 external-inflow source.
+- Preserves manual GENERAL Samsung common-stock quantity and average-cost updates.
+- Adds annual and cumulative OPI2 compensation helpers.
+- Adjusts GENERAL and Total annual profit, YTD, cumulative profit, and TR.
+- Reuses existing TWR/CAGR calculation paths.
+- Preserves existing Growth calculation and account state ownership.
+- Introduces no new Supabase persistence field or payment-confirmation UI.
+- Preserves 2026 behavior.
 
-Continue autonomously until reaching a concrete Next Action as defined in Section 7.
+Verified checks:
+
+- JavaScript syntax and static source audit: PASS.
+- OPI2 helper execution: PASS.
+- Hypothetical 2027 payment and 2028 cumulative compensation tests: PASS.
+- GENERAL/Total YTD and TR isolated calculation: PASS.
+- Virtual DOM cumulative-profit presentation: PASS.
+- Localhost 2026 regression: PASS.
+- GitHub remote commit/diff audit: PASS.
+- Production 2026 regression: PASS.
+- Local HEAD synchronization and clean working tree: PASS.
+
+**Verification limitations:**
+
+- Hypothetical tests are not actual 2027 payment execution.
+- Actual OPI2 payment entry, Supabase save/reload, and integrated Annual Transition have not been verified.
+- No fictitious OPI2 payment data was saved to Production Supabase.
+- Do not mark actual 2027 OPI2 operational behavior as verified.
+
+### Pending Work — OPI2 Operational Verification
+
+When an actual OPI2 payment occurs:
+
+1. Record the payment in Growth `stockCompensation` for the actual payment month.
+2. Update Samsung common-stock quantity and average cost in GENERAL holdings.
+3. Verify GENERAL and Total annual profit, cumulative profit, YTD, TR, TWR, and CAGR.
+4. Verify that payment value is classified as external inflow rather than investment profit.
+5. Verify Supabase save/reload persistence.
+6. Confirm that the payment is not counted twice.
+7. Verify subsequent share-price changes are treated as investment performance.
+8. Verify the annual rollover and subsequent-year cumulative performance.
+
+**Safety:**
+
+- Do not enter hypothetical OPI2 payments into Production.
+- Localhost may use Production Supabase.
+- Do not reopen the completed B2-3 code implementation without new source evidence, a regression, or a requirement change.
+
+### Next Session Execution Requirements
+
+1. Verify the latest GitHub main HEAD and read the updated handoff.
+2. Treat OPI2 B2-3 code implementation as completed at the documented checkpoint.
+3. Do not repeat completed OPI2 source investigation or patch design without new evidence.
+4. Maintain the distinction between code verification and actual 2027 operational verification.
+5. Identify the next pending project task from `PROJECT_HANDOFF.md` and related specifications.
+6. Follow the autonomous development, patch-entry, isolated-testing, GitHub Web UI, Production verification, and Local Sync policies in Sections 6 and 7.
+7. Continue independently until reaching a concrete user Next Action.
+
+**Do not interpret completion of OPI2 code implementation as completion of actual payment or Annual Transition verification.**
 
 ### Session Handoff Maintenance
 
