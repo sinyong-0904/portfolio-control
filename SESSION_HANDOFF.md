@@ -386,7 +386,36 @@ The user performs only the local execution steps that cannot be completed in the
 
 **One comprehensive, meaningful test is preferred over many repetitive, low-value checks.**
 
-#### 6. Execution Completion Rule
+#### 6. Patch Entry / Iterative Verification Policy
+
+Development must balance correctness with executable progress.
+
+Once requirements, authoritative source paths, state ownership, and a minimal reversible patch location are sufficiently understood, proceed to a local patch and execution tests.
+
+Do not require complete proof of every hypothetical side effect before producing a testable patch.
+
+**Patch entry conditions:**
+
+1. Requirements and expected behavior are defined.
+2. Relevant authoritative function bodies and load order have been inspected.
+3. State ownership and persistence implications are understood.
+4. A minimal, reversible patch can be identified.
+
+After these conditions are met:
+
+- Provide exact local modification code.
+- Execute isolated tests where practical.
+- Use localhost/browser verification to discover real integration issues.
+- Fix observed failures iteratively.
+- Audit the final diff and relevant regression paths before committing.
+- Reopen architectural analysis only when new evidence demonstrates a material conflict, state-integrity risk, or requirement change.
+
+Distinguish **local experimental patches** from **Production-approved patches**.
+
+A local test failure is evidence for targeted correction, not automatic justification for restarting the entire design investigation.
+
+**The purpose of pre-patch analysis is to make local experimentation safe, not to eliminate the need for experimentation.**
+#### 7. Execution Completion Rule
 
 The assistant should continue independently until a genuine Next Action is reached.
 
