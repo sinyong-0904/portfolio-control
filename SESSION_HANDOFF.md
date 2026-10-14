@@ -513,6 +513,49 @@ Verified checks:
 - No fictitious OPI2 payment data was saved to Production Supabase.
 - Do not mark actual 2027 OPI2 operational behavior as verified.
 
+### OPI2 × Annual Transition — Isolated Pre-Verification (2026-10-14)
+
+**Status: COMPONENT-LEVEL ISOLATED VERIFICATION PASSED**
+
+Verified implementation commit:
+
+`9f4e61b3614546626f5989f26d20d91b00c2caf1`
+
+Test scenario:
+
+- Hypothetical OPI2 payment: March 2027
+- Samsung common-stock payment: 600 shares at KRW 200,000
+- Growth `stockCompensation`: 12,000 (unit: 10,000 KRW)
+- GENERAL 2028 opening baseline: 12,600 (unit: 10,000 KRW)
+- GENERAL 2028 hypothetical valuation: 13,230 (unit: 10,000 KRW)
+- Subsequent investment gain: 630 (unit: 10,000 KRW)
+
+Verification results:
+
+1. Actual Annual Transition candidate generation: PASS.
+2. Actual candidate validation with isolated fixtures: PASS.
+3. OPI2 monthly history preserved across 2027→2028: PASS.
+4. Actual Growth rollover execution in isolation: PASS.
+5. Actual Performance rollover preview execution in isolation: PASS.
+6. 2028 opening baseline and zero new OPI2 payment: PASS.
+7. Memory persistence transaction, readback, and rollback scenarios: PASS.
+8. Actual 2028 Performance function execution: PASS.
+9. GENERAL/Total YTD, TR, and TWR calculations under isolated fixtures: PASS.
+10. Original source state preservation: PASS.
+
+**Verification boundaries:**
+
+- These tests used hypothetical data and isolated Node.js execution.
+- Growth rollover, Performance preview, Annual Transition transaction, and 2028 Performance were verified in separate controlled tests.
+- A single integrated end-to-end Annual Transition transaction combining all actual components has not been verified.
+- Actual Supabase persistence/reload and Production Annual Transition have not been verified.
+- No fictitious OPI2 payment was saved to Production Supabase.
+
+**Conclusion:**
+
+No additional Production code change is justified by the isolated test results.
+
+OPI2 B2-3 code implementation remains completed. Actual payment and integrated rollover verification remain pending.
 ### Pending Work — OPI2 Operational Verification
 
 When an actual OPI2 payment occurs:
