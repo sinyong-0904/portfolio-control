@@ -346,7 +346,47 @@ When PowerShell is required:
 - State the expected number of PASS results.
 - Avoid repeating previously passed checks without new evidence.
 
-#### 5. Execution Completion Rule
+#### 5. Source-Based Isolated Testing Policy
+
+Portfolio Control development should use actual repository source and isolated execution tests whenever practical.
+
+**Responsibility and execution model:**
+
+1. The assistant independently reads and analyzes the actual GitHub source, preferably at a fixed commit SHA.
+2. The assistant completes source tracing, patch design, and static analysis before requesting user-side execution.
+3. When possible, the assistant obtains source files in an isolated temporary environment, applies the proposed patch, and executes relevant tests without modifying the user's repository.
+4. If the assistant's temporary environment cannot access GitHub source, use the user's existing local Node.js environment as the execution fallback.
+5. User-side Node.js tests must use actual repository functions whenever practical, rather than testing only independently recreated formulas.
+6. Prefer applying the proposed patch locally first, then testing the same modified source that will later be uploaded to GitHub.
+7. Consolidate meaningful scenarios into one comprehensive test instead of repeatedly requesting small verification commands.
+
+**Testing requirements:**
+
+- Use hypothetical test data isolated from Production.
+- Test normal behavior, edge cases, regression risks, and relevant persistence or annual-transition behavior.
+- Distinguish actual source-function execution from standalone arithmetic simulations.
+- Distinguish isolated Node.js PASS from browser integration PASS and Production persistence PASS.
+- Do not claim end-to-end verification based solely on isolated tests.
+- Never save fictitious financial data into Production Supabase.
+
+**User-side PowerShell / Node.js conventions:**
+
+- Provide one copy-paste-ready PowerShell block whenever possible.
+- State the expected number of PASS results before execution.
+- Print concise `PASS |`, `FAIL |`, or `CHECK |` results.
+- Suppress unnecessary logs and intermediate output.
+- Avoid repeated environment checks or function-existence tests already confirmed.
+- Request another test only when new code, new evidence, or a materially different verification objective justifies it.
+
+**Execution principle:**
+
+The assistant owns source inspection, implementation design, and test preparation.
+
+The user performs only the local execution steps that cannot be completed in the assistant's environment.
+
+**One comprehensive, meaningful test is preferred over many repetitive, low-value checks.**
+
+#### 6. Execution Completion Rule
 
 The assistant should continue independently until a genuine Next Action is reached.
 
