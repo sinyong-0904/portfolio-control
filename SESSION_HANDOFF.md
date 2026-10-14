@@ -1,6 +1,6 @@
 # Portfolio Control — Session Handoff
 
-Updated: 2026-10-13
+Updated: 2026-10-14
 
 ## 1. Purpose
 
@@ -41,7 +41,12 @@ Do not claim source verification when access was unsuccessful.
 
 Request local source extraction or ZIP upload only after reasonable retries and alternative methods fail.
 
-## 3. Current Checkpoint
+## 3. Historical Checkpoint — Before October 2026 Updates
+> **Historical reference only.**
+>
+> The checkpoint `49f2596c92349477a75edb1804311d9e443a73ad` records the synchronized state before the October 2026 CAGR and OPI2 B2-3 changes.
+>
+> It is not the current development checkpoint. Refer to Section 8 and verify the latest GitHub main HEAD before starting work.
 
 Last confirmed synchronized checkpoint before creating this file:
 
@@ -63,7 +68,16 @@ Creating this document will produce a newer commit. Therefore, always check the 
 
 The checkpoint above is historical, not a permanent HEAD reference.
 
-## 4. Highest Priority — Simulation CAGR Mismatch
+## 4. Historical Investigation — Simulation CAGR Mismatch (Completed)
+> **Status: COMPLETED**
+>
+> Fix commit: `6126be64096939405b10259a3b967ee78f87059a`
+>
+> The investigation and implementation instructions below are retained for historical reference only.
+>
+> The CAGR mismatch has passed local testing, GitHub remote audit, Production verification, and Local Sync.
+>
+> Do not execute the historical patch instructions again unless new source evidence or a regression justifies reopening the issue.
 
 ### Confirmed runtime values
 
@@ -123,7 +137,18 @@ Do not invent source snippets.
 
 Until all applicable checks pass, do not mark the task complete.
 
-## 5. Second Priority — OPI2 Phase B2-3
+## 5. Historical Implementation Plan — OPI2 B2-3 (Code Completed)
+> **Status: CODE IMPLEMENTATION COMPLETED**
+>
+> Implementation commit: `9f4e61b3614546626f5989f26d20d91b00c2caf1`
+>
+> The implementation plan below is retained as historical context and must not be treated as an active development instruction.
+>
+> Code implementation, isolated tests, Production regression, and Local Sync are complete.
+>
+> Actual 2027 OPI2 payment, Supabase persistence, and integrated Annual Transition verification remain pending.
+>
+> Refer to Section 8 for the current verified state and future operational verification requirements.
 
 Resume only after the Simulation CAGR issue is completed.
 
