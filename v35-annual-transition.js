@@ -504,6 +504,61 @@
           );
   }
 
+
+  function buildSimulationActualV35(
+    source,
+    year,
+    accountBase
+  ) {
+    const ids = ['DC', 'P1', 'P2', 'ISA'];
+    const accounts = source.accounts;
+
+    if (!Array.isArray(accounts)) {
+      throw new Error('Simulation accounts unavailable');
+    }
+
+    let contributionMan = 0;
+    let valuationMan = 0;
+
+    for (const id of ids) {
+      const account = accounts.find(a => a && a.id === id);
+
+      if (!account || !account.annual) {
+        throw new Error('Simulation account missing: ' + id);
+      }
+
+      for (const [key, raw] of Object.entries(account.annual)) {
+        const y = Number(key);
+        if (!Number.isInteger(y) || y > year) continue;
+
+        const amount = Number(raw);
+        if (!Number.isFinite(amount)) {
+          throw new Error('Simulation contribution invalid: ' + id);
+        }
+
+        contributionMan += amount;
+      }
+
+      const value = Number(accountBase[id]);
+      if (!Number.isFinite(value) || value < 0) {
+        throw new Error('Simulation valuation invalid: ' + id);
+      }
+
+      valuationMan += value;
+    }
+
+    if (!Number.isFinite(contributionMan)) {
+      throw new Error('Simulation contribution total invalid');
+    }
+
+    return {
+      contributionMan,
+      valuationMan,
+      finalized: true
+    };
+  }
+
+
   function buildAnnualTransitionCandidateV35(
   fromYear,
   toYear
@@ -733,6 +788,43 @@
         ) || 0;
     }
   );
+
+
+  // Finalize Simulation actuals only during Annual Transition.
+  if (from >= 2026) {
+    const yearKey = String(from);
+
+    candidate.simulation =
+      candidate.simulation &&
+      typeof candidate.simulation === 'object'
+        ? candidate.simulation
+        : {};
+
+    candidate.simulation.actualsByYear =
+      candidate.simulation.actualsByYear &&
+      typeof candidate.simulation.actualsByYear === 'object'
+        ? candidate.simulation.actualsByYear
+        : {};
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        candidate.simulation.actualsByYear,
+        yearKey
+      )
+    ) {
+      throw new Error(
+        'Simulation actual already finalized: ' + yearKey
+      );
+    }
+
+    candidate.simulation.actualsByYear[yearKey] =
+      buildSimulationActualV35(
+        data,
+        from,
+        performance.accountBaseMan
+      );
+  }
+
 
   candidate
     .pensionBucketSnapshot =
@@ -999,6 +1091,32 @@
       cloneAnnualTransitionV35(
         candidateCarry
       );
+
+
+  // Permit only the finalized Simulation record for fromYear.
+  if (Number(fromYear) >= 2026) {
+    expected.simulation =
+      expected.simulation &&
+      typeof expected.simulation === 'object'
+        ? expected.simulation
+        : {};
+
+    expected.simulation.actualsByYear =
+      expected.simulation.actualsByYear &&
+      typeof expected.simulation.actualsByYear === 'object'
+        ? expected.simulation.actualsByYear
+        : {};
+
+    const candidateActual =
+      candidate.simulation &&
+      candidate.simulation.actualsByYear
+        ? candidate.simulation.actualsByYear[from]
+        : undefined;
+
+    expected.simulation.actualsByYear[from] =
+      cloneAnnualTransitionV35(candidateActual);
+  }
+
 
   //
   // Account:
@@ -1482,6 +1600,54 @@
         key: accountBaseKey
       }
     );
+
+
+    if (from >= 2026) {
+      const actual =
+        candidate.simulation &&
+        candidate.simulation.actualsByYear &&
+        candidate.simulation.actualsByYear[String(from)];
+
+      const originalActuals =
+        data.simulation &&
+        data.simulation.actualsByYear
+          ? data.simulation.actualsByYear
+          : {};
+
+      const candidateActuals =
+        candidate.simulation &&
+        candidate.simulation.actualsByYear
+          ? candidate.simulation.actualsByYear
+          : {};
+
+      const previousUnchanged =
+        Object.keys(originalActuals).every(year =>
+          JSON.stringify(originalActuals[year]) ===
+          JSON.stringify(candidateActuals[year])
+        );
+
+      const expectedContribution =
+        buildSimulationActualV35(
+          data,
+          from,
+          built.previews.performance.accountBaseMan
+        );
+
+      annualCandidateCheckV35(
+        checks,
+        'simulationActual',
+        !!actual &&
+        actual.finalized === true &&
+        Number.isFinite(actual.contributionMan) &&
+        Number.isFinite(actual.valuationMan) &&
+        actual.contributionMan ===
+          expectedContribution.contributionMan &&
+        actual.valuationMan ===
+          expectedContribution.valuationMan &&
+        previousUnchanged
+      );
+    }
+
 
     const carry =
       candidate
@@ -2285,13 +2451,13 @@
 
   window.validateAnnualTransitionCandidateV35 =
     validateAnnualTransitionCandidateV35;
-    
+
   window.buildAnnualTransitionCandidateV35 =
     buildAnnualTransitionCandidateV35;
 
   window.buildNextAnnualTransitionCandidateV35 =
     buildNextAnnualTransitionCandidateV35;
-  
+
   window.annualTransitionYearsV35 =
     annualTransitionYearsV35;
 
@@ -2314,6 +2480,6 @@
     createMemoryAnnualPersistenceV35;
 
   window.executeAnnualTransitionTransactionV35 =
-    executeAnnualTransitionTransactionV35;  
+    executeAnnualTransitionTransactionV35;
 
 })();
