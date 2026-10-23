@@ -712,3 +712,8 @@
       1fr;
   }
 }
+
+/* Overview > Performance > Total row negative values */
+table.v33-performance-table tr.v33-performance-total td.v33-negative {
+  color: var(--v33-red, #dc2626) !important;
+}
