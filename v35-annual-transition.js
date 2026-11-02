@@ -396,11 +396,20 @@
       window.save =
         function () {};
 
+
+      const december =
+        data.growthV32?.years?.[String(toYear - 1)]
+          ?.DEC?.monthEndCloseV35;
+
       const ok =
         window.rollGrowthForwardV32(
           toYear,
-          0
+          0,
+          december
+            ? { explicitMonthCloseV35: december }
+            : undefined
         );
+
 
       if (ok === false) {
         throw new Error(

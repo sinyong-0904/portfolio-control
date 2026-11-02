@@ -905,10 +905,16 @@
         ? `
           <div>
             <b>이전 월 마감이 필요합니다.</b>
+
             <span>
-              현재 LIVE 값을 확인한 뒤 확정하세요.
+              ${
+                typeof window.monthCloseConfirmTextV35 === 'function'
+                  ? '저장된 전월 기준값을 확인한 뒤 확정하세요. 저장값이 없으면 경고가 표시됩니다.'
+                  : '현재 LIVE 값을 확인한 뒤 확정하세요.'
+              }
               자동 월마감은 하지 않습니다.
             </span>
+
           </div>
 
           <button
@@ -980,12 +986,16 @@
 
 
   function confirmGrowthCloseV33() {
+
     const ok =
       window.confirm(
-        '이전 월을 현재 Growth 값으로 확정할까요?\n\n' +
-        '확정 후에는 해당 월이 historical close로 고정됩니다. ' +
-        '숫자를 다시 확인한 뒤 진행하세요.'
+        typeof window.monthCloseConfirmTextV35 === 'function'
+          ? window.monthCloseConfirmTextV35()
+          : '이전 월을 현재 Growth 값으로 확정할까요?\n\n' +
+            '확정 후에는 해당 월이 historical close로 고정됩니다. ' +
+            '숫자를 다시 확인한 뒤 진행하세요.'
       );
+
 
     if (!ok) {
       return;
@@ -1004,7 +1014,11 @@
         return;
       }
 
-      rollGrowthForward();
+
+      if (rollGrowthForward() === false) {
+        return;
+      }
+
 
       clearGrowthCloseWarningV33();
 

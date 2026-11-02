@@ -459,80 +459,118 @@
     return out;
   }
 
+
   function rollGrowthForward(
     targetYear,
-    targetMonthIndex
+    targetMonthIndex,
+    options
   ) {
-    const g =
-      data.growthV32;
+    const g = data.growthV32;
+    let serial = g.currentYear * 12 + g.currentMonthIndex;
+    const target = targetYear * 12 + targetMonthIndex;
+    const close = options && options.explicitMonthCloseV35;
 
-    let serial =
-      g.currentYear * 12 +
-      g.currentMonthIndex;
+    // v35 명시적 월말 저장값을 전달받았을 때만 새 경로를 사용한다.
+    // root 및 기존 호출은 아래의 원래 월마감 경로를 유지한다.
+    if (close) {
+      const row = yearRows(g.currentYear)[MONTHS[g.currentMonthIndex]];
+      const start = g.currentStart || {};
+      const numericFields = [
+        'totalValue', 'investmentValue', 'cashValue', 'legacyValue',
+        'startTotal', 'startLegacy', 'contribution', 'cashChange',
+        'stockCompensation', 'totalChange', 'legacy', 'investmentReturn'
+      ];
+      const amountsValid = numericFields.every(
+        key => typeof close[key] === 'number' && Number.isFinite(close[key])
+      );
+      const near = (a, b) => Math.abs(a - b) < 0.0001;
+      const expectedReturn = close.totalChange - close.contribution -
+        close.cashChange - close.legacy -
+        (stockCompEnabledV32(g.currentYear) ? close.stockCompensation : 0);
+      const period = String(g.currentYear) + '-' +
+        String(g.currentMonthIndex + 1).padStart(2, '0');
 
-    const target =
-      targetYear * 12 +
-      targetMonthIndex;
-
-    while (serial < target) {
-      finalizeCurrentMonth();
-
-      const oldYear =
-        g.currentYear;
-
-      const oldMonth =
-        g.currentMonthIndex;
-
-      if (oldMonth === 11) {
-        buildAnnual(oldYear);
+      if (
+        !stockCompUiV32() ||
+        target !== serial + 1 ||
+        row.locked === true ||
+        row.monthEndCloseV35 !== close ||
+        close.marker !== 'USER_MONTH_END_V35' ||
+        close.year !== g.currentYear ||
+        close.monthIndex !== g.currentMonthIndex ||
+        !String(close.priceDate || '').startsWith(period + '-') ||
+        !Number.isFinite(Date.parse(close.savedAt)) ||
+        !amountsValid ||
+        !Number.isFinite(Number(start.totalValue)) ||
+        !Number.isFinite(Number(start.legacyValue)) ||
+        !near(close.startTotal, Number(start.totalValue)) ||
+        !near(close.startLegacy, Number(start.legacyValue)) ||
+        !near(close.totalValue, close.investmentValue + close.cashValue + close.legacyValue) ||
+        !near(close.totalChange, close.totalValue - close.startTotal) ||
+        !near(close.legacy, close.legacyValue - close.startLegacy) ||
+        !near(close.investmentReturn, expectedReturn)
+      ) {
+        throw new Error('저장한 월말 기준값이 유효하지 않습니다. 월마감은 수행되지 않았습니다.');
       }
 
-      const n =
-        netSummary();
-
-      let ny =
-        oldYear;
-
-      let nm =
-        oldMonth + 1;
-
-      if (nm > 11) {
-        nm = 0;
-        ny++;
+      row.value = close.totalValue;
+      row.totalChange = close.totalChange;
+      row.legacy = close.legacy;
+      row.investmentReturn = close.investmentReturn;
+      row.contribution = close.contribution;
+      row.cashChange = close.cashChange;
+      if (stockCompEnabledV32(g.currentYear)) {
+        row.stockCompensation = close.stockCompensation;
       }
+      row.locked = true;
 
-      g.currentYear =
-        ny;
+      const oldYear = g.currentYear;
+      const oldMonth = g.currentMonthIndex;
+      if (oldMonth === 11) buildAnnual(oldYear);
 
-      g.currentMonthIndex =
-        nm;
-
-      const rows =
-        yearRows(ny);
-
-      const next =
-        rows[MONTHS[nm]];
-
-      next.locked =
-        false;
-
+      let newYear = oldYear;
+      let newMonth = oldMonth + 1;
+      if (newMonth > 11) {
+        newMonth = 0;
+        newYear++;
+      }
+      const next = yearRows(newYear)[MONTHS[newMonth]];
+      next.locked = false;
+      g.currentYear = newYear;
+      g.currentMonthIndex = newMonth;
       g.currentStart = {
-        investmentValue:
-          n.inv.value,
-
-        legacyValue:
-          n.legacy.value,
-
-        totalValue:
-          n.total
+        investmentValue: close.investmentValue,
+        legacyValue: close.legacyValue,
+        totalValue: close.totalValue
       };
-
-      serial =
-        ny * 12 + nm;
+      save(false);
+      return true;
     }
 
+    // 원래 rollover 동작: 변경 없음
+    while (serial < target) {
+      finalizeCurrentMonth();
+      const oldYear = g.currentYear;
+      const oldMonth = g.currentMonthIndex;
+      if (oldMonth === 11) buildAnnual(oldYear);
+      const n = netSummary();
+      let ny = oldYear;
+      let nm = oldMonth + 1;
+      if (nm > 11) { nm = 0; ny++; }
+      g.currentYear = ny;
+      g.currentMonthIndex = nm;
+      const next = yearRows(ny)[MONTHS[nm]];
+      next.locked = false;
+      g.currentStart = {
+        investmentValue: n.inv.value,
+        legacyValue: n.legacy.value,
+        totalValue: n.total
+      };
+      serial = ny * 12 + nm;
+    }
     save(false);
   }
+
 
   window.rollGrowthForwardV32 =
     rollGrowthForward;
