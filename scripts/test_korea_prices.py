@@ -142,3 +142,121 @@ if fail:
             f"{name} | "
             f"{error}"
         )
+
+
+# ============================================================
+# KRX / NAVER REGULAR CLOSE COMPARISON
+# Read-only test. No Supabase access.
+# ============================================================
+
+print()
+print("=" * 80)
+print("KRX / NAVER CLOSE COMPARISON")
+print("Historical date: 2026-10-30")
+print("=" * 80)
+
+TEST_SYMBOLS = {
+    "033780": "KT&G",
+    "005930": "Samsung Electronics",
+    "005935": "Samsung Electronics Preferred",
+}
+
+TEST_START = "2026-10-28"
+TEST_END = "2026-11-04"
+TARGET_DATE = "2026-10-30"
+
+EXPECTED_CLOSE = {
+    "005935": 174100.0,
+}
+
+results = {}
+
+for code, name in TEST_SYMBOLS.items():
+    print()
+    print(f"[SYMBOL] {code} | {name}")
+
+    results[code] = {}
+
+    for provider in ("NAVER", "KRX"):
+        source = f"{provider}:{code}"
+
+        try:
+            df = fdr.DataReader(
+                source,
+                TEST_START,
+                TEST_END
+            )
+
+            if df is None or df.empty:
+                raise RuntimeError("empty dataframe")
+
+            df = df.sort_index()
+            df = df.dropna(subset=["Close"])
+
+            if df.empty:
+                raise RuntimeError("no valid close")
+
+            print(f"  [{provider}]")
+            print(
+                df[["Close"]].to_string()
+            )
+
+            matched = df[
+                df.index.strftime("%Y-%m-%d")
+                == TARGET_DATE
+            ]
+
+            if len(matched) != 1:
+                raise RuntimeError(
+                    "target date missing or duplicated"
+                )
+
+            close = float(
+                matched.iloc[0]["Close"]
+            )
+
+            results[code][provider] = close
+
+            print(
+                f"  TARGET CLOSE: {close:,.0f}"
+            )
+
+        except Exception as exc:
+            results[code][provider] = None
+            print(
+                f"  [{provider} FAIL] "
+                f"{type(exc).__name__}: {exc}"
+            )
+
+    naver = results[code]["NAVER"]
+    krx = results[code]["KRX"]
+
+    if naver is not None and krx is not None:
+        print(
+            f"  KRX - NAVER: "
+            f"{krx - naver:+,.0f}"
+        )
+
+    if code in EXPECTED_CLOSE:
+        expected = EXPECTED_CLOSE[code]
+
+        if krx is None:
+            print(
+                "  [UNVERIFIED] KRX close unavailable"
+            )
+        elif krx == expected:
+            print(
+                "  [PASS] KRX matches reference close"
+            )
+        else:
+            print(
+                f"  [MISMATCH] KRX={krx:,.0f}, "
+                f"reference={expected:,.0f}"
+            )
+
+print()
+print("=" * 80)
+print("KRX / NAVER COMPARISON COMPLETE")
+print("No database writes performed.")
+print("=" * 80)
+
