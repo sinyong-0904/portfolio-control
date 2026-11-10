@@ -12,18 +12,16 @@
     'SEP','OCT','NOV','DEC'
   ];
 
-
   const FINAL_TAB_ORDER_V33 = [
     'Overview',
     'Allocation',
     '시장가격',
     '계좌·보유',
-    'Growth & 배당',
-    '자금관리',
+    'Growth',
+    '자금관리&배당',
     'History',
     'Strategy'
   ];
-
 
   //
   // 기존 view 함수는 그대로 보존해서
@@ -419,12 +417,11 @@
   // ============================================================
   //
 
+  
   function growthDividendViewV33() {
 
     return `
-      <div
-        class="v33-merged-page"
-      >
+      <div class="v33-merged-page">
 
         ${sectionWrapV33(
           'Growth',
@@ -435,19 +432,16 @@
           )
         )}
 
-
         ${sectionWrapV33(
-          '배당',
-          '월별 배당과 계좌별 배당 흐름',
-          renderOldViewV33(
-            originalViewsV33.dividend,
-            '배당'
-          )
+          '장기 자산 Simulation',
+          '현재 연금+ISA 평가액에서 시작해 연간 투입과 시장 충격을 함께 본다.',
+          simulationViewV33()
         )}
 
       </div>
     `;
   }
+
 
 
   //
@@ -1717,12 +1711,11 @@
   // ============================================================
   //
 
+  
   function cashFundingViewV33() {
 
     return `
-      <div
-        class="v33-merged-page"
-      >
+      <div class="v33-merged-page">
 
         ${sectionWrapV33(
           '예금성 자금',
@@ -1733,7 +1726,6 @@
           )
         )}
 
-
         ${sectionWrapV33(
           '추가투입',
           '투자계좌로 이동시키는 신규자금 계획과 실제 투입',
@@ -1743,16 +1735,19 @@
           )
         )}
 
-
         ${sectionWrapV33(
-          '장기 자산 Simulation',
-          '현재 연금+ISA 평가액에서 시작해 연간 투입과 시장 충격을 함께 본다.',
-          simulationViewV33()
+          '배당',
+          '월별 배당과 계좌별 배당 흐름',
+          renderOldViewV33(
+            originalViewsV33.dividend,
+            '배당'
+          )
         )}
 
       </div>
     `;
   }
+
 
 
   //
@@ -2723,11 +2718,11 @@
       '계좌·보유':
         originalViewsV33
           .accounts,
-
-      'Growth & 배당':
+      
+      'Growth':
         growthDividendViewV33,
 
-      '자금관리':
+      '자금관리&배당':
         cashFundingViewV33,
 
       'History':

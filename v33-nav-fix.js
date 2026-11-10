@@ -8,8 +8,8 @@
     'Allocation',
     '시장가격',
     '계좌·보유',
-    'Growth & 배당',
-    '자금관리',
+    'Growth',
+    '자금관리&배당',
     'History',
     'Strategy'
   ];
@@ -19,10 +19,17 @@
     'portfolio_v33_final_tab';
 
 
+  
+  const previousTabV33 =
+    localStorage.getItem(STORAGE_KEY);
+
   let activeTabV33 =
-    localStorage.getItem(
-      STORAGE_KEY
-    ) || 'Overview';
+    previousTabV33 === 'Growth & 배당'
+      ? 'Growth'
+      : previousTabV33 === '자금관리'
+        ? '자금관리&배당'
+        : previousTabV33 || 'Overview';
+
 
 
   let finalRendering =
@@ -95,20 +102,19 @@
     }
 
 
+    
     const fallback = {
 
-      'Growth & 배당':
-        window
-          .growthDividendViewV33,
+      'Growth':
+        window.growthDividendViewV33,
 
-      '자금관리':
-        window
-          .cashFundingViewV33,
+      '자금관리&배당':
+        window.cashFundingViewV33,
 
       'History':
-        window
-          .historyViewV33
+        window.historyViewV33
     };
+
 
 
     return (
