@@ -668,6 +668,107 @@
       0
     );
 
+  
+// Cash detail total row: adapt to active future year
+const cashTotalRow = table.querySelector(
+  'tbody tr[data-cash-total-row="true"]'
+);
+
+if (cashTotalRow) {
+  const sumMetric = key =>
+    metrics.reduce(
+      (sum, row) => sum + (Number(row[key]) || 0),
+      0
+    );
+
+  const totalColumns = [
+    [baseIdx, 'nextBase'],
+    [flowIdx, 'nextFlow'],
+    [headers.indexOf('평가액'), 'balance'],
+    [pnlIdx, 'pnl'],
+    [headers.indexOf('누적손익'), 'cumProfit']
+  ];
+
+  totalColumns.forEach(([index, key]) => {
+    if (index < 0) return;
+
+    const cell = cashTotalRow.children[index];
+    if (!cell) return;
+
+    const display = key === 'pnl'
+      ? formatManV35(sumMetric(key))
+      : won(sumMetric(key));
+
+    if (cell.textContent.trim() !== display) {
+      cell.textContent = display;
+    }
+  });
+}
+
+// Future-year dividend/interest summary cards
+const cashSection = table.closest('.v33-merged-section');
+
+const cashCards = Array.from(
+  (cashSection || document.getElementById('content'))
+    .querySelectorAll('.grid .card')
+);
+
+const futureDividendKrw =
+  typeof window.dividendFutureTotalV35 === 'function'
+    ? window.dividendFutureTotalV35()
+    : null;
+
+const futureDividendMan =
+  futureDividendKrw == null
+    ? null
+    : Number(futureDividendKrw) / 10000;
+
+const futureYearLabel = String(year).slice(-2);
+
+const formatFutureMan = value =>
+  value == null
+    ? '—'
+    : Number(value).toLocaleString('ko-KR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + '만원';
+
+const setFutureCashCard = (name, amountMan) => {
+  const card = cashCards.find(item => {
+    const label = (
+      item.querySelector('.label')?.textContent || ''
+    ).trim();
+
+    return label.replace(/^\d{2}'\s*/, '') === name;
+  });
+
+  if (!card) return;
+
+  const label = card.querySelector('.label');
+  const value = card.querySelector('.metric');
+
+  const nextLabel = `${futureYearLabel}' ${name}`;
+  const nextValue = formatFutureMan(amountMan);
+
+  if (label && label.textContent.trim() !== nextLabel) {
+    label.textContent = nextLabel;
+  }
+
+  if (value && value.textContent.trim() !== nextValue) {
+    value.textContent = nextValue;
+  }
+};
+
+setFutureCashCard('배당', futureDividendMan);
+
+setFutureCashCard(
+  '이자+배당',
+  futureDividendMan == null
+    ? null
+    : totalPnl + futureDividendMan
+);
+  
+
   const cards =
     Array.from(
       document.querySelectorAll(
