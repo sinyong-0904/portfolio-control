@@ -1298,6 +1298,92 @@
       return rolloverPreviewV35;
     };
 
+
+// v35: Display actual 2026 account P&L.
+// Do not replace P&L for future annual years.
+function reconcileAccountYearPnlV35() {
+  if (activeAnnualYearV35Safe() !== 2026) {
+    return;
+  }
+
+  if (typeof accountSummary !== 'function') {
+    return;
+  }
+
+  const table = document.querySelector(
+    '#content .v33-performance-table'
+  );
+
+  if (!table) return;
+
+  const headers = Array.from(
+    table.querySelectorAll('thead th')
+  ).map(th =>
+    th.textContent.replace(/\s+/g, '')
+  );
+
+  const pnlIdx = headers.findIndex(
+    text => /^26['’]?손익$/.test(text)
+  );
+
+  if (pnlIdx < 0) return;
+
+  const accountIds = {
+    'DC': 'DC',
+    '연금(1)': 'P1',
+    '연금(2)': 'P2'
+  };
+
+  table.querySelectorAll('tbody tr').forEach(row => {
+    const label = row.children[0]
+      ?.textContent
+      ?.trim();
+
+    const id = accountIds[label];
+
+    if (!id) return;
+
+    const cell = row.children[pnlIdx];
+
+    if (!cell || cell.tagName !== 'TD') return;
+
+    let summary;
+
+    try {
+      summary = accountSummary(id);
+    } catch (error) {
+      console.warn(
+        '[v35] Account P&L unavailable:',
+        id,
+        error
+      );
+      return;
+    }
+
+    const pnl = Number(summary?.pnl);
+
+    if (!Number.isFinite(pnl)) return;
+
+    const formatted = formatManV35(pnl);
+
+    // Avoid unnecessary DOM mutations.
+    if (cell.textContent.trim() !== formatted) {
+      cell.textContent = formatted;
+    }
+
+    cell.classList.remove(
+      'v33-perf-pnl-negative'
+    );
+
+    cell.classList.toggle(
+      'v33-performance-negative',
+      pnl < 0
+    );
+
+    cell.style.removeProperty('color');
+  });
+}
+
   // v35: Synchronize the 26'/future-year P&L color
 // with the value currently displayed in the cell.
 function reconcilePerformanceProfitSignV35() {
@@ -1403,6 +1489,7 @@ function reconcilePerformanceProfitSignV35() {
               false;
 
             applyPerformancePresentationV35();
+            reconcileAccountYearPnlV35();
             reconcilePerformanceProfitSignV35();
           }
         );
