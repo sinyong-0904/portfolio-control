@@ -218,7 +218,7 @@
       100
     );
   }
-  
+
   function opi2StockCompManV35(year) {
     const y = Number(year);
     if (!Number.isInteger(y) || y < 2027) return 0;
@@ -269,7 +269,7 @@
       }, 0);
   }
 
-  
+
   function opi2CumulativePerformanceV35(
     scope,
     year
@@ -1010,14 +1010,14 @@
           .trim()
     );
 
-  
+
   const cumulativePnlIdx =
     headers.findIndex(text =>
       /^(누적손익|누적\s*손익)$/.test(
         text.replace(/\s+/g, '')
       )
     );
-  
+
 
   const pnlIdx =
     headers.findIndex(
@@ -1124,7 +1124,7 @@
           return;
         }
 
-        
+
         const opi2Cumulative =
           opi2CumulativePerformanceV35(
             scope,
@@ -1298,6 +1298,83 @@
       return rolloverPreviewV35;
     };
 
+  // v35: Synchronize the 26'/future-year P&L color
+// with the value currently displayed in the cell.
+function reconcilePerformanceProfitSignV35() {
+  const table = document.querySelector(
+    '#content .v33-performance-table'
+  );
+
+  if (!table) return;
+
+  const headers = Array.from(
+    table.querySelectorAll('thead th')
+  );
+
+  const pnlIdx = headers.findIndex(th =>
+    /^\d{2}['’]?손익$/.test(
+      th.textContent.replace(/\s+/g, '')
+    )
+  );
+
+  if (pnlIdx < 0) return;
+
+  table.querySelectorAll('tbody tr').forEach(row => {
+    const cell = row.children[pnlIdx];
+
+    if (!cell || cell.tagName !== 'TD') return;
+
+    const valueText = cell.textContent
+      .trim()
+      .replace(/,/g, '')
+      .replace(/\u2212/g, '-');
+
+    const parsed = valueText.match(
+      /^([+-]?)(\d+(?:\.\d+)?)/
+    );
+
+    if (!parsed) return;
+
+    const negative =
+      parsed[1] === '-' &&
+      Number(parsed[2]) > 0;
+
+    // Remove the old evaluation-P&L class.
+    cell.classList.remove(
+      'v33-perf-pnl-negative'
+    );
+
+    // Apply the current-year P&L class.
+    cell.classList.toggle(
+      'v33-performance-negative',
+      negative
+    );
+
+    // Remove stale inline color.
+    cell.style.removeProperty('color');
+
+    // Aggregate rows can have a blue !important class.
+    // A negative amount must still be red.
+    if (
+      negative &&
+      (
+        cell.classList.contains(
+          'v33-performance-important'
+        ) ||
+        cell.classList.contains(
+          'v33-perf-money-important'
+        )
+      )
+    ) {
+      cell.style.setProperty(
+        'color',
+        'var(--v33-red, #dc2626)',
+        'important'
+      );
+    }
+  });
+}
+
   function installPerformanceObserverV35() {
     const content =
       document.getElementById(
@@ -1326,6 +1403,7 @@
               false;
 
             applyPerformancePresentationV35();
+            reconcilePerformanceProfitSignV35();
           }
         );
       };
@@ -1359,5 +1437,5 @@
     );
   } else {
     installPerformanceObserverV35();
-  } 
+  }
 })();

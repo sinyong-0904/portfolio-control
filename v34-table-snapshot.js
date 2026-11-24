@@ -88,6 +88,10 @@
       .trim();
   }
 
+  function isV35SnapshotV34() {
+  return /(?:^|\/)v35(?:\/|$)/
+    .test(window.location.pathname);
+  }
 
   function currentYearV34() {
     return new Date()
@@ -638,49 +642,74 @@
 
 
   function captureGrowthDividendV34() {
-    const growth =
-      findGrowthTableV34();
+  let growth = null;
+  let dividend = null;
 
-    const dividend =
-      findDividendTableV34();
+  if (isV35SnapshotV34()) {
+    try {
+      growth = findGrowthTableV34();
+    } catch (error) {
+      if (
+        error.message !==
+        '현재 Growth 표를 찾지 못했습니다.'
+      ) {
+        throw error;
+      }
+    }
 
-    return {
-      title:
-        'Growth & 배당',
+    try {
+      dividend = findDividendTableV34();
+    } catch (error) {
+      if (
+        error.message !==
+        '현재 배당금 현황 표를 찾지 못했습니다.'
+      ) {
+        throw error;
+      }
+    }
 
-      tables: [
-        {
-          key:
-            'growth',
-
-          title:
-            tableTitleBeforeV34(
-              growth
-            ) ||
-            `${currentYearV34()} 월별 금융자산 Growth`,
-
-          ...captureTableV34(
-            growth
-          )
-        },
-
-        {
-          key:
-            'dividend',
-
-          title:
-            tableTitleBeforeV34(
-              dividend
-            ) ||
-            `${currentYearV34()} 배당금 현황`,
-
-          ...captureTableV34(
-            dividend
-          )
-        }
-      ]
-    };
+    if (!growth && !dividend) {
+      throw new Error(
+        '현재 화면에서 Growth 또는 배당금 현황 표를 찾지 못했습니다.'
+      );
+    }
+  } else {
+    // Preserve the legacy Root behavior.
+    growth = findGrowthTableV34();
+    dividend = findDividendTableV34();
   }
+
+  const tables = [];
+
+  if (growth) {
+    tables.push({
+      key: 'growth',
+
+      title:
+        tableTitleBeforeV34(growth) ||
+        `${currentYearV34()} 월별 금융자산 Growth`,
+
+      ...captureTableV34(growth)
+    });
+  }
+
+  if (dividend) {
+    tables.push({
+      key: 'dividend',
+
+      title:
+        tableTitleBeforeV34(dividend) ||
+        `${currentYearV34()} 배당금 현황`,
+
+      ...captureTableV34(dividend)
+    });
+  }
+
+  return {
+    title: 'Growth & 배당',
+    tables
+  };
+}
 
 
   function captureCashLikeV34() {
@@ -981,6 +1010,64 @@
     }
   }
 
+  // Preserve the other table when only Growth or
+// Dividend is captured from the current v35 tab.
+function mergeGrowthDividendSnapshotV34(
+  payload,
+  existing
+) {
+  if (
+    !isV35SnapshotV34() ||
+    !existing
+  ) {
+    return payload;
+  }
+
+  const previous = existing.snapshot_data;
+
+  if (
+    !previous ||
+    typeof previous !== 'object' ||
+    !Array.isArray(previous.tables) ||
+    !previous.tables.every(
+      table =>
+        table &&
+        typeof table.key === 'string'
+    )
+  ) {
+    throw new Error(
+      '기존 Growth & 배당 Snapshot 형식이 달라 자동 병합을 중단했습니다.'
+    );
+  }
+
+  const replacedKeys = new Set(
+    payload.tables.map(table => table.key)
+  );
+
+  const mergedTables = [
+    ...previous.tables.filter(
+      table => !replacedKeys.has(table.key)
+    ),
+    ...payload.tables
+  ];
+
+  const order = {
+    growth: 0,
+    dividend: 1
+  };
+
+  mergedTables.sort(
+    (a, b) =>
+      (order[a.key] ?? 2) -
+      (order[b.key] ?? 2)
+  );
+
+  return {
+    ...previous,
+    ...payload,
+    tables: mergedTables
+  };
+}
 
   async function saveSnapshotV34(
     type
@@ -1004,7 +1091,7 @@
         return;
       }
 
-      const payload =
+      let payload =
         captureByTypeV34(
           type
         );
@@ -1028,7 +1115,11 @@
         );
 
       if (
-        !cache.loaded
+        !cache.loaded ||
+        (
+          isV35SnapshotV34() &&
+          type === 'growth_dividend'
+        )
       ) {
         await loadSnapshotsV34(
           true
@@ -1038,6 +1129,17 @@
           cachedSnapshotV34(
             year,
             type
+          );
+      }
+
+      if (
+        isV35SnapshotV34() &&
+        type === 'growth_dividend'
+      ) {
+        payload =
+          mergeGrowthDividendSnapshotV34(
+            payload,
+            existing
           );
       }
 
@@ -1326,11 +1428,55 @@
     box.appendChild(
       makeSnapshotButtonV34(
         'growth_dividend',
-        'Growth & 배당 Snapshot'
+        isV35SnapshotV34()
+          ? 'Growth Snapshot'
+          : 'Growth & 배당 Snapshot'
       )
     );
   }
 
+  function injectDividendButtonV34() {
+  if (!isV35SnapshotV34()) return;
+
+  let dividend;
+
+  try {
+    dividend = findDividendTableV34();
+  } catch (error) {
+    return;
+  }
+
+  const section = dividend.closest(
+    '.v33-merged-section'
+  );
+
+  const heading = section?.querySelector(
+    '.v33-merged-heading'
+  );
+
+  const title = normalizeTextV34(
+    heading?.querySelector('h2')?.textContent
+  );
+
+  if (!heading || title !== '배당') return;
+
+  const box = ensureActionBoxV34(heading);
+
+  if (
+    box.querySelector(
+      '[data-snapshot-type="growth_dividend"]'
+    )
+  ) {
+    return;
+  }
+
+  box.appendChild(
+    makeSnapshotButtonV34(
+      'growth_dividend',
+      '배당 Snapshot'
+    )
+  );
+}
 
   function injectCashLikeButtonV34() {
     let cash;
@@ -1383,6 +1529,7 @@
 
     injectPerformanceButtonV34();
     injectGrowthDividendButtonV34();
+    injectDividendButtonV34();
     injectCashLikeButtonV34();
   }
 
@@ -2051,6 +2198,15 @@
   // ============================================================
   // Public helpers
   // ============================================================
+
+  // Read-only capture preview for v35 diagnostics.
+  // No Supabase write is performed.
+  if (isV35SnapshotV34()) {
+    window.previewTableSnapshotV35 =
+      function (type = 'growth_dividend') {
+        return captureByTypeV34(type);
+      };
+  }
 
   window.saveTableSnapshotV34 =
     saveSnapshotV34;

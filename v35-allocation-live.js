@@ -666,6 +666,66 @@
   window.applyAllocationPresentationV35 =
     applyAllocationPresentationV35;
 
+  // v35: Color only P&L and return columns in
+// Portfolio Exposure and Exposure Detail.
+function applyAllocationSignColorsV35() {
+  const tables = document.querySelectorAll(
+    '#content .v33-exposure-table, ' +
+    '#content .v33-exposure-detail-table'
+  );
+
+  tables.forEach(table => {
+    const headers = Array.from(
+      table.querySelectorAll('thead th')
+    ).map(th =>
+      th.textContent.replace(/\s+/g, '')
+    );
+
+    const targetIndices = headers
+      .map((label, index) =>
+        /^(?:\d{2}손익|YTD\d{2}|누적손익|TR)$/
+          .test(label)
+          ? index
+          : -1
+      )
+      .filter(index => index >= 0);
+
+    // Do not modify an unexpected table structure.
+    if (targetIndices.length !== 4) return;
+
+    table.querySelectorAll('tbody tr').forEach(row => {
+      if (row.children.length !== headers.length) {
+        return;
+      }
+
+      targetIndices.forEach(index => {
+        const cell = row.children[index];
+
+        if (!cell || cell.tagName !== 'TD') return;
+
+        const valueText = cell.textContent
+          .trim()
+          .replace(/,/g, '')
+          .replace(/\u2212/g, '-');
+
+        const parsed = valueText.match(
+          /^([+-]?)(\d+(?:\.\d+)?)/
+        );
+
+        const negative = Boolean(
+          parsed &&
+          parsed[1] === '-' &&
+          Number(parsed[2]) > 0
+        );
+
+        cell.classList.toggle(
+          'v33-negative',
+          negative
+        );
+      });
+    });
+  });
+}
   function installAllocationObserverV35() {
     const content =
       document.getElementById(
@@ -694,6 +754,7 @@
               false;
 
             applyAllocationPresentationV35();
+            applyAllocationSignColorsV35();
           }
         );
       };
