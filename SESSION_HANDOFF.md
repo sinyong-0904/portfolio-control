@@ -1146,4 +1146,166 @@ Portfolio Control의 목적은 최신 화면을 만드는 것에 그치지 않�
 
 ---
 
+
+## Appendix — 2026-11-24 v3.5 Maintenance & Performance Reconciliation
+
+### A. Release checkpoint
+
+- Date: 2026-11-24 (KST)
+- Production: `/v35/`
+- Stable Reference: `/` (unchanged)
+- Code checkpoint: `a4c787bc2d800921be3733e13fb05d23b984e0b3`
+- Release tag: `v3.5-maintenance-20261124`
+- Scope: UI bug fixes, Snapshot compatibility, pension performance calculation reconciliation
+- Status: Code committed, localhost static/runtime checks passed, local Git synchronized
+- Limitations: Actual Supabase Snapshot write/read-back and post-release Production regression not fully verified
+
+### B. Completed fixes
+
+#### B.1 Overview performance sign and account P&L
+
+Commits:
+- `e6b18dc667ba1103805363218e7d14a1272faddc`
+- `a4c787bc2d800921be3733e13fb05d23b984e0b3`
+
+Changes:
+- Corrected stale negative-color CSS classes.
+- Corrected 2026 account-level P&L presentation using `accountSummary().pnl`.
+- Preserved existing account performance calculations.
+- Preserved future-year presentation logic.
+
+Validation:
+- JavaScript syntax PASS.
+- Account P&L values PASS.
+- Negative-color presentation PASS.
+
+#### B.2 Allocation Exposure Detail
+
+Commits:
+- `e6b18dc667ba1103805363218e7d14a1272faddc`
+- `a4c787bc2d800921be3733e13fb05d23b984e0b3`
+
+Changes:
+- Corrected negative P&L/return colors.
+- Replaced 2026 detail P&L calculation based on snapshot evaluation-value delta with current holdings ledger P&L.
+- Ledger components: unrealized P&L, realized P&L, cumulative dividends.
+- Current cumulative P&L minus 2025 year-end baseline gives 2026 P&L.
+- Existing buy amount, valuation, allocation weights and snapshot YTD denominators remain unchanged.
+- Detail Sum reconciled with the existing non-PARKING Portfolio Exposure calculation.
+- Unallocated historical P&L displayed separately.
+- 2027 rehearsal and return to 2026 verified.
+
+Validation:
+- Eight asset rows: PASS.
+- P&L, cumulative P&L, YTD, TR display: PASS.
+- Negative sign colors: PASS.
+- Non-PARKING bucket total reconciliation: PASS.
+- Carry row uniqueness: PASS.
+- 2026 → 2027 rehearsal → 2026 restoration: PASS.
+
+Important:
+- Calculation-path consistency does not prove historical accounting accuracy.
+- Do not hardcode Excel values to force reconciliation.
+
+#### B.3 Growth / Dividend Snapshot
+
+Commit:
+- `e6b18dc667ba1103805363218e7d14a1272faddc`
+
+Changes:
+- Separated Growth and Dividend table capture after tab restructuring.
+- Preserved the existing `growth_dividend` snapshot type.
+- Merged partial captures with existing snapshot tables.
+- Added Dividend Snapshot action in the relocated Dividend section.
+- Preserved `cash_like` and existing History data format.
+
+Validation:
+- Growth capture PASS.
+- Dividend capture PASS.
+- Existing Growth/Dividend merge mock tests PASS.
+- History rendering PASS.
+- Actual Supabase write and overwrite test NOT PERFORMED.
+
+### C. Remaining known limitations
+
+#### C.1 Account vs bucket cumulative P&L
+
+A small historical reconciliation difference remains between account-level cash-flow-based cumulative P&L and bucket-level holdings-ledger cumulative P&L.
+
+Findings:
+- Current holdings valuation plus account cash reconciles with account valuation.
+- Holdings mapping weights reconcile.
+- Existing fixed archived P&L is included in bucket metrics.
+- Some historical closed/deleted holding acquisition and realized P&L records are unavailable.
+
+Decision:
+- Preserve the existing historical carry.
+- Do not add arbitrary adjustment values.
+- Treat the remaining difference as an unresolved historical reconciliation item.
+- Reopen only when material new evidence is available or the difference increases.
+
+#### C.2 Asset-level YTD denominator
+
+Current asset-level YTD uses `ytdDenomKRW` from the existing pension snapshot.
+
+The original Excel notes proposed:
+- Previous year-end valuation + current-year purchases.
+
+However, the current application uses state-based holdings editing:
+- Buy: update quantity and average cost.
+- Sell: update quantity and realized P&L.
+- Full exit: use the holding close action.
+
+The application does not retain a complete transaction-level execution ledger in the inspected portfolio state.
+
+Decision:
+- Retain existing YTD denominators.
+- Do not substitute current purchase cost or net purchase-cost change for actual annual purchase amounts.
+- Do not label these YTD calculations as TWR.
+- Defer transaction-aware denominator improvements until reliable transaction data exists.
+
+#### C.3 TR interpretation
+
+- Account TR uses an account-level cumulative investment basis.
+- Bucket/detail TR uses current holdings purchase cost.
+- These percentages are not fully comparable across aggregation levels.
+- Avoid treating them as identical cash-flow-adjusted return metrics.
+
+#### C.4 Historical allocation attribution
+
+- Historical asset mapping and deleted holdings may prevent exact asset-level reconciliation.
+- Do not reconstruct unknown realized P&L from sale prices alone.
+- Preserve the known baseline and unallocated adjustment separately.
+
+### D. Operating and verification rules
+
+- `HEAD → READ → VERIFY → PATCH → TEST → DIFF/AUDIT → COMMIT → HANDOFF`.
+- User applies local patches and performs GitHub Web Upload.
+- AI provides copy-paste-ready source changes and verification commands.
+- No unsolicited GitHub push or Production Supabase write.
+- Preserve unrelated local Markdown modifications.
+- Avoid verbose Git whitespace warnings; report concise PASS/CHECK/FAIL.
+- For localhost F12 tests, always state the exact tab, year and execution timing.
+- Include the PowerShell server command:
+
+  `python -m http.server 8000 --directory "D:\GIT\portfolio-control"`
+
+- Test URL: `http://localhost:8000/v35/`
+- "진행" means continue independently until a specific user action is necessary.
+- End each work response with "다음 추론 단계".
+- High/Extra High usage is limited; recommend it only immediately before a sufficiently prepared task expected to produce substantive, copy-paste-ready code.
+
+### E. Release status and next maintenance
+
+This release is a maintenance checkpoint, not a certification of all historical financial performance values.
+
+No further calculation change is planned for this release.
+
+Future work, only when needed:
+1. Investigate materially growing historical reconciliation differences.
+2. Revisit transaction-aware YTD denominator design if reliable trade records become available.
+3. Verify actual Snapshot persistence separately with explicit approval.
+4. Keep `/` as the unchanged Stable Reference.
+
+
 **End of SESSION_HANDOFF.md**
